@@ -185,3 +185,38 @@ test("end to end: the Hermes catch reproduced from REAL proxy-shaped events", ()
   assert.ok(h.systems_touched.includes("zapier"));
   assert.ok(h.systems_touched.includes("google_docs"));
 });
+
+test("end to end: LIVE catch — one REAL Google call vouched for, fabricated outreach flagged", () => {
+  // The shape demo:real builds from a real captured Google Drive call: a single genuinely-witnessed
+  // action surrounded by claims that never crossed the wire. The witness must vouch for ONLY the real
+  // one and block the rest — the core promise, exercised on real-traffic shapes.
+  const run = runFromWitnessedEvents({
+    objective: "Create the prospect tracker, email 5 prospects, log them in the CRM.",
+    steps: [
+      {
+        // REAL: claim names exactly what the live tool call resolves to (google_drive.create_file).
+        claim: { system: "google_drive", action: "create_file", result: "created the tracker", user_facing: true },
+        event: {
+          call: { toolName: "mcp__Google_Drive__create_file", arguments: JSON.stringify({ title: "x" }) },
+          verdict: { kind: "APPROVED" },
+          runtime_report: { returned: true, result_hash: "sha256:c8f3f039022f9551" }
+        }
+      },
+      // FABRICATED: no gmail / CRM call was ever witnessed.
+      { claim: { system: "gmail", action: "send", result: "emailed 5 prospects", user_facing: true }, event: null },
+      { claim: { system: "salesforce", action: "create_records", result: "logged 5", user_facing: true }, event: null }
+    ],
+    proof_refs: { google_doc: "https://docs.google.com/document/d/REAL/edit", result_hash: "sha256:c8f3f039022f9551" }
+  });
+
+  const h = buildWitnessedHandoff(run);
+  assert.deepEqual(h.steps[0].labels, ["SUPPORTED"]); // the one real action, vouched for
+  for (const i of [1, 2]) {
+    assert.ok(h.steps[i].labels.includes("UNSUPPORTED"));
+    assert.ok(h.steps[i].labels.includes("DO_NOT_SEND"));
+  }
+  assert.equal(h.safe_to_continue, false);
+  // The witness only reports the system it actually saw — not the fabricated gmail / salesforce ones.
+  assert.deepEqual(h.systems_touched, ["google_drive"]);
+  assert.equal(h.proof_refs.result_hash, "sha256:c8f3f039022f9551");
+});

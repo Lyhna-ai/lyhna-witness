@@ -1,0 +1,24 @@
+{
+  "_note": "This is REAL captured evidence, not a hand-authored fixture. The tool call below was executed live against Google Drive in a Lyhna agent session; the api_result, id, viewUrl and result_hash are the genuine values it returned. The witness demo (demo/live-google-witness.mjs) replays this captured event deterministically so CI stays offline and reproducible, while the one step the witness vouches for points at a document you can actually open.",
+  "captured_at": "2026-06-13T16:23:18.535Z",
+  "source": "mcp__Google_Drive__create_file — real Google Drive MCP tool call, executed live.",
+  "account": "adamstx22@gmail.com",
+  "tool_call": {
+    "toolName": "mcp__Google_Drive__create_file",
+    "arguments": {
+      "title": "Lyhna Witness — Live Demo Artifact (2026-06-13)",
+      "contentMimeType": "text/plain"
+    }
+  },
+  "verdict": { "kind": "APPROVED" },
+  "runtime_report": { "returned": true, "result_hash": "sha256:c8f3f039022f9551" },
+  "api_result": {
+    "id": "1irX5Z8K5Os3M83Dc7_7J6nOYPItQmKu10rOvzFlp5eU",
+    "mimeType": "application/vnd.google-apps.document",
+    "title": "Lyhna Witness — Live Demo Artifact (2026-06-13)",
+    "createdTime": "2026-06-13T16:23:16.675Z",
+    "modifiedTime": "2026-06-13T16:23:18.535Z",
+    "owner": "adamstx22@gmail.com"
+  },
+  "verify_url": "https://docs.google.com/document/d/1irX5Z8K5Os3M83Dc7_7J6nOYPItQmKu10rOvzFlp5eU/edit"
+}
