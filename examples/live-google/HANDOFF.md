@@ -35,9 +35,9 @@ Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log th
 _(none)_
 
 ## Proof / References
-- google_doc: https://docs.google.com/document/d/1irX5Z8K5Os3M83Dc7_7J6nOYPItQmKu10rOvzFlp5eU/edit
-- result_hash: sha256:c8f3f039022f9551
-- captured_at: 2026-06-13T16:23:18.535Z
+- google_doc: https://docs.google.com/document/d/19KXYrVUZSY40XbVLw9CSzCV0WUU-zi018BYWm2mza30/edit
+- result_hash: sha256:672f0118c87f2850
+- captured_at: 2026-06-13T16:40:25.868Z
 
 ## Settled Decisions
 - The prospect tracker document exists — it is the one action the witness can vouch for.

@@ -20,8 +20,8 @@ Start from these next actions:
 - Do NOT tell the prospects they were contacted — no email or CRM write was witnessed. Re-run the outreach through the proxy and confirm each send returns before reporting it as done.
 
 Proof / references the witness recorded — carry these forward so the vouched-for work stays verifiable:
-- google_doc: https://docs.google.com/document/d/1irX5Z8K5Os3M83Dc7_7J6nOYPItQmKu10rOvzFlp5eU/edit
-- result_hash: sha256:c8f3f039022f9551
-- captured_at: 2026-06-13T16:23:18.535Z
+- google_doc: https://docs.google.com/document/d/19KXYrVUZSY40XbVLw9CSzCV0WUU-zi018BYWm2mza30/edit
+- result_hash: sha256:672f0118c87f2850
+- captured_at: 2026-06-13T16:40:25.868Z
 
 NOT safe to send/continue until the unverified steps and any required approvals above are resolved.

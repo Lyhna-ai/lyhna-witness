@@ -14,7 +14,7 @@
         "system": "google_drive",
         "action": "create_file",
         "returned": true,
-        "result_hash": "sha256:c8f3f039022f9551"
+        "result_hash": "sha256:672f0118c87f2850"
       },
       "labels": [
         "SUPPORTED"
@@ -77,8 +77,8 @@
   "do_not_re_litigate": [],
   "safe_to_continue": false,
   "proof_refs": {
-    "google_doc": "https://docs.google.com/document/d/1irX5Z8K5Os3M83Dc7_7J6nOYPItQmKu10rOvzFlp5eU/edit",
-    "result_hash": "sha256:c8f3f039022f9551",
-    "captured_at": "2026-06-13T16:23:18.535Z"
+    "google_doc": "https://docs.google.com/document/d/19KXYrVUZSY40XbVLw9CSzCV0WUU-zi018BYWm2mza30/edit",
+    "result_hash": "sha256:672f0118c87f2850",
+    "captured_at": "2026-06-13T16:40:25.868Z"
   }
 }
