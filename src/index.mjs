@@ -6,3 +6,8 @@ export {
   renderHandoffMarkdown,
   renderNextAiPrompt
 } from "./generate.mjs";
+export {
+  resolveWitnessedAction,
+  witnessedFromEvent,
+  runFromWitnessedEvents
+} from "./witnessed-event.mjs";

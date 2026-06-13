@@ -33,7 +33,9 @@ jobs:
         run: npm test
 
       - name: Regenerate demo artifacts
-        run: npm run demo
+        run: |
+          npm run demo
+          npm run demo:live
 
       - name: Assert committed demo output did not drift
         run: |
@@ -43,7 +45,7 @@ jobs:
           changes="$(git status --porcelain -- examples/)"
           if [ -n "$changes" ]; then
             echo "::error::Committed examples/ output is out of sync with the generator." \
-                 "Run 'npm run demo' and commit the regenerated artifacts."
+                 "Run 'npm run demo' / 'npm run demo:live' and commit the regenerated artifacts."
             echo "$changes"
             exit 1
           fi
