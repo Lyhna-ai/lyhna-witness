@@ -45,6 +45,19 @@ function normalizeActionPart(value) {
 }
 
 /**
+ * Strip a leading MCP client namespace (`mcp__<server>__<tool>` → `<tool>`) so the mirrored
+ * wrapper-family descriptors, which match the bare tool name, still fire on a namespaced wrapper.
+ * Server names may contain underscores (e.g. `Google_Drive`), so split on the FIRST `__` after the
+ * `mcp__` prefix. A name without that shape is returned unchanged.
+ */
+function stripMcpNamespace(toolName) {
+  if (!toolName.startsWith("mcp__")) return toolName;
+  const rest = toolName.slice("mcp__".length);
+  const sep = rest.indexOf("__");
+  return sep >= 0 ? rest.slice(sep + 2) : toolName;
+}
+
+/**
  * Split a non-wrapper tool name into { system, action } by common MCP conventions:
  * `mcp__Server__tool`, `server__tool`, or `server.tool`. A flat name with no separator IS the
  * system (no derivable sub-action). Conservative: never invents a split that is not in the name.
@@ -101,7 +114,13 @@ function readOperationValues(declaredArguments, fieldPaths) {
  */
 export function resolveWitnessedAction(call) {
   const toolName = call?.toolName ?? "";
-  const descriptor = WRAPPER_FAMILY_DESCRIPTORS.find((d) => d.matchesToolName(toolName));
+  // An MCP trace namespaces tools as `mcp__<server>__<tool>`. The wrapper-family descriptors are
+  // mirrored verbatim from the proxy, which matches the BARE tool name — so strip the client-side
+  // namespace before matching, or a namespaced wrapper (mcp__zapier__execute_zapier_*_action) would
+  // slip past the crack-open and lose its wrapped app/action. Non-wrapper tools keep the original
+  // name so the server segment can still serve as the system.
+  const bareToolName = stripMcpNamespace(toolName);
+  const descriptor = WRAPPER_FAMILY_DESCRIPTORS.find((d) => d.matchesToolName(bareToolName));
   if (!descriptor) {
     // No hidden route. Best-effort split into system + action by common MCP tool-name conventions
     // so the claim ("gmail" / "send") can be compared to the witnessed call ("gmail.send").

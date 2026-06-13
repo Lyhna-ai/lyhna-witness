@@ -21,6 +21,25 @@ test("resolveWitnessedAction cracks a Zapier wrapper call into its true app.acti
   });
 });
 
+test("resolveWitnessedAction cracks a NAMESPACED wrapper call (mcp__zapier__execute_zapier_*)", () => {
+  // The MCP client namespaces the wrapper tool; the crack-open must still fire.
+  const r = resolveWitnessedAction({
+    toolName: "mcp__zapier__execute_zapier_google_docs_action",
+    arguments: JSON.stringify({ app: "google_docs", action: "create_document" })
+  });
+  assert.deepEqual(r, {
+    system: "zapier",
+    app: "google_docs",
+    action: "create_document",
+    wrapper_family: "zapier"
+  });
+});
+
+test("a namespaced non-wrapper tool keeps its server as system (mcp__Google_Drive__create_file)", () => {
+  const r = resolveWitnessedAction({ toolName: "mcp__Google_Drive__create_file" });
+  assert.deepEqual(r, { system: "google_drive", app: null, action: "create_file", wrapper_family: null });
+});
+
 test("resolveWitnessedAction splits a non-wrapper tool into system + action (no hidden route)", () => {
   assert.deepEqual(resolveWitnessedAction({ toolName: "gmail.send", arguments: {} }), {
     system: "gmail",
