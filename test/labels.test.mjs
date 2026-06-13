@@ -91,6 +91,20 @@ test("route-only mismatch (same action/result via another path) is NOT marked UN
   assert.ok(!r.labels.includes(L.DO_NOT_SEND));
 });
 
+test("wrapper route seen but operation UNREADABLE → NEEDS_EVIDENCE + UNSUPPORTED, never SUPPORTED", () => {
+  // The witness saw a Zapier call return, but could not read which app/action — so a claim that a
+  // specific thing happened is unverified, even though the call returned.
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "google_docs", action: "create_document", result: "created", user_facing: true },
+    witnessed: { system: "zapier", wrapper_family: "zapier", returned: true }
+  });
+  assert.ok(r.labels.includes(L.NEEDS_EVIDENCE));
+  assert.ok(r.labels.includes(L.UNSUPPORTED));
+  assert.ok(r.labels.includes(L.DO_NOT_SEND));
+  assert.ok(!r.labels.includes(L.SUPPORTED));
+});
+
 test("witnessed failure → UNSUPPORTED (+ DO_NOT_SEND when user-facing)", () => {
   const r = computeStepLabels({
     index: 0,

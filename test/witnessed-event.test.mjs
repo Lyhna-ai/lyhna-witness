@@ -99,6 +99,29 @@ test("witnessedFromEvent: an error_hash on the runtime report → result 'error'
   assert.equal(witnessed.error_hash, "sha256:err");
 });
 
+test("end to end: an approved wrapper call with UNREADABLE args does not read as safe", () => {
+  // The witness saw a Zapier call return, but its args did not disclose the operation. A returned
+  // call must not let a user-facing claim be marked safe when the app/action was never verified.
+  const h = buildWitnessedHandoff(
+    runFromWitnessedEvents({
+      objective: "Create the doc in Google.",
+      steps: [
+        {
+          claim: { system: "google_docs", action: "create_document", result: "created", user_facing: true },
+          event: {
+            call: { toolName: "execute_zapier_google_docs_action", arguments: "<<not json>>" },
+            verdict: { kind: "APPROVED" },
+            runtime_report: { returned: true }
+          }
+        }
+      ]
+    })
+  );
+  assert.ok(h.steps[0].labels.includes("NEEDS_EVIDENCE"));
+  assert.ok(h.steps[0].labels.includes("UNSUPPORTED"));
+  assert.equal(h.safe_to_continue, false);
+});
+
 test("end to end: the Hermes catch reproduced from REAL proxy-shaped events", () => {
   // Same story as the hand-mocked demo, but the witnessed side is now derived from a wrapper tool
   // call + judgment verdict + runtime report — the proxy's actual event vocabulary.
