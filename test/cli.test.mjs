@@ -93,8 +93,16 @@ test("CLI fails cleanly when steps is not an array (no stack trace)", () => {
   const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
   const { code, stderr } = run(["-", dir], { input: JSON.stringify({ steps: {} }) });
   assert.equal(code, 2);
-  assert.match(stderr, /steps must be an array/);
+  assert.match(stderr, /steps is required and must be an array/);
   assert.doesNotMatch(stderr, /at \w+/); // not a Node stack trace
+});
+
+test("CLI fails closed when steps is omitted (no fail-open SAFE handoff from nothing)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  // A dropped capture (no steps) must NOT exit 0 / SAFE_TO_CONTINUE under --gate.
+  const { code, stderr } = run(["-", dir, "--gate"], { input: JSON.stringify({ objective: "Send the email" }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /steps is required/);
 });
 
 test("CLI fails cleanly on a malformed step entry (e.g. null), not a crash", () => {

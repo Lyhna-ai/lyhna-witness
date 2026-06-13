@@ -53,8 +53,11 @@ try {
 if (input === null || typeof input !== "object" || Array.isArray(input)) {
   fail("input must be a JSON object (a runFromWitnessedEvents payload)");
 }
-if (input.steps !== undefined && !Array.isArray(input.steps)) {
-  fail("input.steps must be an array of { claim, event } steps");
+// `steps` must be PRESENT and an array. A missing steps field is treated as a dropped/malformed
+// capture and fails closed — never let it default to [] and emit a SAFE_TO_CONTINUE handoff from
+// nothing (a fail-open at the safety boundary). An explicit [] is a deliberate zero-step run.
+if (!Array.isArray(input.steps)) {
+  fail("input.steps is required and must be an array of { claim, event } steps");
 }
 
 // The CLI is the runtime boundary for captured events: a malformed-but-valid-JSON payload (a null
