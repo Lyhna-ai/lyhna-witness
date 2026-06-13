@@ -30,16 +30,23 @@ export function buildWitnessedHandoff(run) {
   const unsupported = steps.filter((s) => has(s, L.UNSUPPORTED)).map((s) => s.index);
   const do_not_send = steps.filter((s) => has(s, L.DO_NOT_SEND)).map((s) => s.index);
 
-  // SAFE_TO_CONTINUE is honest and conservative: not safe if anything is flagged DO_NOT_SEND,
-  // or if any user-facing step is UNSUPPORTED. Mismatches alone surface a review note but do not
-  // by themselves block continuation (the route differed; the work may still be fine).
-  const safe_to_continue = do_not_send.length === 0 && unsupported.length === 0;
+  // SAFE_TO_CONTINUE is honest and conservative: not safe if anything is flagged DO_NOT_SEND, if
+  // any step is UNSUPPORTED, or if any step still NEEDS_HUMAN_APPROVAL — the next AI must not proceed
+  // past a step a human has to sign off on. Mismatches alone surface a review note but do not by
+  // themselves block continuation (the route differed; the work may still be fine).
+  const safe_to_continue =
+    do_not_send.length === 0 && unsupported.length === 0 && needs_human_approval.length === 0;
 
   return {
     schema: WITNESSED_HANDOFF_SCHEMA,
     objective: run.objective ?? "",
     steps,
-    systems_touched: [...new Set(steps.map((s) => s.witnessed?.system).filter(Boolean))],
+    // Include the wrapped business app, not just the outer route: a `zapier → google_docs` call
+    // records BOTH "zapier" and "google_docs", so this human-facing inventory does not under-report
+    // the system the witness actually saw touched underneath a wrapper family.
+    systems_touched: [
+      ...new Set(steps.flatMap((s) => [s.witnessed?.system, s.witnessed?.app]).filter(Boolean))
+    ],
     summary: {
       total_steps: steps.length,
       supported: steps.filter((s) => has(s, L.SUPPORTED)).length,

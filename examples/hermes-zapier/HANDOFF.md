@@ -23,6 +23,7 @@ Draft the client onboarding doc, save it to the client's Google Drive, and confi
 
 ## Systems Touched
 - zapier
+- google_docs
 - gmail
 
 ## Supported Work

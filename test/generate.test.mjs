@@ -55,7 +55,25 @@ test("safe_to_continue is false when any step is DO_NOT_SEND / UNSUPPORTED", () 
   assert.equal(h.safe_to_continue, false);
   assert.equal(h.summary.mismatches, 1);
   assert.equal(h.summary.do_not_send, 1);
-  assert.deepEqual(h.systems_touched, ["zapier", "gmail"]);
+  // The wrapped app (google_docs, seen under the zapier wrapper) is inventoried too, not just the route.
+  assert.deepEqual(h.systems_touched, ["zapier", "google_docs", "gmail"]);
+});
+
+test("safe_to_continue is false while a step still NEEDS_HUMAN_APPROVAL", () => {
+  const h = buildWitnessedHandoff({
+    objective: "Refund the customer.",
+    steps: [
+      {
+        needs_human_approval: true,
+        claimed: { system: "stripe", action: "refund", result: "refunded" },
+        witnessed: { system: "stripe", action: "refund", result: "refunded", returned: true }
+      }
+    ]
+  });
+  // Every label-level check passes (supported, no do-not-send), but a human still has to sign off,
+  // so the handoff must NOT tell the next AI it is safe to proceed.
+  assert.deepEqual(h.needs_human_approval, [0]);
+  assert.equal(h.safe_to_continue, false);
 });
 
 test("a fully clean run is safe_to_continue", () => {
