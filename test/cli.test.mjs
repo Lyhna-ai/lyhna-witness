@@ -140,3 +140,26 @@ test("CLI rejects a claim with no system", () => {
   assert.equal(code, 2);
   assert.match(stderr, /claim\.system must be a non-empty string/);
 });
+
+test("CLI requires a verdict on an event (truncated capture is not safe)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  const { code, stderr } = run(["-", dir, "--gate"], { input: JSON.stringify({ steps: [{ event: { call: { toolName: "gmail.send" } } }] }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /verdict\.kind must be a non-empty string/);
+});
+
+test("CLI requires runtime_report.returned for an APPROVED event", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  const { code, stderr } = run(["-", dir], { input: JSON.stringify({ steps: [{ event: { call: { toolName: "gmail.send" }, verdict: { kind: "APPROVED" } } }] }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /runtime_report\.returned .* required for an APPROVED/);
+});
+
+test("CLI: a no-claim REFUSED event is valid but does NOT pass --gate (labeler fail-closed)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  // Legitimate blocked event (no runtime report) — accepted by validation, but an unclaimed
+  // non-successful observation must not read as SAFE_TO_CONTINUE.
+  const { code, stdout } = run(["-", dir, "--gate"], { input: JSON.stringify({ steps: [{ event: { call: { toolName: "stripe.refund" }, verdict: { kind: "REFUSED" } } }] }) });
+  assert.equal(code, 3);
+  assert.match(stdout, /DO_NOT_CONTINUE/);
+});

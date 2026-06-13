@@ -52,11 +52,21 @@ function validateSteps(steps) {
       if (!isPlainObject(e.call) || !isNonEmptyString(e.call.toolName)) {
         fail(`${at}.event.call.toolName must be a non-empty string`);
       }
-      if (e.verdict !== undefined && e.verdict !== null && !isPlainObject(e.verdict)) {
-        fail(`${at}.event.verdict must be an object`);
+      // A proxy-captured event always carries a judgment verdict. Require it — a truncated event with
+      // no verdict would otherwise be treated as a bare observation and read as safe.
+      if (!isPlainObject(e.verdict) || !isNonEmptyString(e.verdict.kind)) {
+        fail(`${at}.event.verdict.kind must be a non-empty string`);
       }
       if (e.runtime_report !== undefined && e.runtime_report !== null && !isPlainObject(e.runtime_report)) {
         fail(`${at}.event.runtime_report must be an object`);
+      }
+      // An APPROVED (forwarded) call always has a runtime report with a boolean `returned` — that is
+      // the result the witness vouches on. Require it; absence means a truncated capture, not success.
+      // A blocked verdict (REFUSED/ESCALATED) legitimately has no runtime report.
+      if (e.verdict.kind.trim().toLowerCase() === "approved") {
+        if (!isPlainObject(e.runtime_report) || typeof e.runtime_report.returned !== "boolean") {
+          fail(`${at}.event.runtime_report.returned (boolean) is required for an APPROVED event`);
+        }
       }
     }
   });

@@ -127,10 +127,22 @@ export function computeStepLabels(step) {
     return finalize(step, labels, notes, claimed, witnessed);
   }
 
-  // A witnessed step with no claim is recorded as supported observation (nothing to contradict).
+  // A witnessed step with no claim is recorded as an observation. It is SUPPORTED only if the call
+  // actually succeeded — a no-claim call that did NOT return (a failure, or a REFUSED/ESCALATED
+  // verdict the witness records as returned:false) must not read as supported work, or an unclaimed
+  // failed observation would let the run be marked safe_to_continue (fail-open).
   if (!claimed && witnessed) {
-    labels.push(L.SUPPORTED);
-    notes.push(`Witnessed tool call with no agent claim attached; recorded as observed.`);
+    const observedFailure = witnessed.returned === false || isErrorResult(witnessed.result);
+    if (observedFailure) {
+      labels.push(L.UNSUPPORTED);
+      notes.push(
+        `Witnessed tool call with no agent claim that did not succeed (${witnessed.result ?? "no result returned"}); ` +
+          `recorded as an observed failure, not supported work.`
+      );
+    } else {
+      labels.push(L.SUPPORTED);
+      notes.push(`Witnessed tool call with no agent claim attached; recorded as observed.`);
+    }
     return finalize(step, labels, notes, claimed, witnessed);
   }
 
