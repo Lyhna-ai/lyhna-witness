@@ -148,6 +148,21 @@ export function computeStepLabels(step) {
     notes.push(`The tool call ran but did not succeed (result: ${witnessed.result ?? "error"}).`);
   }
 
+  // 2b) Wrapper route seen, but the operation under it was UNREADABLE. The witness saw a call go
+  //     through a wrapper family (e.g. Zapier) and return, but could not determine which app/action
+  //     it performed — so it cannot vouch that the claimed app/action actually happened. A returned
+  //     call is NOT evidence for the specific claim; treat it as needing evidence (and, with a claim,
+  //     unsupported) rather than letting a bare wrapper return read as "safe".
+  const operationUnverified = Boolean(norm(witnessed.wrapper_family)) && !norm(witnessed.app);
+  if (operationUnverified) {
+    labels.push(L.NEEDS_EVIDENCE, L.UNSUPPORTED);
+    if (userFacing) labels.push(L.DO_NOT_SEND);
+    notes.push(
+      `The witness saw a ${witnessed.wrapper_family} call return, but could not read which app or ` +
+        `action it performed — there is no evidence the claimed step actually happened.`
+    );
+  }
+
   // 3) Claimed-vs-actual mismatch. Two independent axes, either of which fires the label:
   //    (a) the ROUTE differs (the Hermes catch — "said Google, witness saw Zapier"); and/or
   //    (b) the ACTION or RESULT differs (same system, but "said it sent" / witness saw a draft).
@@ -169,7 +184,7 @@ export function computeStepLabels(step) {
   }
 
   // 4) Agreement.
-  if (!failed && !mismatch) {
+  if (!failed && !mismatch && !operationUnverified) {
     labels.push(L.SUPPORTED);
     notes.push(`The agent's account matches what the witness observed.`);
   }

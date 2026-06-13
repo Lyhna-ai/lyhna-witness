@@ -25,7 +25,7 @@ Labels are computed by fixed rules — `SUPPORTED`, `CLAIMED_ACTUAL_MISMATCH`, `
 determinism is the trust.
 
 ```bash
-npm test     # 14 tests, node:test, no install needed (Node >= 20)
+npm test     # node:test, no install needed (Node >= 20)
 npm run demo # the Hermes/Zapier "claimed Google, used Zapier" demo
 ```
 
@@ -42,13 +42,32 @@ business owner must see:
 ### Layout
 
 ```
-src/labels.mjs      deterministic per-step trust labels (claimed vs. actual)
-src/generate.mjs    build witnessed-handoff/v1 + render HANDOFF.md / next-ai-prompt.md
-src/index.mjs       public surface
-test/               node:test suite (14 tests)
-demo/hermes-zapier.mjs   the brutal demo
-examples/hermes-zapier/  committed sample output (HANDOFF.md, handoff.json, next-ai-prompt.md)
+src/labels.mjs           deterministic per-step trust labels (claimed vs. actual)
+src/generate.mjs         build witnessed-handoff/v1 + render HANDOFF.md / next-ai-prompt.md
+src/witnessed-event.mjs  adapter: proxy event vocabulary (wrapper call + verdict + runtime report) → step
+src/index.mjs            public surface
+test/                    node:test suite
+demo/hermes-zapier.mjs        the brutal demo (hand-authored witnessed side)
+demo/zapier-google-witness.mjs   the same catch, driven by proxy-shaped events
+examples/                committed sample output (HANDOFF.md, handoff.json, next-ai-prompt.md)
 ```
+
+## Wiring to real witnessed events (BUILD-PLAN slice 5)
+
+`src/witnessed-event.mjs` is the bridge from the proxy's real event vocabulary to the labeler.
+It mirrors the frozen wrapper-registry (`lyhna-mcp-proxy/src/extractors/wrapper-registry.ts`) to
+crack a wrapper call (`execute_zapier_<app>_action`) open into its true `zapier.<app>.<action>`, and
+maps the judgment-ledger `verdict` (APPROVED/ESCALATED/REFUSED) + `runtime_report`
+(`returned` / `result_hash` / `error_hash`) into the witnessed half of a step. The agent's **claim**
+(`record_claim` — net-new, since the content-blind proxy never stores it) is supplied alongside.
+
+```bash
+npm run demo:live  # the Zapier/Google catch, built from proxy-shaped events (not hand-authored)
+```
+
+On a successful call the witness records only `returned: true` (+ the result hash) — it does **not**
+invent a semantic result (`"sent"`, `"created"`), because it did not observe one. That restraint is
+the V1 line in code: witness what crossed the boundary; never fabricate what you didn't see.
 
 ## V1 promise (the honesty ceiling)
 

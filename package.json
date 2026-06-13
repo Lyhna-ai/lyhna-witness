@@ -7,7 +7,8 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "node --test",
-    "demo": "node demo/hermes-zapier.mjs"
+    "demo": "node demo/hermes-zapier.mjs",
+    "demo:live": "node demo/zapier-google-witness.mjs"
   },
   "license": "UNLICENSED"
 }
