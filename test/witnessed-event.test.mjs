@@ -220,3 +220,30 @@ test("end to end: LIVE catch — one REAL Google call vouched for, fabricated ou
   assert.deepEqual(h.systems_touched, ["google_drive"]);
   assert.equal(h.proof_refs.result_hash, "sha256:c8f3f039022f9551");
 });
+
+test("end to end: UNIVERSAL catch — 'said sent, only drafted' on real Gmail traffic", () => {
+  // The shape demo:gmail builds from two real mcp__Gmail__create_draft calls. Same witnessed action
+  // both times (gmail.create_draft); only the CLAIM differs. The witness must catch the step that
+  // calls a draft a send, and vouch for the step that honestly reports a draft.
+  const draft = (hash) => ({
+    call: { toolName: "mcp__Gmail__create_draft", arguments: JSON.stringify({ to: ["x@y.example"] }) },
+    verdict: { kind: "APPROVED" },
+    runtime_report: { returned: true, result_hash: hash }
+  });
+  const run = runFromWitnessedEvents({
+    objective: "Send the follow-up; prepare the cover note.",
+    steps: [
+      { claim: { system: "gmail", action: "send", result: "sent the follow-up", user_facing: true }, event: draft("sha256:2879154e8e065626") },
+      { claim: { system: "gmail", action: "create_draft", result: "saved a draft for review", user_facing: true }, event: draft("sha256:1c0972132e7344f3") }
+    ]
+  });
+  const h = buildWitnessedHandoff(run);
+  // Step 1: claimed a send, witness saw a draft → mismatch + unsupported + do-not-send.
+  assert.ok(h.steps[0].labels.includes("CLAIMED_ACTUAL_MISMATCH"));
+  assert.ok(h.steps[0].labels.includes("UNSUPPORTED"));
+  assert.ok(h.steps[0].labels.includes("DO_NOT_SEND"));
+  // Step 2: an honestly-reported draft is SUPPORTED — drafting itself is never the crime.
+  assert.deepEqual(h.steps[1].labels, ["SUPPORTED"]);
+  assert.equal(h.safe_to_continue, false);
+  assert.deepEqual(h.systems_touched, ["gmail"]);
+});

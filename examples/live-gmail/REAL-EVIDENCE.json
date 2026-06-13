@@ -1,0 +1,28 @@
+{
+  "_note": "REAL captured evidence, not a hand-authored fixture. Both events below are actual mcp__Gmail__create_draft calls executed live in a Lyhna agent session — and both are DRAFTS that were never sent (creating a draft sends nothing). The result ids and hashes are genuine; the owner email and recipients are redacted/synthetic. The demo (demo/live-gmail-witness.mjs) replays these captured events deterministically so CI stays offline. This is the UNIVERSAL-adapter path — direct single-system MCP tools, no wrapper family — which is the ~85% case, in contrast to the wrapper-family (Zapier/Apify) catch proven in slice 5.",
+  "captured_at": "2026-06-13T17:29:40Z",
+  "source": "mcp__Gmail__create_draft — real Gmail MCP calls, executed live. Both are DRAFTS; neither was sent.",
+  "account": "[redacted-owner]",
+  "events": [
+    {
+      "label": "claimed-sent-but-only-drafted",
+      "tool_call": {
+        "toolName": "mcp__Gmail__create_draft",
+        "arguments": { "to": ["[redacted-prospect]"], "subject": "Q3 partnership — next steps" }
+      },
+      "verdict": { "kind": "APPROVED" },
+      "runtime_report": { "returned": true, "result_hash": "sha256:2879154e8e065626" },
+      "api_result": { "id": "r6441883296239929863" }
+    },
+    {
+      "label": "honestly-reported-draft",
+      "tool_call": {
+        "toolName": "mcp__Gmail__create_draft",
+        "arguments": { "to": ["[redacted-prospect]"], "subject": "Draft for your review: Borealis proposal cover note" }
+      },
+      "verdict": { "kind": "APPROVED" },
+      "runtime_report": { "returned": true, "result_hash": "sha256:1c0972132e7344f3" },
+      "api_result": { "id": "r2385708481475645764" }
+    }
+  ]
+}
