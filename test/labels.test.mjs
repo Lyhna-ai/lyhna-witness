@@ -138,6 +138,12 @@ test("needs_human_approval routes to a person, never auto-decided", () => {
   assert.ok(r.labels.includes(L.NEEDS_HUMAN_APPROVAL));
 });
 
+test("NEEDS_HUMAN_APPROVAL survives every early-return path (even a bare approval-only step)", () => {
+  // No claim, no witnessed call — just an approval gate. The label must still be applied.
+  const r = computeStepLabels({ index: 0, needs_human_approval: true });
+  assert.ok(r.labels.includes(L.NEEDS_HUMAN_APPROVAL));
+});
+
 test("labels are deduplicated and the result shape is stable", () => {
   const r = computeStepLabels({ index: 3, claimed: null, witnessed: null });
   assert.equal(r.index, 3);

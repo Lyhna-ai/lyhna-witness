@@ -80,6 +80,18 @@ test("safe_to_continue is false while a step still NEEDS_HUMAN_APPROVAL", () => 
   assert.match(p, /Step 1: awaiting human approval/);
 });
 
+test("a bare approval-only step (no claim/witness) is NOT marked safe to continue", () => {
+  // Regression: the approval label must reach the handoff even when the step has no claim or
+  // witnessed call, or safe_to_continue would wrongly come back true.
+  const h = buildWitnessedHandoff({
+    objective: "Wait for the owner to approve the wire transfer.",
+    steps: [{ needs_human_approval: true }]
+  });
+  assert.deepEqual(h.needs_human_approval, [0]);
+  assert.equal(h.safe_to_continue, false);
+  assert.match(renderNextAiPrompt(h), /Step 1: awaiting human approval/);
+});
+
 test("an action/result mismatch on a user-facing step makes the run NOT safe to continue", () => {
   const h = buildWitnessedHandoff({
     objective: "Email the client the signed contract.",

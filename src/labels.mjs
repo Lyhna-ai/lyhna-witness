@@ -131,7 +131,6 @@ export function computeStepLabels(step) {
   if (!claimed && witnessed) {
     labels.push(L.SUPPORTED);
     notes.push(`Witnessed tool call with no agent claim attached; recorded as observed.`);
-    if (step.needs_human_approval) labels.push(L.NEEDS_HUMAN_APPROVAL);
     return finalize(step, labels, notes, claimed, witnessed);
   }
 
@@ -175,13 +174,14 @@ export function computeStepLabels(step) {
     notes.push(`The agent's account matches what the witness observed.`);
   }
 
-  // 5) Human approval is never decided by a model — it is routed to a person.
-  if (step.needs_human_approval) labels.push(L.NEEDS_HUMAN_APPROVAL);
-
   return finalize(step, labels, notes, claimed, witnessed);
 }
 
 function finalize(step, labels, notes, claimed, witnessed) {
+  // Human approval is never decided by a model — it is routed to a person. Applied HERE, in the
+  // one function every return path flows through, so the label survives all of computeStepLabels'
+  // early returns (an unwitnessed-but-approval-gated step must not silently drop it and read safe).
+  if (step.needs_human_approval) labels.push(TRUST_LABELS.NEEDS_HUMAN_APPROVAL);
   return {
     index: typeof step.index === "number" ? step.index : 0,
     claimed: claimed ?? null,
