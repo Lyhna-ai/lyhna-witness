@@ -262,6 +262,14 @@ export function renderOkfBundle(handoff, options = {}) {
           : ["- _(none)_"];
       })(),
       ``,
+      `These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:`,
+      ...(() => {
+        const gated = (handoff.steps ?? []).filter((s) => (s.labels ?? []).includes("NEEDS_HUMAN_APPROVAL"));
+        return gated.length
+          ? gated.map((s) => `- [Step ${s.index + 1}](../steps/${stepSlug(s.index)}.md): ${s.human_note ?? "awaiting human approval"}`)
+          : ["- _(none)_"];
+      })(),
+      ``,
       `**Next actions:**`,
       (handoff.next_actions ?? []).length ? (handoff.next_actions ?? []).map((x) => `- ${x}`).join("\n") : "- _(none)_",
       ``

@@ -24,5 +24,8 @@ These steps are UNVERIFIED by the tool-call witness — do not assume they happe
 - [Step 1](../steps/step-001.md): The agent said it used google_docs directly, but the witness saw it routed through zapier (zapier → google_docs.create_document). Same end app or not, the path you were told is not the path it took.
 - [Step 2](../steps/step-002.md): The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
+These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:
+- _(none)_
+
 **Next actions:**
 - Confirm the document was actually shared before telling the client it is ready.

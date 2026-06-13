@@ -121,3 +121,20 @@ test("a safe handoff with no proof refs omits proof_refs and reads safe", () => 
   assert.equal(scalarField(fm, "safe_to_continue"), true);
   assert.doesNotMatch(fm, /^proof_refs:/m);
 });
+
+test("OKF prompt names approval-gated steps when a run is unsafe only due to NEEDS_HUMAN_APPROVAL", () => {
+  const h = buildWitnessedHandoff({
+    objective: "x",
+    steps: [
+      {
+        claimed: { system: "stripe", action: "refund", result: "refunded" },
+        witnessed: { system: "stripe", action: "refund", returned: true },
+        needs_human_approval: true
+      }
+    ]
+  });
+  assert.equal(h.safe_to_continue, false); // unsafe ONLY because of the approval gate
+  const prompt = renderOkfBundle(h, { name: "appr" })["prompts/next-ai-prompt.md"];
+  assert.match(prompt, /REQUIRE HUMAN APPROVAL/);
+  assert.match(prompt, /\[Step 1\]\(\.\.\/steps\/step-001\.md\)/);
+});
