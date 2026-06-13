@@ -67,6 +67,11 @@ function frontmatter(pairs) {
   return lines.join("\n");
 }
 
+const proofRefPairs = (proofRefs) =>
+  proofRefs && typeof proofRefs === "object" && !Array.isArray(proofRefs)
+    ? Object.entries(proofRefs).filter(([, v]) => v !== undefined && v !== null && v !== "")
+    : [];
+
 const stepSlug = (index) => `step-${String(index + 1).padStart(3, "0")}`;
 const distinctStepLabels = (handoff) =>
   [...new Set((handoff.steps ?? []).flatMap((s) => s.labels ?? []))].sort();
@@ -243,6 +248,16 @@ export function renderOkfBundle(handoff, options = {}) {
       ["safe_to_continue", Boolean(handoff.safe_to_continue)],
       ["handoff_resource", `../${handoffRel}`]
     ]);
+    // Mirror the canonical renderNextAiPrompt continuation context so an agent consuming ONLY this
+    // file still gets the settled/do-not-re-litigate guardrails, open questions, and proof pointers.
+    const listOr = (arr) => (arr.length ? arr : ["- _(none)_"]);
+    const stepLink = (s) => `- [Step ${s.index + 1}](../steps/${stepSlug(s.index)}.md): ${s.human_note ?? ""}`;
+    const settledAll = [...(handoff.settled ?? []), ...(handoff.do_not_re_litigate ?? [])];
+    const unverified = (handoff.steps ?? []).filter(
+      (s) => (s.labels ?? []).includes("UNSUPPORTED") || (s.labels ?? []).includes("CLAIMED_ACTUAL_MISMATCH")
+    );
+    const gated = (handoff.steps ?? []).filter((s) => (s.labels ?? []).includes("NEEDS_HUMAN_APPROVAL"));
+    const proofEntries = proofRefPairs(handoff.proof_refs);
     const body = [
       `# Safe Continuation Prompt`,
       ``,
@@ -250,28 +265,25 @@ export function renderOkfBundle(handoff, options = {}) {
       ``,
       `**Objective:** ${handoff.objective || "(none stated)"}`,
       ``,
+      `Treat these as SETTLED — do not re-litigate unless new evidence appears:`,
+      ...listOr(settledAll.map((x) => `- ${x}`)),
+      ``,
       `**Status:** ${handoff.safe_to_continue ? "Safe to continue." : "NOT safe to send/continue until the unverified steps and any required approvals are resolved."}`,
       ``,
       `These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not tell anyone they are done until confirmed:`,
-      ...(() => {
-        const unv = (handoff.steps ?? []).filter(
-          (s) => (s.labels ?? []).includes("UNSUPPORTED") || (s.labels ?? []).includes("CLAIMED_ACTUAL_MISMATCH")
-        );
-        return unv.length
-          ? unv.map((s) => `- [Step ${s.index + 1}](../steps/${stepSlug(s.index)}.md): ${s.human_note ?? ""}`)
-          : ["- _(none)_"];
-      })(),
+      ...listOr(unverified.map(stepLink)),
       ``,
       `These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:`,
-      ...(() => {
-        const gated = (handoff.steps ?? []).filter((s) => (s.labels ?? []).includes("NEEDS_HUMAN_APPROVAL"));
-        return gated.length
-          ? gated.map((s) => `- [Step ${s.index + 1}](../steps/${stepSlug(s.index)}.md): ${s.human_note ?? "awaiting human approval"}`)
-          : ["- _(none)_"];
-      })(),
+      ...listOr(gated.map((s) => `- [Step ${s.index + 1}](../steps/${stepSlug(s.index)}.md): ${s.human_note ?? "awaiting human approval"}`)),
+      ``,
+      `**Open questions:**`,
+      ...listOr((handoff.open_questions ?? []).map((x) => `- ${x}`)),
       ``,
       `**Next actions:**`,
-      (handoff.next_actions ?? []).length ? (handoff.next_actions ?? []).map((x) => `- ${x}`).join("\n") : "- _(none)_",
+      ...listOr((handoff.next_actions ?? []).map((x) => `- ${x}`)),
+      ``,
+      `**Proof / references** — carry these forward so the vouched-for work stays verifiable:`,
+      ...listOr(proofEntries.map(([k, v]) => `- ${k}: ${v}`)),
       ``
     ].join("\n");
     files["prompts/next-ai-prompt.md"] = `${fm}\n\n${body}`;

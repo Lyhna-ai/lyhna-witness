@@ -5,7 +5,7 @@
 // Writes the three handoff artifacts to examples/hermes-zapier/ and prints a plain-language
 // readout a non-technical business owner can act on — NOT a code review.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -62,6 +62,9 @@ writeFileSync(join(outDir, "next-ai-prompt.md"), nextPrompt);
 // portable directory of markdown + YAML frontmatter). OKF is the container; Lyhna is the witness.
 // Deterministic — no timestamp is passed, so none is written.
 const okf = renderOkfBundle(handoff, { name: "hermes-zapier" });
+// Clear the bundle dir first so a step/label that disappears does not leave a stale file behind
+// (the drift gate only diffs tracked files, so an orphaned file would not be flagged).
+rmSync(join(outDir, "okf"), { recursive: true, force: true });
 for (const [relPath, contents] of Object.entries(okf)) {
   const dest = join(outDir, "okf", relPath);
   mkdirSync(dirname(dest), { recursive: true });

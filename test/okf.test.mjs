@@ -138,3 +138,20 @@ test("OKF prompt names approval-gated steps when a run is unsafe only due to NEE
   assert.match(prompt, /REQUIRE HUMAN APPROVAL/);
   assert.match(prompt, /\[Step 1\]\(\.\.\/steps\/step-001\.md\)/);
 });
+
+test("OKF prompt carries continuation context (settled, do-not-re-litigate, open questions, proof refs)", () => {
+  const h = buildWitnessedHandoff({
+    objective: "x",
+    steps: [{ claimed: { system: "gmail", action: "send", result: "sent" }, witnessed: { system: "gmail", action: "send", returned: true } }],
+    settled: ["Format v2 agreed."],
+    do_not_re_litigate: ["The onboarding format."],
+    open_questions: ["Edit or view access?"],
+    proof_refs: { doc: "https://example.com/doc" }
+  });
+  const prompt = renderOkfBundle(h, { name: "ctx" })["prompts/next-ai-prompt.md"];
+  assert.match(prompt, /Treat these as SETTLED/);
+  assert.match(prompt, /Format v2 agreed\./);
+  assert.match(prompt, /The onboarding format\./);
+  assert.match(prompt, /Edit or view access\?/);
+  assert.match(prompt, /doc: https:\/\/example\.com\/doc/);
+});

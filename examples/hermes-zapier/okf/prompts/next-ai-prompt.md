@@ -18,6 +18,10 @@ Continuation handoff for [Witnessed Handoff: Draft the client onboarding doc, sa
 
 **Objective:** Draft the client onboarding doc, save it to the client's Google Drive, and confirm by email.
 
+Treat these as SETTLED — do not re-litigate unless new evidence appears:
+- Client onboarding template v2 is the agreed format.
+- The onboarding format — already agreed with the client.
+
 **Status:** NOT safe to send/continue until the unverified steps and any required approvals are resolved.
 
 These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not tell anyone they are done until confirmed:
@@ -27,5 +31,11 @@ These steps are UNVERIFIED by the tool-call witness — do not assume they happe
 These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:
 - _(none)_
 
+**Open questions:**
+- Should the client get edit access or view-only?
+
 **Next actions:**
 - Confirm the document was actually shared before telling the client it is ready.
+
+**Proof / references** — carry these forward so the vouched-for work stays verifiable:
+- _(none)_
