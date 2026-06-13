@@ -69,6 +69,33 @@ On a successful call the witness records only `returned: true` (+ the result has
 invent a semantic result (`"sent"`, `"created"`), because it did not observe one. That restraint is
 the V1 line in code: witness what crossed the boundary; never fabricate what you didn't see.
 
+## OKF-compatible export (a portable projection)
+
+Lyhna can emit a witnessed handoff as an **OKF-compatible bundle** — [Open Knowledge Format](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing/),
+a portable directory of markdown files with YAML frontmatter — beside the existing outputs:
+
+```
+examples/hermes-zapier/
+  HANDOFF.md  handoff.json  next-ai-prompt.md
+  okf/
+    index.md  log.md
+    handoffs/hermes-zapier.md      # type: Lyhna Witnessed Handoff
+    steps/step-001.md …            # type: Lyhna Witnessed Step
+    labels/CLAIMED_ACTUAL_MISMATCH.md …   # type: Lyhna Trust Label
+    prompts/next-ai-prompt.md      # type: Lyhna Safe Continuation Prompt
+```
+
+`renderOkfBundle(handoff, options)` returns the bundle as a `{ path: contents }` map (the demo writes
+it under `okf/`). It is deterministic — no clock, no model calls; a `timestamp` appears only if you
+pass one in `options`. Frontmatter carries the witness facts the format should preserve:
+`safe_to_continue`, `lyhna_labels`, the mismatch / unsupported / do-not-send counts, and `proof_refs`.
+
+**OKF is the container; Lyhna is the witness.** The bundle is a *portable export* for agents, repos,
+catalogs, and knowledge systems — it is **not** the source of truth. The source of truth remains the
+witnessed event sequence, the deterministic trust labels, `handoff.json`, and the proof spine. OKF can
+carry knowledge; Lyhna is what tells you which agent claims are supported, unsupported, mismatched, or
+unsafe to continue.
+
 ## V1 promise (the honesty ceiling)
 
 Action-level witness + evidence-bound continuation. Lyhna witnesses what crossed the boundary and

@@ -11,3 +11,4 @@ export {
   witnessedFromEvent,
   runFromWitnessedEvents
 } from "./witnessed-event.mjs";
+export { OKF_LYHNA_TYPES, renderOkfBundle } from "./okf.mjs";
