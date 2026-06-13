@@ -1,0 +1,152 @@
+// Lyhna Witness — deterministic trust labels (claimed vs. actual).
+//
+// The labels are computed from the event sequence by FIXED RULES, never by a model's opinion.
+// That determinism is the trust: Lyhna witnesses what crossed the tool boundary and compares it
+// to what the agent claimed. It does NOT judge whether the work was good, and it does NOT know
+// reality outside the observed path (see THESIS.md §6, the V1 promise).
+
+/** The full label vocabulary (THESIS.md §7). */
+export const TRUST_LABELS = Object.freeze({
+  SUPPORTED: "SUPPORTED",
+  UNSUPPORTED: "UNSUPPORTED",
+  NEEDS_EVIDENCE: "NEEDS_EVIDENCE",
+  NEEDS_HUMAN_APPROVAL: "NEEDS_HUMAN_APPROVAL",
+  CLAIMED_ACTUAL_MISMATCH: "CLAIMED_ACTUAL_MISMATCH",
+  SETTLED: "SETTLED",
+  REOPENED: "REOPENED",
+  SAFE_TO_CONTINUE: "SAFE_TO_CONTINUE",
+  DO_NOT_SEND: "DO_NOT_SEND",
+  DO_NOT_RE_LITIGATE: "DO_NOT_RE_LITIGATE"
+});
+
+const norm = (s) => (typeof s === "string" ? s.trim().toLowerCase() : "");
+
+/** A result string that denotes failure. Witnessed `returned === false` is also failure. */
+function isErrorResult(result) {
+  const r = norm(result);
+  return r === "error" || r === "failed" || r === "failure" || r === "timeout" || r === "rejected";
+}
+
+/**
+ * Path mismatch = the agent's claimed route is not the route the witness observed. Two cases:
+ *  (a) the call was routed through an undisclosed wrapper family (e.g. the agent claimed a direct
+ *      app but the witness saw it go through Zapier) — the Hermes catch; OR
+ *  (b) the claimed system simply differs from the witnessed system.
+ * Case (a) fires even when the underlying app matches (claimed google_docs, witnessed
+ * zapier→google_docs): the route the human was told is still wrong.
+ */
+function isPathMismatch(claimed, witnessed) {
+  if (!claimed || !witnessed) return false;
+  const wrapper = norm(witnessed.wrapper_family);
+  if (wrapper) {
+    const claimedRoute = norm(claimed.via) || norm(claimed.system);
+    if (claimedRoute !== wrapper) return true; // routed through a wrapper the agent did not disclose
+    // Wrapper disclosed: the claim is honest about the route, so compare the underlying app the
+    // agent named (claimed.system) to the app the witness saw under the wrapper (witnessed.app).
+    if (norm(claimed.system) && norm(witnessed.app) && norm(claimed.system) !== norm(witnessed.app)) {
+      return true;
+    }
+    return false;
+  }
+  return norm(claimed.system) !== norm(witnessed.system);
+}
+
+function mismatchNote(claimed, witnessed) {
+  const wrapper = norm(witnessed.wrapper_family);
+  if (wrapper && norm(claimed.system) !== wrapper) {
+    const under = [witnessed.app, witnessed.action].filter(Boolean).join(".");
+    return (
+      `The agent said it used ${claimed.system || "a direct integration"} directly, but the witness ` +
+      `saw it routed through ${witnessed.wrapper_family}` +
+      (under ? ` (${witnessed.wrapper_family} → ${under})` : "") +
+      `. Same end app or not, the path you were told is not the path it took.`
+    );
+  }
+  return (
+    `The agent said it used ${claimed.system || "(unspecified)"}, but the witness saw ` +
+    `${witnessed.system || "(unspecified)"}. The systems do not match.`
+  );
+}
+
+function claimedPhrase(claimed) {
+  if (!claimed) return "did something";
+  const sys = claimed.system ? ` in ${claimed.system}` : "";
+  return `${claimed.action || "completed a step"}${sys}`;
+}
+
+const dedup = (arr) => [...new Set(arr)];
+
+/**
+ * Compute the deterministic labels + a plain-language note for one step.
+ * @param {{index?:number, claimed?:object|null, witnessed?:object|null, needs_human_approval?:boolean, user_facing?:boolean}} step
+ * @returns {{index:number, claimed:object|null, witnessed:object|null, labels:string[], human_note:string}}
+ */
+export function computeStepLabels(step) {
+  const L = TRUST_LABELS;
+  const claimed = step.claimed ?? null;
+  const witnessed = step.witnessed ?? null;
+  const userFacing = Boolean(step.user_facing ?? claimed?.user_facing);
+  const labels = [];
+  const notes = [];
+
+  // 1) Claimed but never witnessed — the dangerous case. No evidence it happened.
+  if (claimed && !witnessed) {
+    labels.push(L.UNSUPPORTED, L.NEEDS_EVIDENCE);
+    if (userFacing) labels.push(L.DO_NOT_SEND);
+    notes.push(
+      `The agent claimed it ${claimedPhrase(claimed)}, but the witness saw no tool call for this step — ` +
+        `there is no evidence it actually happened.`
+    );
+    return finalize(step, labels, notes, claimed, witnessed);
+  }
+
+  // A witnessed step with no claim is recorded as supported observation (nothing to contradict).
+  if (!claimed && witnessed) {
+    labels.push(L.SUPPORTED);
+    notes.push(`Witnessed tool call with no agent claim attached; recorded as observed.`);
+    if (step.needs_human_approval) labels.push(L.NEEDS_HUMAN_APPROVAL);
+    return finalize(step, labels, notes, claimed, witnessed);
+  }
+
+  if (!claimed && !witnessed) {
+    labels.push(L.NEEDS_EVIDENCE);
+    notes.push(`Empty step: neither a claim nor a witnessed call.`);
+    return finalize(step, labels, notes, claimed, witnessed);
+  }
+
+  // 2) Witnessed failure.
+  const failed = witnessed.returned === false || isErrorResult(witnessed.result);
+  if (failed) {
+    labels.push(L.UNSUPPORTED);
+    if (userFacing) labels.push(L.DO_NOT_SEND);
+    notes.push(`The tool call ran but did not succeed (result: ${witnessed.result ?? "error"}).`);
+  }
+
+  // 3) Path mismatch (claimed route ≠ witnessed route).
+  const mismatch = isPathMismatch(claimed, witnessed);
+  if (mismatch) {
+    labels.push(L.CLAIMED_ACTUAL_MISMATCH);
+    notes.push(mismatchNote(claimed, witnessed));
+  }
+
+  // 4) Agreement.
+  if (!failed && !mismatch) {
+    labels.push(L.SUPPORTED);
+    notes.push(`The agent's account matches what the witness observed.`);
+  }
+
+  // 5) Human approval is never decided by a model — it is routed to a person.
+  if (step.needs_human_approval) labels.push(L.NEEDS_HUMAN_APPROVAL);
+
+  return finalize(step, labels, notes, claimed, witnessed);
+}
+
+function finalize(step, labels, notes, claimed, witnessed) {
+  return {
+    index: typeof step.index === "number" ? step.index : 0,
+    claimed: claimed ?? null,
+    witnessed: witnessed ?? null,
+    labels: dedup(labels),
+    human_note: notes.join(" ")
+  };
+}

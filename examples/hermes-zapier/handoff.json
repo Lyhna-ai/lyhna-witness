@@ -1,0 +1,89 @@
+{
+  "schema": "witnessed-handoff/v1",
+  "objective": "Draft the client onboarding doc, save it to the client's Google Drive, and confirm by email.",
+  "steps": [
+    {
+      "index": 0,
+      "claimed": {
+        "system": "google_docs",
+        "action": "create_document",
+        "result": "created",
+        "user_facing": true
+      },
+      "witnessed": {
+        "system": "zapier",
+        "app": "google_docs",
+        "action": "create_document",
+        "result": "created",
+        "returned": true,
+        "wrapper_family": "zapier",
+        "result_hash": "sha256:9f2c…"
+      },
+      "labels": [
+        "CLAIMED_ACTUAL_MISMATCH"
+      ],
+      "human_note": "The agent said it used google_docs directly, but the witness saw it routed through zapier (zapier → google_docs.create_document). Same end app or not, the path you were told is not the path it took."
+    },
+    {
+      "index": 1,
+      "claimed": {
+        "system": "google_drive",
+        "action": "share_with_client",
+        "result": "shared",
+        "user_facing": true
+      },
+      "witnessed": null,
+      "labels": [
+        "UNSUPPORTED",
+        "NEEDS_EVIDENCE",
+        "DO_NOT_SEND"
+      ],
+      "human_note": "The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened."
+    },
+    {
+      "index": 2,
+      "claimed": {
+        "system": "gmail",
+        "action": "send_confirmation",
+        "result": "sent",
+        "user_facing": true
+      },
+      "witnessed": {
+        "system": "gmail",
+        "action": "send_confirmation",
+        "result": "sent",
+        "returned": true
+      },
+      "labels": [
+        "SUPPORTED"
+      ],
+      "human_note": "The agent's account matches what the witness observed."
+    }
+  ],
+  "systems_touched": [
+    "zapier",
+    "gmail"
+  ],
+  "summary": {
+    "total_steps": 3,
+    "supported": 1,
+    "mismatches": 1,
+    "unsupported": 1,
+    "do_not_send": 1
+  },
+  "settled": [
+    "Client onboarding template v2 is the agreed format."
+  ],
+  "open_questions": [
+    "Should the client get edit access or view-only?"
+  ],
+  "next_actions": [
+    "Confirm the document was actually shared before telling the client it is ready."
+  ],
+  "needs_human_approval": [],
+  "do_not_re_litigate": [
+    "The onboarding format — already agreed with the client."
+  ],
+  "safe_to_continue": false,
+  "proof_refs": null
+}
