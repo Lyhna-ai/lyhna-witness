@@ -27,6 +27,41 @@ function fail(message, code = 2) {
   process.exit(code);
 }
 
+const isPlainObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
+
+// This CLI is the fail-CLOSED runtime seam for captured events. Validate every step (and its claim /
+// event / call shape) BEFORE building the handoff — do not rely on runFromWitnessedEvents to throw.
+// Some malformed-but-valid payloads do not throw: e.g. `{steps:[{event:"bad"}]}` would otherwise be
+// recorded as an observed step with an empty system, labeled SUPPORTED, and pass --gate. A dropped
+// or malformed capture must fail closed, never read as safe.
+function validateSteps(steps) {
+  steps.forEach((s, i) => {
+    const at = `steps[${i}]`;
+    if (!isPlainObject(s)) fail(`${at} must be an object`);
+    const hasClaim = s.claim !== undefined && s.claim !== null;
+    const hasEvent = s.event !== undefined && s.event !== null;
+    if (!hasClaim && !hasEvent) fail(`${at} must have a claim or an event (a step with neither is a dropped capture)`);
+    if (hasClaim) {
+      if (!isPlainObject(s.claim)) fail(`${at}.claim must be an object or null`);
+      if (!isNonEmptyString(s.claim.system)) fail(`${at}.claim.system must be a non-empty string`);
+    }
+    if (hasEvent) {
+      const e = s.event;
+      if (!isPlainObject(e)) fail(`${at}.event must be an object or null`);
+      if (!isPlainObject(e.call) || !isNonEmptyString(e.call.toolName)) {
+        fail(`${at}.event.call.toolName must be a non-empty string`);
+      }
+      if (e.verdict !== undefined && e.verdict !== null && !isPlainObject(e.verdict)) {
+        fail(`${at}.event.verdict must be an object`);
+      }
+      if (e.runtime_report !== undefined && e.runtime_report !== null && !isPlainObject(e.runtime_report)) {
+        fail(`${at}.event.runtime_report must be an object`);
+      }
+    }
+  });
+}
+
 const argv = process.argv.slice(2);
 const gate = argv.includes("--gate");
 const positional = argv.filter((a) => a !== "--gate");
@@ -59,9 +94,10 @@ if (input === null || typeof input !== "object" || Array.isArray(input)) {
 if (!Array.isArray(input.steps)) {
   fail("input.steps is required and must be an array of { claim, event } steps");
 }
+validateSteps(input.steps);
 
-// The CLI is the runtime boundary for captured events: a malformed-but-valid-JSON payload (a null
-// step, a non-object claim/event, …) must fail predictably, not surface as an internal stack trace.
+// Backstop: even after structural validation, fail predictably rather than as an internal stack
+// trace if the deterministic build rejects something validation did not anticipate.
 let handoff;
 try {
   handoff = buildWitnessedHandoff(runFromWitnessedEvents(input));

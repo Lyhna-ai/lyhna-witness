@@ -109,5 +109,34 @@ test("CLI fails cleanly on a malformed step entry (e.g. null), not a crash", () 
   const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
   const { code, stderr } = run(["-", dir], { input: JSON.stringify({ objective: "x", steps: [null] }) });
   assert.equal(code, 2);
-  assert.match(stderr, /not a valid witness payload/);
+  assert.match(stderr, /steps\[0\] must be an object/);
+});
+
+test("CLI rejects a malformed event and does NOT pass --gate (fail-open closed)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  // The P1 case: a string event must not become a SUPPORTED observation that exits 0 under --gate.
+  const { code, stderr } = run(["-", dir, "--gate"], { input: JSON.stringify({ objective: "Send the email", steps: [{ event: "bad" }] }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /event must be an object/);
+});
+
+test("CLI rejects an event with no call.toolName", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  const { code, stderr } = run(["-", dir], { input: JSON.stringify({ steps: [{ event: { call: {} } }] }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /toolName must be a non-empty string/);
+});
+
+test("CLI rejects a step with neither a claim nor an event", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  const { code, stderr } = run(["-", dir], { input: JSON.stringify({ steps: [{}] }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /must have a claim or an event/);
+});
+
+test("CLI rejects a claim with no system", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  const { code, stderr } = run(["-", dir], { input: JSON.stringify({ steps: [{ claim: { action: "send" } }] }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /claim\.system must be a non-empty string/);
 });
