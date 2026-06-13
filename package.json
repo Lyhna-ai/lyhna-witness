@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Lyhna Witness — witnessed-handoff generator. Records what actually crossed the tool-call wire, compares it to what the agent claimed, and emits a trust-marked handoff. Claimed vs. actual.",
   "engines": { "node": ">=20" },
+  "bin": { "lyhna-witness": "src/cli.mjs" },
   "scripts": {
     "test": "node --test",
     "demo": "node demo/hermes-zapier.mjs",

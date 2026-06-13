@@ -164,3 +164,18 @@ test("labels are deduplicated and the result shape is stable", () => {
   assert.equal(new Set(r.labels).size, r.labels.length);
   assert.ok(typeof r.human_note === "string");
 });
+
+test("no-claim observation: SUPPORTED only when it succeeded, UNSUPPORTED when it failed", () => {
+  // A witnessed call the agent never claimed, that returned successfully → observed/supported.
+  const ok = computeStepLabels({ claimed: null, witnessed: { system: "gmail", action: "send", returned: true } });
+  assert.deepEqual(ok.labels, [L.SUPPORTED]);
+
+  // The same with no successful return (e.g. a REFUSED/failed call) must NOT read as supported work.
+  const failed = computeStepLabels({ claimed: null, witnessed: { system: "gmail", action: "send", returned: false } });
+  assert.ok(failed.labels.includes(L.UNSUPPORTED));
+  assert.ok(!failed.labels.includes(L.SUPPORTED));
+
+  const refused = computeStepLabels({ claimed: null, witnessed: { system: "gmail", returned: false, result: "refused" } });
+  assert.ok(refused.labels.includes(L.UNSUPPORTED));
+  assert.ok(!refused.labels.includes(L.SUPPORTED));
+});
