@@ -43,6 +43,54 @@ test("differing system → CLAIMED_ACTUAL_MISMATCH", () => {
   assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH));
 });
 
+test("same system but different action/result → CLAIMED_ACTUAL_MISMATCH, never SUPPORTED", () => {
+  // The agent says it SENT the email; the witness only saw it create a DRAFT. Same system (gmail),
+  // no wrapper, the call succeeded — but it is NOT the work the agent claimed.
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "gmail", action: "send", result: "sent", user_facing: true },
+    witnessed: { system: "gmail", action: "create_draft", result: "created", returned: true }
+  });
+  assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH));
+  assert.ok(!r.labels.includes(L.SUPPORTED));
+  // The claimed user-facing action did not happen, so it must also block (not just flag a route note).
+  assert.ok(r.labels.includes(L.UNSUPPORTED));
+  assert.ok(r.labels.includes(L.DO_NOT_SEND));
+  assert.match(r.human_note, /create_draft/);
+});
+
+test("differing result alone (same action) → CLAIMED_ACTUAL_MISMATCH + UNSUPPORTED", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "stripe", action: "refund", result: "refunded" },
+    witnessed: { system: "stripe", action: "refund", result: "pending", returned: true }
+  });
+  assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH));
+  assert.ok(r.labels.includes(L.UNSUPPORTED));
+  assert.ok(!r.labels.includes(L.DO_NOT_SEND)); // not user-facing
+  assert.ok(!r.labels.includes(L.SUPPORTED));
+});
+
+test("route-only mismatch (same action/result via another path) is NOT marked UNSUPPORTED", () => {
+  // Claimed Google directly; witness saw the same create_document/created routed through Zapier.
+  // The route differed, but the work happened — flag it, do not block it.
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "google_docs", action: "create_document", result: "created", user_facing: true },
+    witnessed: {
+      system: "zapier",
+      app: "google_docs",
+      action: "create_document",
+      result: "created",
+      returned: true,
+      wrapper_family: "zapier"
+    }
+  });
+  assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH));
+  assert.ok(!r.labels.includes(L.UNSUPPORTED));
+  assert.ok(!r.labels.includes(L.DO_NOT_SEND));
+});
+
 test("witnessed failure → UNSUPPORTED (+ DO_NOT_SEND when user-facing)", () => {
   const r = computeStepLabels({
     index: 0,
@@ -87,6 +135,12 @@ test("needs_human_approval routes to a person, never auto-decided", () => {
     claimed: { system: "stripe", action: "refund", result: "refunded" },
     witnessed: { system: "stripe", action: "refund", result: "refunded", returned: true }
   });
+  assert.ok(r.labels.includes(L.NEEDS_HUMAN_APPROVAL));
+});
+
+test("NEEDS_HUMAN_APPROVAL survives every early-return path (even a bare approval-only step)", () => {
+  // No claim, no witnessed call — just an approval gate. The label must still be applied.
+  const r = computeStepLabels({ index: 0, needs_human_approval: true });
   assert.ok(r.labels.includes(L.NEEDS_HUMAN_APPROVAL));
 });
 

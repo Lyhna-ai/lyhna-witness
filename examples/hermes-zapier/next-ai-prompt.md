@@ -11,10 +11,13 @@ tell anyone they are done until confirmed:
 - Step 1: The agent said it used google_docs directly, but the witness saw it routed through zapier (zapier → google_docs.create_document). Same end app or not, the path you were told is not the path it took.
 - Step 2: The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
+These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:
+_(none)_
+
 Open questions:
 - Should the client get edit access or view-only?
 
 Start from these next actions:
 - Confirm the document was actually shared before telling the client it is ready.
 
-NOT safe to send/continue until the unverified steps above are confirmed.
+NOT safe to send/continue until the unverified steps and any required approvals above are resolved.

@@ -1,0 +1,49 @@
+name: ci
+
+# Determinism / honesty gate for the witness. Every push (any branch) and every pull request
+# (ANY base branch) runs the full test suite, then regenerates the committed demo artifacts and
+# asserts they did not drift. The witness's whole claim is that its trust labels are computed by
+# fixed rules — given the same event sequence it emits the same handoff. This workflow is what
+# keeps that promise honest: if a change makes the generator non-deterministic or silently alters
+# a label, the golden-file drift check below turns the build red.
+#
+# Zero runtime dependencies by design (node:test, no third-party packages), so there is no
+# install step and no lockfile to cache. The pull_request trigger is intentionally UNFILTERED by
+# base branch: coupling the gate to a branch-name string would silently stop matching if the
+# default branch were ever renamed. `edited` is included so a PR retargeted to a new base re-runs.
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test (full suite)
+        run: npm test
+
+      - name: Regenerate demo artifacts
+        run: npm run demo
+
+      - name: Assert committed demo output did not drift
+        run: |
+          # --porcelain reports BOTH modified tracked files AND new untracked files (?? lines),
+          # so a newly-emitted-but-uncommitted artifact fails the gate too — not just edits to
+          # files already checked in (which is all `git diff --exit-code` would have caught).
+          changes="$(git status --porcelain -- examples/)"
+          if [ -n "$changes" ]; then
+            echo "::error::Committed examples/ output is out of sync with the generator." \
+                 "Run 'npm run demo' and commit the regenerated artifacts."
+            echo "$changes"
+            exit 1
+          fi

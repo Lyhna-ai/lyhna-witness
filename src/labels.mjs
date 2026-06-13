@@ -68,6 +68,33 @@ function mismatchNote(claimed, witnessed) {
   );
 }
 
+/**
+ * Action/result mismatch: the route may match, but the agent named a different ACTION than the
+ * witness saw, or claimed a different RESULT than the witness recorded. Compared only when BOTH
+ * sides state the field, so a missing field never fabricates a mismatch. This is what stops a
+ * claimed `gmail.send`/`sent` step that the witness only saw as `gmail.create_draft`/`created`
+ * from being labeled SUPPORTED — exactly the claimed-vs-actual guarantee the witness exists to make.
+ */
+function actionResultMismatch(claimed, witnessed) {
+  if (!claimed || !witnessed) return { mismatch: false, note: "" };
+  const parts = [];
+  const ca = norm(claimed.action);
+  const wa = norm(witnessed.action);
+  if (ca && wa && ca !== wa) {
+    parts.push(`a "${claimed.action}" action, but the witness saw "${witnessed.action}"`);
+  }
+  const cr = norm(claimed.result);
+  const wr = norm(witnessed.result);
+  if (cr && wr && cr !== wr) {
+    parts.push(`the result "${claimed.result}", but the witness recorded "${witnessed.result}"`);
+  }
+  if (!parts.length) return { mismatch: false, note: "" };
+  return {
+    mismatch: true,
+    note: `The agent claimed ${parts.join(" and ")}. What it did or got back does not match what the witness observed.`
+  };
+}
+
 function claimedPhrase(claimed) {
   if (!claimed) return "did something";
   const sys = claimed.system ? ` in ${claimed.system}` : "";
@@ -104,7 +131,6 @@ export function computeStepLabels(step) {
   if (!claimed && witnessed) {
     labels.push(L.SUPPORTED);
     notes.push(`Witnessed tool call with no agent claim attached; recorded as observed.`);
-    if (step.needs_human_approval) labels.push(L.NEEDS_HUMAN_APPROVAL);
     return finalize(step, labels, notes, claimed, witnessed);
   }
 
@@ -122,11 +148,24 @@ export function computeStepLabels(step) {
     notes.push(`The tool call ran but did not succeed (result: ${witnessed.result ?? "error"}).`);
   }
 
-  // 3) Path mismatch (claimed route ≠ witnessed route).
-  const mismatch = isPathMismatch(claimed, witnessed);
+  // 3) Claimed-vs-actual mismatch. Two independent axes, either of which fires the label:
+  //    (a) the ROUTE differs (the Hermes catch — "said Google, witness saw Zapier"); and/or
+  //    (b) the ACTION or RESULT differs (same system, but "said it sent" / witness saw a draft).
+  const pathMismatch = isPathMismatch(claimed, witnessed);
+  const actionResult = actionResultMismatch(claimed, witnessed);
+  const mismatch = pathMismatch || actionResult.mismatch;
   if (mismatch) {
     labels.push(L.CLAIMED_ACTUAL_MISMATCH);
-    notes.push(mismatchNote(claimed, witnessed));
+    if (pathMismatch) notes.push(mismatchNote(claimed, witnessed));
+    if (actionResult.mismatch) {
+      // A different ACTION or RESULT means the claimed work did not happen as stated — unlike a
+      // route-only mismatch, where the same action/result was achieved via another path and the
+      // work may well be fine. So an action/result mismatch is also UNSUPPORTED (and DO_NOT_SEND
+      // when user-facing), which keeps the run from being marked safe to continue.
+      labels.push(L.UNSUPPORTED);
+      if (userFacing) labels.push(L.DO_NOT_SEND);
+      notes.push(actionResult.note);
+    }
   }
 
   // 4) Agreement.
@@ -135,13 +174,14 @@ export function computeStepLabels(step) {
     notes.push(`The agent's account matches what the witness observed.`);
   }
 
-  // 5) Human approval is never decided by a model — it is routed to a person.
-  if (step.needs_human_approval) labels.push(L.NEEDS_HUMAN_APPROVAL);
-
   return finalize(step, labels, notes, claimed, witnessed);
 }
 
 function finalize(step, labels, notes, claimed, witnessed) {
+  // Human approval is never decided by a model — it is routed to a person. Applied HERE, in the
+  // one function every return path flows through, so the label survives all of computeStepLabels'
+  // early returns (an unwitnessed-but-approval-gated step must not silently drop it and read safe).
+  if (step.needs_human_approval) labels.push(TRUST_LABELS.NEEDS_HUMAN_APPROVAL);
   return {
     index: typeof step.index === "number" ? step.index : 0,
     claimed: claimed ?? null,
