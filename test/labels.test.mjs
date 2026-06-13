@@ -43,6 +43,29 @@ test("differing system → CLAIMED_ACTUAL_MISMATCH", () => {
   assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH));
 });
 
+test("same system but different action/result → CLAIMED_ACTUAL_MISMATCH, never SUPPORTED", () => {
+  // The agent says it SENT the email; the witness only saw it create a DRAFT. Same system (gmail),
+  // no wrapper, the call succeeded — but it is NOT the work the agent claimed.
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "gmail", action: "send", result: "sent", user_facing: true },
+    witnessed: { system: "gmail", action: "create_draft", result: "created", returned: true }
+  });
+  assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH));
+  assert.ok(!r.labels.includes(L.SUPPORTED));
+  assert.match(r.human_note, /create_draft/);
+});
+
+test("differing result alone (same action) → CLAIMED_ACTUAL_MISMATCH", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "stripe", action: "refund", result: "refunded" },
+    witnessed: { system: "stripe", action: "refund", result: "pending", returned: true }
+  });
+  assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH));
+  assert.ok(!r.labels.includes(L.SUPPORTED));
+});
+
 test("witnessed failure → UNSUPPORTED (+ DO_NOT_SEND when user-facing)", () => {
   const r = computeStepLabels({
     index: 0,
