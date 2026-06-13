@@ -163,3 +163,13 @@ test("CLI: a no-claim REFUSED event is valid but does NOT pass --gate (labeler f
   assert.equal(code, 3);
   assert.match(stdout, /DO_NOT_CONTINUE/);
 });
+
+test("CLI rejects an unknown verdict kind (only proxy verdicts pass the gate)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  // "DENIED" + returned:true must NOT be treated as an unblocked APPROVED-like call.
+  const { code, stderr } = run(["-", dir, "--gate"], {
+    input: JSON.stringify({ steps: [{ event: { call: { toolName: "x" }, verdict: { kind: "DENIED" }, runtime_report: { returned: true } } }] })
+  });
+  assert.equal(code, 2);
+  assert.match(stderr, /must be one of APPROVED, REFUSED, ESCALATED/);
+});

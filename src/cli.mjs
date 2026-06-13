@@ -29,6 +29,9 @@ function fail(message, code = 2) {
 
 const isPlainObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
+// The only verdicts a proxy capture can carry. Anything else (e.g. "DENIED") is not a known proxy
+// verdict and must be rejected — the witness would otherwise treat an unknown kind as unblocked.
+const VERDICT_KINDS = new Set(["approved", "refused", "escalated"]);
 
 // This CLI is the fail-CLOSED runtime seam for captured events. Validate every step (and its claim /
 // event / call shape) BEFORE building the handoff — do not rely on runFromWitnessedEvents to throw.
@@ -52,10 +55,15 @@ function validateSteps(steps) {
       if (!isPlainObject(e.call) || !isNonEmptyString(e.call.toolName)) {
         fail(`${at}.event.call.toolName must be a non-empty string`);
       }
-      // A proxy-captured event always carries a judgment verdict. Require it — a truncated event with
-      // no verdict would otherwise be treated as a bare observation and read as safe.
+      // A proxy-captured event always carries a judgment verdict, and only the three proxy kinds are
+      // valid. Require it AND validate the enum — an unknown kind (e.g. "DENIED") would otherwise be
+      // treated as an unblocked call and could read as SUPPORTED / safe.
       if (!isPlainObject(e.verdict) || !isNonEmptyString(e.verdict.kind)) {
         fail(`${at}.event.verdict.kind must be a non-empty string`);
+      }
+      const kind = e.verdict.kind.trim().toLowerCase();
+      if (!VERDICT_KINDS.has(kind)) {
+        fail(`${at}.event.verdict.kind must be one of APPROVED, REFUSED, ESCALATED (got "${e.verdict.kind}")`);
       }
       if (e.runtime_report !== undefined && e.runtime_report !== null && !isPlainObject(e.runtime_report)) {
         fail(`${at}.event.runtime_report must be an object`);
@@ -63,7 +71,7 @@ function validateSteps(steps) {
       // An APPROVED (forwarded) call always has a runtime report with a boolean `returned` — that is
       // the result the witness vouches on. Require it; absence means a truncated capture, not success.
       // A blocked verdict (REFUSED/ESCALATED) legitimately has no runtime report.
-      if (e.verdict.kind.trim().toLowerCase() === "approved") {
+      if (kind === "approved") {
         if (!isPlainObject(e.runtime_report) || typeof e.runtime_report.returned !== "boolean") {
           fail(`${at}.event.runtime_report.returned (boolean) is required for an APPROVED event`);
         }
