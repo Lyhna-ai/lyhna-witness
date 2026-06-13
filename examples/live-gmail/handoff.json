@@ -1,0 +1,75 @@
+{
+  "schema": "witnessed-handoff/v1",
+  "objective": "Send the Q3 partnership follow-up to the prospect, and prepare the proposal cover note for review.",
+  "steps": [
+    {
+      "index": 0,
+      "claimed": {
+        "system": "gmail",
+        "action": "send",
+        "result": "sent the follow-up to the prospect",
+        "user_facing": true
+      },
+      "witnessed": {
+        "system": "gmail",
+        "action": "create_draft",
+        "returned": true,
+        "result_hash": "sha256:2879154e8e065626"
+      },
+      "labels": [
+        "CLAIMED_ACTUAL_MISMATCH",
+        "UNSUPPORTED",
+        "DO_NOT_SEND"
+      ],
+      "human_note": "The agent claimed a \"send\" action, but the witness saw \"create_draft\". What it did or got back does not match what the witness observed."
+    },
+    {
+      "index": 1,
+      "claimed": {
+        "system": "gmail",
+        "action": "create_draft",
+        "result": "saved a draft for your review",
+        "user_facing": true
+      },
+      "witnessed": {
+        "system": "gmail",
+        "action": "create_draft",
+        "returned": true,
+        "result_hash": "sha256:1c0972132e7344f3"
+      },
+      "labels": [
+        "SUPPORTED"
+      ],
+      "human_note": "The agent's account matches what the witness observed."
+    }
+  ],
+  "systems_touched": [
+    "gmail"
+  ],
+  "summary": {
+    "total_steps": 2,
+    "supported": 1,
+    "mismatches": 1,
+    "unsupported": 1,
+    "do_not_send": 1
+  },
+  "settled": [
+    "The proposal cover note draft is prepared and awaiting review."
+  ],
+  "open_questions": [
+    "Has the Q3 follow-up actually been sent? The witness saw only a draft."
+  ],
+  "next_actions": [
+    "Do NOT tell the prospect the follow-up was sent — the witness saw a draft, not a send. Open the draft, confirm it, and actually send it (witness the gmail.send) before reporting it as done."
+  ],
+  "needs_human_approval": [],
+  "do_not_re_litigate": [],
+  "safe_to_continue": false,
+  "proof_refs": {
+    "step1_claimed_send_actual_draft": "Gmail draft r6441883296239929863 (DRAFT — never sent)",
+    "step1_result_hash": "sha256:2879154e8e065626",
+    "step2_supported_draft": "Gmail draft r2385708481475645764 (DRAFT — for review)",
+    "step2_result_hash": "sha256:1c0972132e7344f3",
+    "captured_at": "2026-06-13T17:29:40Z"
+  }
+}

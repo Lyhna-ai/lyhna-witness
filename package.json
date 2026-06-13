@@ -9,7 +9,8 @@
     "test": "node --test",
     "demo": "node demo/hermes-zapier.mjs",
     "demo:live": "node demo/zapier-google-witness.mjs",
-    "demo:real": "node demo/live-google-witness.mjs"
+    "demo:real": "node demo/live-google-witness.mjs",
+    "demo:gmail": "node demo/live-gmail-witness.mjs"
   },
   "license": "UNLICENSED"
 }
