@@ -88,3 +88,18 @@ test("CLI fails cleanly on malformed input", () => {
   assert.equal(code, 2);
   assert.match(stderr, /not valid JSON/);
 });
+
+test("CLI fails cleanly when steps is not an array (no stack trace)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  const { code, stderr } = run(["-", dir], { input: JSON.stringify({ steps: {} }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /steps must be an array/);
+  assert.doesNotMatch(stderr, /at \w+/); // not a Node stack trace
+});
+
+test("CLI fails cleanly on a malformed step entry (e.g. null), not a crash", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  const { code, stderr } = run(["-", dir], { input: JSON.stringify({ objective: "x", steps: [null] }) });
+  assert.equal(code, 2);
+  assert.match(stderr, /not a valid witness payload/);
+});

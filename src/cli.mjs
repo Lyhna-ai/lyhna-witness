@@ -53,8 +53,18 @@ try {
 if (input === null || typeof input !== "object" || Array.isArray(input)) {
   fail("input must be a JSON object (a runFromWitnessedEvents payload)");
 }
+if (input.steps !== undefined && !Array.isArray(input.steps)) {
+  fail("input.steps must be an array of { claim, event } steps");
+}
 
-const handoff = buildWitnessedHandoff(runFromWitnessedEvents(input));
+// The CLI is the runtime boundary for captured events: a malformed-but-valid-JSON payload (a null
+// step, a non-object claim/event, …) must fail predictably, not surface as an internal stack trace.
+let handoff;
+try {
+  handoff = buildWitnessedHandoff(runFromWitnessedEvents(input));
+} catch (err) {
+  fail(`input is not a valid witness payload: ${err.message}`);
+}
 
 try {
   mkdirSync(outDir, { recursive: true });
