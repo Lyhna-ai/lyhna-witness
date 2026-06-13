@@ -37,8 +37,13 @@ jobs:
 
       - name: Assert committed demo output did not drift
         run: |
-          if ! git diff --exit-code examples/; then
+          # --porcelain reports BOTH modified tracked files AND new untracked files (?? lines),
+          # so a newly-emitted-but-uncommitted artifact fails the gate too — not just edits to
+          # files already checked in (which is all `git diff --exit-code` would have caught).
+          changes="$(git status --porcelain -- examples/)"
+          if [ -n "$changes" ]; then
             echo "::error::Committed examples/ output is out of sync with the generator." \
                  "Run 'npm run demo' and commit the regenerated artifacts."
+            echo "$changes"
             exit 1
           fi
