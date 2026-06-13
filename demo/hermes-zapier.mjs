@@ -5,11 +5,11 @@
 // Writes the three handoff artifacts to examples/hermes-zapier/ and prints a plain-language
 // readout a non-technical business owner can act on — NOT a code review.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt } from "../src/index.mjs";
+import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt, renderOkfBundle } from "../src/index.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "examples", "hermes-zapier");
@@ -57,6 +57,19 @@ mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, "handoff.json"), JSON.stringify(handoff, null, 2) + "\n");
 writeFileSync(join(outDir, "HANDOFF.md"), md);
 writeFileSync(join(outDir, "next-ai-prompt.md"), nextPrompt);
+
+// Additive OKF export: the same witnessed handoff, projected into an OKF-compatible bundle (a
+// portable directory of markdown + YAML frontmatter). OKF is the container; Lyhna is the witness.
+// Deterministic — no timestamp is passed, so none is written.
+const okf = renderOkfBundle(handoff, { name: "hermes-zapier" });
+// Clear the bundle dir first so a step/label that disappears does not leave a stale file behind
+// (the drift gate only diffs tracked files, so an orphaned file would not be flagged).
+rmSync(join(outDir, "okf"), { recursive: true, force: true });
+for (const [relPath, contents] of Object.entries(okf)) {
+  const dest = join(outDir, "okf", relPath);
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, contents);
+}
 
 // ---- plain-language readout (the "oh no, I need this" moment) ----
 const line = "─".repeat(64);
