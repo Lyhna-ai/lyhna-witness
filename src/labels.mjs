@@ -158,7 +158,15 @@ export function computeStepLabels(step) {
   if (mismatch) {
     labels.push(L.CLAIMED_ACTUAL_MISMATCH);
     if (pathMismatch) notes.push(mismatchNote(claimed, witnessed));
-    if (actionResult.mismatch) notes.push(actionResult.note);
+    if (actionResult.mismatch) {
+      // A different ACTION or RESULT means the claimed work did not happen as stated — unlike a
+      // route-only mismatch, where the same action/result was achieved via another path and the
+      // work may well be fine. So an action/result mismatch is also UNSUPPORTED (and DO_NOT_SEND
+      // when user-facing), which keeps the run from being marked safe to continue.
+      labels.push(L.UNSUPPORTED);
+      if (userFacing) labels.push(L.DO_NOT_SEND);
+      notes.push(actionResult.note);
+    }
   }
 
   // 4) Agreement.

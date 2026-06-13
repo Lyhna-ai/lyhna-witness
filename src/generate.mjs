@@ -165,6 +165,13 @@ export function renderNextAiPrompt(h) {
         .map((s) => `Step ${s.index + 1}: ${s.human_note}`)
     ),
     ``,
+    `These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:`,
+    bullet(
+      h.steps
+        .filter((s) => s.labels.includes("NEEDS_HUMAN_APPROVAL"))
+        .map((s) => `Step ${s.index + 1}: awaiting human approval`)
+    ),
+    ``,
     `Open questions:`,
     bullet(h.open_questions),
     ``,
@@ -173,7 +180,7 @@ export function renderNextAiPrompt(h) {
     ``,
     h.safe_to_continue
       ? `Safe to continue.`
-      : `NOT safe to send/continue until the unverified steps above are confirmed.`,
+      : `NOT safe to send/continue until the unverified steps and any required approvals above are resolved.`,
     ``
   ].join("\n");
 }
