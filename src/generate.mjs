@@ -66,6 +66,23 @@ export function buildWitnessedHandoff(run) {
 
 const bullet = (items) => (items.length ? items.map((x) => `- ${x}`).join("\n") : "_(none)_");
 
+// The witness's proof refs (e.g. a vouched-for file URL + result hash + capture time) are the
+// evidence a SUPPORTED step rests on. Render them as labelled bullets when present so neither the
+// human handoff nor the next-agent prompt drops the only pointer to the verifiable artifact. Returns
+// [] when there are none, so handoffs without proof_refs render byte-identically to before.
+function proofRefLines(proofRefs) {
+  if (!proofRefs || typeof proofRefs !== "object" || Array.isArray(proofRefs)) return [];
+  const entries = Object.entries(proofRefs).filter(([, v]) => v !== null && v !== undefined && v !== "");
+  return entries.map(([k, v]) => `${k}: ${v}`);
+}
+
+// Conditional section: emitted ONLY when proof refs exist, so a handoff with `proof_refs: null`
+// renders exactly as it did before this section was added (no golden-file drift).
+function proofRefsSection(heading, proofRefs) {
+  const lines = proofRefLines(proofRefs);
+  return lines.length ? [heading, bullet(lines), ``] : [];
+}
+
 function stepLine(s) {
   const claimed = s.claimed
     ? `${s.claimed.action ?? "step"}${s.claimed.system ? ` in ${s.claimed.system}` : ""}`
@@ -116,6 +133,7 @@ export function renderHandoffMarkdown(h) {
     `## Mismatches`,
     bullet(by(L.CLAIMED_ACTUAL_MISMATCH).map((s) => `Step ${s.index + 1}: ${s.human_note}`)),
     ``,
+    ...proofRefsSection(`## Proof / References`, h.proof_refs),
     `## Settled Decisions`,
     bullet(h.settled),
     ``,
@@ -178,6 +196,10 @@ export function renderNextAiPrompt(h) {
     `Start from these next actions:`,
     bullet(h.next_actions),
     ``,
+    ...proofRefsSection(
+      `Proof / references the witness recorded — carry these forward so the vouched-for work stays verifiable:`,
+      h.proof_refs
+    ),
     h.safe_to_continue
       ? `Safe to continue.`
       : `NOT safe to send/continue until the unverified steps and any required approvals above are resolved.`,

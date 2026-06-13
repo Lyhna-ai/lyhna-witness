@@ -146,3 +146,23 @@ test("generation is deterministic (no clock / no randomness)", () => {
   const b = JSON.stringify(buildWitnessedHandoff(hermesRun()));
   assert.equal(a, b);
 });
+
+test("proof_refs are rendered into BOTH the human handoff and the next-agent prompt", () => {
+  const h = buildWitnessedHandoff({
+    objective: "x",
+    steps: [{ claimed: { system: "google_drive", action: "create_file" }, witnessed: { system: "google_drive", action: "create_file", returned: true } }],
+    proof_refs: { google_doc: "https://docs.google.com/document/d/REAL/edit", result_hash: "sha256:c8f3f039022f9551" }
+  });
+  const md = renderHandoffMarkdown(h);
+  const prompt = renderNextAiPrompt(h);
+  assert.match(md, /## Proof \/ References/);
+  assert.match(md, /google_doc: https:\/\/docs\.google\.com\/document\/d\/REAL\/edit/);
+  assert.match(prompt, /carry these forward/);
+  assert.match(prompt, /result_hash: sha256:c8f3f039022f9551/);
+});
+
+test("a handoff with proof_refs: null renders NO proof section (no drift for existing demos)", () => {
+  const h = buildWitnessedHandoff({ objective: "x", steps: [], proof_refs: null });
+  assert.doesNotMatch(renderHandoffMarkdown(h), /Proof \/ References/);
+  assert.doesNotMatch(renderNextAiPrompt(h), /carry these forward/);
+});

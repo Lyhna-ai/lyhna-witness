@@ -1,0 +1,24 @@
+{
+  "_note": "This is REAL captured evidence, not a hand-authored fixture. The tool call below was executed live against Google Drive in a Lyhna agent session; the api_result, id, viewUrl and result_hash are the genuine values it returned. The witness demo (demo/live-google-witness.mjs) replays this captured event deterministically so CI stays offline and reproducible, while the one step the witness vouches for points at a document you can actually open. The owner email is redacted (it is not read by the demo); the id, result_hash and verify_url are the genuine captured values. The document is a Q3 prospect tracker with synthetic placeholder prospects — the demo's settled fact ('a prospect tracker exists') is therefore the artifact actually witnessed.",
+  "captured_at": "2026-06-13T16:40:25.868Z",
+  "source": "mcp__Google_Drive__create_file — real Google Drive MCP tool call, executed live.",
+  "account": "[redacted-owner]",
+  "tool_call": {
+    "toolName": "mcp__Google_Drive__create_file",
+    "arguments": {
+      "title": "Q3 Prospect Tracker",
+      "contentMimeType": "text/plain"
+    }
+  },
+  "verdict": { "kind": "APPROVED" },
+  "runtime_report": { "returned": true, "result_hash": "sha256:672f0118c87f2850" },
+  "api_result": {
+    "id": "19KXYrVUZSY40XbVLw9CSzCV0WUU-zi018BYWm2mza30",
+    "mimeType": "application/vnd.google-apps.document",
+    "title": "Q3 Prospect Tracker",
+    "createdTime": "2026-06-13T16:40:24.475Z",
+    "modifiedTime": "2026-06-13T16:40:25.868Z",
+    "owner": "[redacted-owner]"
+  },
+  "verify_url": "https://docs.google.com/document/d/19KXYrVUZSY40XbVLw9CSzCV0WUU-zi018BYWm2mza30/edit"
+}

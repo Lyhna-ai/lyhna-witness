@@ -1,0 +1,84 @@
+{
+  "schema": "witnessed-handoff/v1",
+  "objective": "Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log them in the CRM.",
+  "steps": [
+    {
+      "index": 0,
+      "claimed": {
+        "system": "google_drive",
+        "action": "create_file",
+        "result": "created the prospect tracker",
+        "user_facing": true
+      },
+      "witnessed": {
+        "system": "google_drive",
+        "action": "create_file",
+        "returned": true,
+        "result_hash": "sha256:672f0118c87f2850"
+      },
+      "labels": [
+        "SUPPORTED"
+      ],
+      "human_note": "The agent's account matches what the witness observed."
+    },
+    {
+      "index": 1,
+      "claimed": {
+        "system": "gmail",
+        "action": "send",
+        "result": "sent personalized emails to 5 prospects",
+        "user_facing": true
+      },
+      "witnessed": null,
+      "labels": [
+        "UNSUPPORTED",
+        "NEEDS_EVIDENCE",
+        "DO_NOT_SEND"
+      ],
+      "human_note": "The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
+    },
+    {
+      "index": 2,
+      "claimed": {
+        "system": "salesforce",
+        "action": "create_records",
+        "result": "logged 5 prospects in the CRM",
+        "user_facing": true
+      },
+      "witnessed": null,
+      "labels": [
+        "UNSUPPORTED",
+        "NEEDS_EVIDENCE",
+        "DO_NOT_SEND"
+      ],
+      "human_note": "The agent claimed it create_records in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened."
+    }
+  ],
+  "systems_touched": [
+    "google_drive"
+  ],
+  "summary": {
+    "total_steps": 3,
+    "supported": 1,
+    "mismatches": 0,
+    "unsupported": 2,
+    "do_not_send": 2
+  },
+  "settled": [
+    "The prospect tracker document exists — it is the one action the witness can vouch for."
+  ],
+  "open_questions": [
+    "Were ANY of the 5 outreach emails actually sent? The witness observed none."
+  ],
+  "next_actions": [
+    "Do NOT tell the prospects they were contacted — no email or CRM write was witnessed. Re-run the outreach through the proxy and confirm each send returns before reporting it as done."
+  ],
+  "needs_human_approval": [],
+  "do_not_re_litigate": [],
+  "safe_to_continue": false,
+  "proof_refs": {
+    "google_doc": "https://docs.google.com/document/d/19KXYrVUZSY40XbVLw9CSzCV0WUU-zi018BYWm2mza30/edit",
+    "result_hash": "sha256:672f0118c87f2850",
+    "captured_at": "2026-06-13T16:40:25.868Z"
+  }
+}
