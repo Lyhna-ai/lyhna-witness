@@ -1,6 +1,7 @@
 /* Lyhna Witness — demo page logic. Vanilla JS, no deps, no build step.
    Renders the EXACT committed receipt from window.LYHNA_HANDOFF
-   (generated from examples/hermes-zapier/handoff.json). It never invents data.
+   (generated from examples/live-loop/handoff.json — the receipt that came through the real
+   lyhna-mcp-proxy witness loop). It never invents data; this page replays that committed receipt.
 
    Determinism: nothing time-based is written to disk. setTimeout is used only for
    runtime animation pacing; it does not affect any committed output. */
