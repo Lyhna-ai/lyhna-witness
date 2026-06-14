@@ -100,13 +100,17 @@
 
     var statusEl = document.getElementById("capsule-status");
     statusEl.textContent = safe ? "Safe to continue" : "Needs Review / DO NOT SEND";
+    // Reset before re-applying so a re-run ("Re-run Witness Capsule") never stacks classes.
+    statusEl.classList.remove("safe", "danger");
     statusEl.classList.add(safe ? "safe" : "danger");
 
     document.getElementById("cap-systems").textContent =
       (H.systems_touched || []).join(", ") || "(none)";
 
-    // One line per unsupported/mismatch step — print the human_note verbatim.
+    // One line per unsupported/mismatch step — print the human_note verbatim. Clear first so a
+    // re-run does not append the same flags again and overstate what the receipt proves.
     var flags = document.getElementById("cap-flags");
+    flags.innerHTML = "";
     var flagged = (H.steps || []).filter(function (s) {
       var l = s.labels || [];
       return (
