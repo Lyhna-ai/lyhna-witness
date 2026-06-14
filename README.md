@@ -96,7 +96,7 @@ witnessed event sequence, the deterministic trust labels, `handoff.json`, and th
 carry knowledge; Lyhna is what tells you which agent claims are supported, unsupported, mismatched, or
 unsafe to continue.
 
-## PAM-compatible export (memory projection)
+## PAM-shaped memory projection
 
 Beside OKF, Lyhna emits the same witnessed handoff as a **PAM-shaped memory bundle** — PAM (Portable
 Agent Memory) is the format agents use to carry memory/continuation state between systems:

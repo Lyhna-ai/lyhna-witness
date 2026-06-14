@@ -86,6 +86,16 @@ test("unsupported / DO_NOT_SEND claims stay unsupported memory — never upgrade
   assert.ok(mems.some((m) => m.id === "procedural:do-not-send-step-2" && m.evidence_status === "DO_NOT_SEND"));
 });
 
+test("proof refs live on the manifest only — never on a per-item memory", () => {
+  // The receipt's proof_refs are run-level (not bound to a step). Attaching them to a memory item
+  // would let an importer read a ref as evidence for an unsupported claim — so they stay manifest-only.
+  const f = renderPamBundle(sampleHandoff(), { name: "t" });
+  assert.deepEqual(manifestOf(f).proof_refs, { doc: "https://example.com/doc", result_hash: "sha256:abc" });
+  for (const m of memoriesOf(f)) {
+    assert.equal(m.proof_refs, undefined, `${m.id} must not carry proof_refs`);
+  }
+});
+
 test("mismatch labels survive the export", () => {
   const mems = memoriesOf(renderPamBundle(sampleHandoff(), { name: "t" }));
   const ep1 = mems.find((m) => m.memory_type === "episodic" && m.step_index === 1);

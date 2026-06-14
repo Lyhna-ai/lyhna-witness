@@ -194,8 +194,11 @@ export function renderPamBundle(handoff, options = {}) {
         supported: isSupported(s),
         content: s.human_note ?? "",
         claimed: claimView(s.claimed ?? null), // the agent's account — not fact
-        witnessed: witnessView(s.witnessed ?? null), // what the witness actually saw
-        ...(proofRefs ? { proof_refs: proofRefs } : {})
+        witnessed: witnessView(s.witnessed ?? null) // what the witness actually saw
+        // NOTE: proof_refs are deliberately NOT attached to per-step memories. The receipt's
+        // proof_refs are run-level (not bound to a specific step), so attaching them to an item would
+        // let an importer read a supported step's hash/URL as evidence for an unsupported claim. They
+        // live on the manifest only, where they cannot be mistaken for per-step evidence.
       })
     );
   }
