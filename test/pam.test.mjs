@@ -116,10 +116,9 @@ test("an unclaimed observed failure is never given a fabricated agent claim", ()
   const ep = mems.find((m) => m.memory_type === "episodic" && m.step_index === 1);
   assert.equal(ep.claimed, null);
   assert.ok(ep.labels.includes("UNSUPPORTED"));
-  // No memory about this step may assert the agent claimed anything (there was no claim).
-  for (const m of mems.filter((x) => x.step_index === 1)) {
-    assert.doesNotMatch(JSON.stringify(m), /the agent claimed|unspecified step/);
-  }
+  // No memory anywhere — per-step OR run-level — may assert the agent claimed anything (no claim exists).
+  const f = renderPamBundle(h, { name: "t" });
+  assert.doesNotMatch(f["memories.jsonl"], /the agent claimed|claimed step|unspecified step/);
   // The semantic fact still exists, framed as an observed failure.
   const sem = mems.find((m) => m.id === "semantic:step-1-evidence-gap");
   assert.ok(sem);

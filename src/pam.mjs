@@ -212,7 +212,7 @@ export function renderPamBundle(handoff, options = {}) {
       safe_to_continue: safe,
       content: safe
         ? "Fact: Lyhna witnessed this run as safe to continue."
-        : "Fact: this run is NOT safe to continue per Lyhna — at least one claimed step lacks witnessed support or needs approval."
+        : "Fact: this run is NOT safe to continue per Lyhna — at least one step lacks witnessed support or needs approval." // claim-neutral: a gap may be an unclaimed observed failure
     })
   );
   memories.push(
