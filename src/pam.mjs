@@ -55,14 +55,13 @@ const primaryEvidence = (labels) => {
 };
 
 const isSupported = (s) => (s.labels ?? []).includes("SUPPORTED") && !(s.labels ?? []).includes("UNSUPPORTED");
-const isFlagged = (s) => {
+const needsApproval = (s) => (s.labels ?? []).includes("NEEDS_HUMAN_APPROVAL");
+// A genuine evidence gap — NOT a witnessed/supported step that merely awaits human approval. An
+// approval-gated supported step is surfaced as a procedural approval rule, never as an evidence gap
+// (otherwise witnessed work would be mislabeled "missing evidence" with supported:false).
+const isEvidenceGap = (s) => {
   const l = s.labels ?? [];
-  return (
-    l.includes("UNSUPPORTED") ||
-    l.includes("DO_NOT_SEND") ||
-    l.includes("CLAIMED_ACTUAL_MISMATCH") ||
-    l.includes("NEEDS_HUMAN_APPROVAL")
-  );
+  return l.includes("UNSUPPORTED") || l.includes("DO_NOT_SEND") || l.includes("CLAIMED_ACTUAL_MISMATCH");
 };
 
 const claimPhrase = (c) => (c ? `${c.action ?? "a step"}${c.system ? ` in ${c.system}` : ""}` : "an unspecified step");
@@ -226,7 +225,7 @@ export function renderPamBundle(handoff, options = {}) {
   );
   // One evidence-gap fact per FLAGGED step — the honesty-preserving core: the unsupported claim becomes
   // a fact about ABSENCE of evidence, never a fact asserting the claim happened.
-  for (const s of steps.filter(isFlagged)) {
+  for (const s of steps.filter(isEvidenceGap)) {
     const labels = s.labels ?? [];
     memories.push(
       base({
@@ -268,6 +267,20 @@ export function renderPamBundle(handoff, options = {}) {
         content: s.claimed
           ? `Rule: do not send or act outward on step ${s.index + 1} (claimed ${claimPhrase(s.claimed)}) until a witnessed tool call confirms it.`
           : `Rule: do not send or act outward on step ${s.index + 1} until a witnessed tool call confirms it.`
+      })
+    );
+  }
+  // Approval-gated steps: witnessed/supported work that still needs sign-off. Surfaced as a procedural
+  // rule (never an evidence gap) so a consumer sees WHICH step to route for approval.
+  for (const s of steps.filter(needsApproval)) {
+    memories.push(
+      base({
+        id: `procedural:needs-approval-step-${s.index + 1}`,
+        memory_type: PAM_MEMORY_TYPES.PROCEDURAL,
+        step_index: s.index + 1,
+        evidence_status: "NEEDS_HUMAN_APPROVAL",
+        labels: s.labels ?? [],
+        content: `Rule: step ${s.index + 1} requires human approval before anyone proceeds${s.claimed ? ` (claimed ${claimPhrase(s.claimed)})` : ""}.`
       })
     );
   }

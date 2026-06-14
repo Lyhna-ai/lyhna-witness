@@ -125,6 +125,31 @@ test("an unclaimed observed failure is never given a fabricated agent claim", ()
   assert.match(sem.content, /observed|no agent claim|did not succeed/i);
 });
 
+test("an approval-gated supported step is a procedural rule, not an evidence gap", () => {
+  // Witnessed + supported, but needs human approval → SUPPORTED + NEEDS_HUMAN_APPROVAL, safe=false.
+  const h = buildWitnessedHandoff({
+    objective: "Refund the customer.",
+    steps: [
+      {
+        claimed: { system: "stripe", action: "refund", result: "refunded" },
+        witnessed: { system: "stripe", action: "refund", returned: true },
+        needs_human_approval: true
+      }
+    ]
+  });
+  const mems = memoriesOf(renderPamBundle(h, { name: "t" }));
+  const ep = mems.find((m) => m.memory_type === "episodic" && m.step_index === 1);
+  assert.equal(ep.supported, true, "witnessed work stays supported");
+  assert.ok(ep.labels.includes("NEEDS_HUMAN_APPROVAL"));
+  // It must NOT be rendered as an evidence gap (that would mislabel witnessed work as missing evidence).
+  assert.ok(!mems.some((m) => m.id === "semantic:step-1-evidence-gap"));
+  assert.ok(!mems.some((m) => m.step_index === 1 && m.supported === false));
+  // It IS surfaced as a procedural approval rule naming the step.
+  const appr = mems.find((m) => m.id === "procedural:needs-approval-step-1");
+  assert.ok(appr);
+  assert.match(appr.content, /human approval/i);
+});
+
 test("a supplied timestamp appears only in the manifest, only when supplied; never auto-generated", () => {
   const without = renderPamBundle(sampleHandoff(), { name: "t" });
   assert.equal(manifestOf(without).timestamp, undefined);
