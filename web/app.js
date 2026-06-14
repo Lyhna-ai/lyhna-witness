@@ -118,15 +118,21 @@
     var sum = H.summary || {};
     var total = sum.total_steps != null ? sum.total_steps : (H.steps || []).length;
     var supported = sum.supported != null ? sum.supported : (H.steps || []).filter(isSupported).length;
-    if (H.safe_to_continue === true) {
-      return "All " + total + " steps were witnessed and supported. Safe to continue.";
-    }
     var unsupported = sum.unsupported || 0;
     var mismatches = sum.mismatches || 0;
+    // "All supported" is keyed off the COUNTS, not safe_to_continue: a route-only mismatch leaves
+    // safe_to_continue true while supported < total, and that mismatch must not be erased from the
+    // verdict. Only call it fully clean when every step is supported with no mismatch/unsupported.
+    if (supported === total && mismatches === 0 && unsupported === 0) {
+      return "All " + total + " steps were witnessed and supported. Safe to continue.";
+    }
     var parts = [supported + " of " + total + " steps witnessed and supported"];
     if (unsupported) parts.push(unsupported + " claimed " + (unsupported === 1 ? "action" : "actions") + " the witness never saw");
     if (mismatches) parts.push(mismatches + " route " + (mismatches === 1 ? "mismatch" : "mismatches"));
-    return parts.join(" · ") + " — do not send.";
+    // Mismatch-only receipts stay safe_to_continue (a review note, not a send-blocker); reserve
+    // "do not send" for the genuinely unsafe case so the verdict never over- or under-claims.
+    var tail = H.safe_to_continue === true ? " — review before sending." : " — do not send.";
+    return parts.join(" · ") + tail;
   }
 
   // ---- capsule ("Client-Ready AI Work Receipt") ----
@@ -159,7 +165,7 @@
       supported.forEach(function (s) {
         var li = el("li");
         li.appendChild(el("span", "ok-system", claimLabel(s)));
-        li.appendChild(document.createTextNode(" — witnessed (approved, returned)"));
+        li.appendChild(document.createTextNode(" — witnessed (call returned)"));
         supportedEl.appendChild(li);
       });
     }
