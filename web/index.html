@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lyhna Witness — AI Work Receipts your clients can trust</title>
+  <meta
+    name="description"
+    content="Before your AI tells a client 'done,' get the receipt. Lyhna witnesses an agent's real tool calls, compares them to what it claimed, and prints a deterministic, honest receipt."
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <!-- HERO -->
+    <section class="hero">
+      <p class="eyebrow">Lyhna Witness</p>
+      <h1>AI Work Receipts your clients can trust.</h1>
+      <p class="subhead">Before your AI tells a client "done," get the receipt.</p>
+      <button id="run-btn" class="btn btn-primary" type="button">
+        Generate Witness Capsule
+      </button>
+      <p class="honest-tag">Demo workflow. Simulated tools. Real Lyhna receipt rules.</p>
+    </section>
+
+    <!-- OBJECTIVE -->
+    <section id="objective" class="objective" hidden>
+      <p class="objective-label">Objective the agent was given</p>
+      <p id="objective-text" class="objective-text"></p>
+    </section>
+
+    <!-- RUN (the three beats per step) -->
+    <section id="run" class="run" hidden>
+      <h2 class="section-title">Witnessing the run</h2>
+      <ol id="steps" class="steps"></ol>
+    </section>
+
+    <!-- CAPSULE -->
+    <section id="capsule" class="capsule" hidden>
+      <header class="capsule-head">
+        <h2>Client-Ready AI Work Receipt</h2>
+        <span id="capsule-status" class="capsule-status"></span>
+      </header>
+
+      <dl class="capsule-grid">
+        <dt>Systems touched</dt>
+        <dd id="cap-systems"></dd>
+
+        <dt>Flagged steps</dt>
+        <dd><ul id="cap-flags" class="flag-list"></ul></dd>
+
+        <dt>Safe to send</dt>
+        <dd id="cap-safe"></dd>
+
+        <dt>Next action</dt>
+        <dd id="cap-next"></dd>
+      </dl>
+
+      <!-- HONESTY CEILING (verbatim) -->
+      <div class="ceiling">
+        <div class="ceiling-col ceiling-can">
+          <h3>What Lyhna can say:</h3>
+          <ul>
+            <li>This tool call was witnessed.</li>
+            <li>This claim matched the witnessed action.</li>
+            <li>This claim had no witnessed evidence.</li>
+            <li>This route differed from what the agent claimed.</li>
+            <li>This handoff is safe / not safe to continue.</li>
+          </ul>
+        </div>
+        <div class="ceiling-col ceiling-cannot">
+          <h3>What Lyhna cannot say:</h3>
+          <ul>
+            <li>The client read the email.</li>
+            <li>The document is business/legally correct.</li>
+            <li>Every sentence the agent wrote is true.</li>
+            <li>Anything that happened outside the observed workflow.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- CTA FOOTER -->
+      <footer class="cta">
+        <p class="cta-primary">Run the demo. Then ask your AI if the receipt overclaims.</p>
+        <div class="cta-actions">
+          <button id="copy-btn" class="btn btn-secondary" type="button">Copy receipt</button>
+          <span id="copy-status" class="copy-status" aria-live="polite"></span>
+        </div>
+        <p class="install-line">
+          Install Lyhna Witness — witness real agent workflows.
+          <a href="#" class="beta-link">Join the beta</a>
+        </p>
+      </footer>
+    </section>
+  </main>
+
+  <script src="data/handoff.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
