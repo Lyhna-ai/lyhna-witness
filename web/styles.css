@@ -271,17 +271,17 @@ body {
 .capsule-grid dd { margin: 0; color: var(--ink); }
 
 .flag-list, .ok-list { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
-.flag-list li, .ok-list li { font-size: 14.5px; }
+.flag-list li, .ok-list li { font-size: 15.5px; }
 .flag-system {
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--bad-ink);
   font-weight: 700;
 }
 .ok-list li::marker { color: var(--ok-ink); }
 .ok-system {
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--ok-ink);
   font-weight: 700;
 }
@@ -307,7 +307,7 @@ body {
 }
 .ceiling-col h3 { margin: 0 0 10px; font-size: 14px; }
 .ceiling-col ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
-.ceiling-col li { font-size: 13.5px; color: var(--ink-soft); }
+.ceiling-col li { font-size: 14px; color: var(--ink-soft); }
 .ceiling-can h3   { color: var(--ok-ink); }
 .ceiling-cannot h3 { color: var(--bad-ink); }
 .ceiling-cannot li { color: var(--ink-soft); }
