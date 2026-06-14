@@ -1,0 +1,45 @@
+{
+  "schema": "lyhna-pam/v0",
+  "pam_projection": "v0",
+  "conformance": "PAM-shaped projection of a Lyhna witnessed-handoff/v1 receipt. Not yet validated against a formal published PAM schema.",
+  "source": "lyhna-witness",
+  "lyhna_schema": "witnessed-handoff/v1",
+  "name": "live-loop",
+  "objective": "Fix the checkout total rounding bug and confirm the fix with the client",
+  "safe_to_continue": false,
+  "summary": {
+    "total_steps": 3,
+    "supported": 2,
+    "mismatches": 0,
+    "unsupported": 1,
+    "do_not_send": 1
+  },
+  "memory_types": [
+    "episodic",
+    "semantic",
+    "procedural",
+    "working",
+    "identity"
+  ],
+  "memory_counts": {
+    "episodic": 3,
+    "semantic": 3,
+    "procedural": 3,
+    "working": 3,
+    "identity": 1
+  },
+  "memory_total": 13,
+  "memories_file": "memories.jsonl",
+  "handoff_resource": "../handoff.json",
+  "honesty_ceiling": {
+    "witnessed": "action-level only — what crossed the tool boundary vs. what the agent claimed",
+    "never_asserts": [
+      "that a claimed-but-unwitnessed action happened (e.g. an email was sent)",
+      "business / legal / quality correctness of the work",
+      "client or third-party behavior",
+      "anything outside the observed workflow",
+      "agent confidence as evidence"
+    ],
+    "rule": "every memory item carries evidence_status; an unsupported claim stays unsupported and is never upgraded into a fact"
+  }
+}

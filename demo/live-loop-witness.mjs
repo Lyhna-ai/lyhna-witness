@@ -22,7 +22,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runFromWitnessedEvents } from "../src/witnessed-event.mjs";
-import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt, renderOkfBundle } from "../src/index.mjs";
+import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt, renderOkfBundle, renderPamBundle } from "../src/index.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const inputPath = join(here, "live-loop-witness-input.json");
@@ -45,6 +45,18 @@ const okf = renderOkfBundle(handoff, { name: "live-loop" });
 rmSync(join(outDir, "okf"), { recursive: true, force: true });
 for (const [relPath, contents] of Object.entries(okf)) {
   const dest = join(outDir, "okf", relPath);
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, contents);
+}
+
+// Additive PAM export: the same witnessed handoff projected into a PAM-shaped memory bundle beside okf/.
+// Deterministic — no timestamp passed. Every memory item carries its evidence_status, so the receipt
+// travels as portable memory without shedding the honesty ceiling (PAM is the container; Lyhna is the
+// witness). Clear the dir first so a vanished item leaves no stale file.
+const pam = renderPamBundle(handoff, { name: "live-loop" });
+rmSync(join(outDir, "pam"), { recursive: true, force: true });
+for (const [relPath, contents] of Object.entries(pam)) {
+  const dest = join(outDir, "pam", relPath);
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, contents);
 }

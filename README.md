@@ -96,6 +96,36 @@ witnessed event sequence, the deterministic trust labels, `handoff.json`, and th
 carry knowledge; Lyhna is what tells you which agent claims are supported, unsupported, mismatched, or
 unsafe to continue.
 
+## PAM-shaped memory projection
+
+Beside OKF, Lyhna emits the same witnessed handoff as a **PAM-shaped memory bundle** — PAM (Portable
+Agent Memory) is the format agents use to carry memory/continuation state between systems:
+
+```
+examples/live-loop/
+  HANDOFF.md  handoff.json  next-ai-prompt.md
+  okf/        # knowledge bundle
+  pam/        # memory projection
+    manifest.json     # schema, summary, memory-type counts, honesty ceiling
+    memories.jsonl    # one memory item per line, across PAM's five classes
+    README.md
+```
+
+`renderPamBundle(handoff, options)` returns a `{ path: contents }` map (the demo writes it under
+`pam/`), deterministic — no clock, no model calls; a `timestamp` appears (manifest only) solely if you
+pass one. The receipt projects across PAM's five memory classes: **episodic** (the witnessed steps),
+**semantic** (evidence-bound facts), **procedural** (continuation rules / do-not-send / do-not-re-litigate),
+**working** (objective, open questions, settled, continuation state), and **identity** (explicit
+user/org/client preferences only — never inferred; clearly absent otherwise).
+
+**PAM is the memory container; Lyhna is the witness.** The distinction is transport integrity vs.
+origin integrity: a memory format proves a bundle was not altered; it cannot prove the contents reflect
+work that happened. So **every memory item carries its `evidence_status`** (`SUPPORTED`, `UNSUPPORTED`,
+`DO_NOT_SEND`, `CLAIMED_ACTUAL_MISMATCH`, …). A downstream agent therefore *inherits* the honesty
+ceiling instead of stripping it: an unsupported claim stays unsupported memory and is never upgraded
+into a fact. (Conformance: `lyhna-pam/v0` — a PAM-shaped projection, not yet validated against a formal
+published PAM schema.)
+
 ## V1 promise (the honesty ceiling)
 
 Action-level witness + evidence-bound continuation. Lyhna witnesses what crossed the boundary and

@@ -9,7 +9,7 @@ import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt, renderOkfBundle } from "../src/index.mjs";
+import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt, renderOkfBundle, renderPamBundle } from "../src/index.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "examples", "hermes-zapier");
@@ -67,6 +67,17 @@ const okf = renderOkfBundle(handoff, { name: "hermes-zapier" });
 rmSync(join(outDir, "okf"), { recursive: true, force: true });
 for (const [relPath, contents] of Object.entries(okf)) {
   const dest = join(outDir, "okf", relPath);
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, contents);
+}
+
+// Additive PAM export: the same witnessed handoff projected into a PAM-shaped memory bundle beside okf/.
+// PAM is the container; Lyhna is the witness. Every memory item carries its evidence_status so an
+// unsupported claim stays unsupported memory. Deterministic — no timestamp passed.
+const pam = renderPamBundle(handoff, { name: "hermes-zapier" });
+rmSync(join(outDir, "pam"), { recursive: true, force: true });
+for (const [relPath, contents] of Object.entries(pam)) {
+  const dest = join(outDir, "pam", relPath);
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, contents);
 }

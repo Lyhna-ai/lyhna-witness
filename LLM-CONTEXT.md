@@ -46,7 +46,7 @@ correct," "this happened live"), it is an **overclaim** — do not ship it.
 | Repo | Language | Base branch | What it is |
 | --- | --- | --- | --- |
 | **`lyhna-mcp-proxy`** | TypeScript | `master` | Runtime MCP proxy in the tool-call path. Witnesses real tool calls, captures agent claims, and exports a `witness-input.json`. ~503 tests. |
-| **`lyhna-witness`** | zero-dep ESM JS (Node ≥20) | `main` | Product layer: deterministic labeler + handoff generator + CLI + OKF export + the `web/` demo. ~70 tests. |
+| **`lyhna-witness`** | zero-dep ESM JS (Node ≥20) | `main` | Product layer: deterministic labeler + handoff generator + CLI + OKF + PAM exports + the `web/` demo. ~80 tests. |
 
 The proxy **produces** the witness input; the witness **renders** it into the user-readable receipt. Neither
 imports the other's internals — the witness mirrors the proxy's event vocabulary (Integration Option A).
@@ -64,7 +64,7 @@ imports the other's internals — the witness mirrors the proxy's event vocabula
    (`assembleWitnessInput`) and emits **`witness-input.json`** (verified-context only; plaintext).
 4. **`lyhna-witness <witness-input.json>`** applies the deterministic labeler and writes the
    receipt: `HANDOFF.md` (readable receipt) · `handoff.json` (machine) · `next-ai-prompt.md` (continuation) ·
-   `okf/` (portable bundle).
+   `okf/` (knowledge bundle) · `pam/` (PAM-shaped memory projection — every item carries its evidence_status).
 5. **`web/`** renders a committed `handoff.json` for a user or AI to audit.
 
 ### The canonical "came through the live loop" receipt
@@ -72,7 +72,7 @@ imports the other's internals — the witness mirrors the proxy's event vocabula
   `lyhna-mcp-proxy/examples/live-loop/witness-input.json` (deterministic; a test asserts it byte-for-byte).
 - Witness: that file is vendored to `lyhna-witness/demo/live-loop-witness-input.json`;
   `demo/live-loop-witness.mjs` (`npm run demo:live-loop`) renders it to
-  `lyhna-witness/examples/live-loop/` (handoff.json/HANDOFF.md/next-ai-prompt.md/okf).
+  `lyhna-witness/examples/live-loop/` (handoff.json/HANDOFF.md/next-ai-prompt.md/okf/pam).
 - The receipt's scenario (honest, mixed): agent wrote the checkout fix (SUPPORTED) + ran tests
   (SUPPORTED) + **claimed it emailed the client an invoice but made no email tool call** →
   UNSUPPORTED / DO_NOT_SEND. This is the killer demo: "claimed but never witnessed."
@@ -117,8 +117,16 @@ what this receipt refuses to fake" section, and a **Copy receipt** button whose 
 - The demo is **live, public, and honesty-audited** (Codex review on every PR + an independent
   adversarial audit + a live-URL pass; no overclaims).
 
-**Health:** witness `main` green (70 tests); proxy `master` green (503 tests). Check GitHub for open
+**Health:** witness `main` green (~80 tests); proxy `master` green (~503 tests). Check GitHub for open
 PRs before starting a new lane.
+
+**Carriers vs. the witness (the export bet):** OKF and PAM are *carriers* (transport integrity — a
+bundle was not altered). Lyhna is the *witness* (origin integrity — whether the contents reflect work
+that crossed the tool boundary). Lyhna does not compete with these formats; it **feeds** them. Each
+handoff already projects into `okf/` (knowledge) and `pam/` (memory), with the evidence verdict baked
+into every item so a consumer inherits the honesty ceiling instead of stripping it. The carrier is a
+consumer of Lyhna, not Lyhna. (PAM wording stays "PAM-shaped projection / `lyhna-pam/v0`" until matched
+against a formal PAM schema.)
 
 **Deferred / next lanes (NOT V1 blockers):** real beta-capture path (mailto/Tally/waitlist) to replace
 the static "Private beta soon"; buyer copy + MCP install instructions; proxy README repositioning onto
@@ -200,8 +208,8 @@ second engineer; don't merge around it.
 - `THESIS.md` — the product thesis + honesty ceiling (canonical). `BUILD-PLAN.md`, `HUMAN-GUIDE.md`,
   `PROJECT-BRIEF.md` — supporting docs.
 - `src/labels.mjs` — deterministic trust labels. `src/generate.mjs` — handoff builder + renderers.
-  `src/witnessed-event.mjs` — maps proxy events → labeler input. `src/okf.mjs` — OKF export.
-  `src/cli.mjs` — the `lyhna-witness` CLI.
+  `src/witnessed-event.mjs` — maps proxy events → labeler input. `src/okf.mjs` — OKF (knowledge) export.
+  `src/pam.mjs` — PAM (memory) projection. `src/cli.mjs` — the `lyhna-witness` CLI.
 - `demo/*.mjs` — regenerate `examples/*`. `examples/live-loop/` — the canonical receipt.
 - `web/` — the live demo (see §5). `.github/workflows/{ci.yml,pages.yml}`.
 
@@ -222,6 +230,10 @@ second engineer; don't merge around it.
 - **Receipt / handoff / capsule** — the rendered claimed-vs-actual output (`handoff.json` + `HANDOFF.md`).
 - **`witness-input.json`** — the proxy's emitted pairing of claims with witnessed turns; the witness's input.
 - **Honesty ceiling** — the fixed set of things Lyhna can/cannot assert (§2).
-- **OKF** — a portable markdown+frontmatter projection of a handoff (`okf/`).
+- **OKF** — a portable markdown+frontmatter *knowledge* projection of a handoff (`okf/`).
+- **PAM** — Portable Agent Memory; Lyhna's PAM-shaped *memory* projection of a handoff (`pam/`,
+  `lyhna-pam/v0`), each item tagged with its evidence_status.
+- **Carrier vs. witness** — carriers (OKF/PAM) prove transport integrity; Lyhna proves origin integrity
+  (what crossed the tool boundary). Lyhna feeds the carriers; the carrier is a consumer of Lyhna.
 - **Drift gate** — CI that regenerates committed artifacts and fails if they differ (enforces determinism).
 - **The loop / live loop** — the proxy standing-service run that produces a real witnessed receipt.
