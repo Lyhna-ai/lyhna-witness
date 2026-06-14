@@ -2,7 +2,7 @@
 
 > What your agent actually did — from the tool-call witness, not the agent's self-report.
 
-**⛔ NOT safe to continue / send yet — see flags below.**  ·  3 steps · 2 supported · 0 mismatch · 1 unsupported · 1 do-not-send
+**⛔ NOT safe to continue / send yet — see flags below.**  ·  3 steps · 2 supported · 0 mismatches · 1 unsupported · 1 do-not-send
 
 ## Current Objective
 Fix the checkout total rounding bug and confirm the fix with the client

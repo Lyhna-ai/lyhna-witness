@@ -108,6 +108,11 @@ function deriveNextActions(steps, L) {
 
 const bullet = (items) => (items.length ? items.map((x) => `- ${x}`).join("\n") : "_(none)_");
 
+// Count-aware noun so the summary line reads "0 mismatches" / "1 mismatch" / "3 steps" — never the
+// ungrammatical "0 mismatch". Only the true count-nouns (step, mismatch) need this; "supported" etc.
+// read fine as adjective counts ("2 supported", "0 do-not-send").
+const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
 // The witness's proof refs (e.g. a vouched-for file URL + result hash + capture time) are the
 // evidence a SUPPORTED step rests on. Render them as labelled bullets when present so neither the
 // human handoff nor the next-agent prompt drops the only pointer to the verifiable artifact. Returns
@@ -150,8 +155,9 @@ export function renderHandoffMarkdown(h) {
     ``,
     `> What your agent actually did — from the tool-call witness, not the agent's self-report.`,
     ``,
-    `**${verdict}**  ·  ${h.summary.total_steps} steps · ${h.summary.supported} supported · ` +
-      `${h.summary.mismatches} mismatch · ${h.summary.unsupported} unsupported · ${h.summary.do_not_send} do-not-send`,
+    `**${verdict}**  ·  ${count(h.summary.total_steps, "step", "steps")} · ${h.summary.supported} supported · ` +
+      `${count(h.summary.mismatches, "mismatch", "mismatches")} · ${h.summary.unsupported} unsupported · ` +
+      `${h.summary.do_not_send} do-not-send`,
     ``,
     `## Current Objective`,
     h.objective || "_(none stated)_",

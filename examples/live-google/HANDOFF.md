@@ -2,7 +2,7 @@
 
 > What your agent actually did — from the tool-call witness, not the agent's self-report.
 
-**⛔ NOT safe to continue / send yet — see flags below.**  ·  3 steps · 1 supported · 0 mismatch · 2 unsupported · 2 do-not-send
+**⛔ NOT safe to continue / send yet — see flags below.**  ·  3 steps · 1 supported · 0 mismatches · 2 unsupported · 2 do-not-send
 
 ## Current Objective
 Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log them in the CRM.
