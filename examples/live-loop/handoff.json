@@ -1,0 +1,78 @@
+{
+  "schema": "witnessed-handoff/v1",
+  "objective": "Witnessed handoff for loop loop-checkout-fix",
+  "steps": [
+    {
+      "index": 0,
+      "claimed": {
+        "system": "filesystem",
+        "action": "write_file",
+        "result": "patched the checkout rounding bug"
+      },
+      "witnessed": {
+        "system": "filesystem",
+        "action": "write_file",
+        "returned": true,
+        "result_hash": "sha256:377057b9961590565c14768d19c2d2d1a1cf34a7a613c375901c49295434d687"
+      },
+      "labels": [
+        "SUPPORTED"
+      ],
+      "human_note": "The agent's account matches what the witness observed."
+    },
+    {
+      "index": 1,
+      "claimed": {
+        "system": "test_runner",
+        "action": "run_tests",
+        "result": "all checkout tests pass"
+      },
+      "witnessed": {
+        "system": "test_runner",
+        "action": "run_tests",
+        "returned": true,
+        "result_hash": "sha256:650da06bf02f43fc80b72c3536bb98c1028039b9ebd9892e5f1eb65d1e3d66cb"
+      },
+      "labels": [
+        "SUPPORTED"
+      ],
+      "human_note": "The agent's account matches what the witness observed."
+    },
+    {
+      "index": 2,
+      "claimed": {
+        "system": "gmail",
+        "action": "send",
+        "result": "emailed the client the corrected invoice",
+        "user_facing": true
+      },
+      "witnessed": null,
+      "labels": [
+        "UNSUPPORTED",
+        "NEEDS_EVIDENCE",
+        "DO_NOT_SEND"
+      ],
+      "human_note": "The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
+    }
+  ],
+  "systems_touched": [
+    "filesystem",
+    "test_runner"
+  ],
+  "summary": {
+    "total_steps": 3,
+    "supported": 2,
+    "mismatches": 0,
+    "unsupported": 1,
+    "do_not_send": 1
+  },
+  "settled": [
+    "checkout total rounding bug patched"
+  ],
+  "open_questions": [],
+  "next_actions": [],
+  "needs_human_approval": [],
+  "do_not_re_litigate": [],
+  "safe_to_continue": false,
+  "proof_refs": null
+}
