@@ -1,6 +1,6 @@
 # Lyhna Witness — demo landing page (`web/`)
 
-This is the public demo page for **Lyhna Witness** — "AI Work Receipts your clients can trust." It is a self-contained, vanilla HTML/CSS/JS page (no frameworks, no build step, no dependencies) that walks a visitor through one witnessed agent run and prints the deterministic, honest receipt: the agent's *claim* vs. what the *witness* actually saw cross the tool-call wire, a colored label per step (green OK / yellow MISMATCH / red DO NOT SEND), a client-ready capsule, and the verbatim "honesty ceiling" stating what Lyhna can and cannot say. It is labeled honestly as *"Demo tools. Real witness loop. Real receipt rules."* and it renders the **exact committed receipt** from `examples/live-loop/handoff.json` — the canonical receipt that actually came through the lyhna-mcp-proxy standing-service loop — via the generated `data/handoff.js`, kept in sync by `test/web-data.test.mjs`, so the demo can never silently drift from the real receipt rules.
+This is the public demo page for **Lyhna Witness** — "AI Work Receipts your clients can trust." It is a self-contained, vanilla HTML/CSS/JS page (no frameworks, no build step, no dependencies) that walks a visitor through one witnessed agent run and prints the deterministic, honest receipt: the agent's *claim* vs. what the *witness* actually saw cross the tool-call wire, a colored label per step (green OK / yellow MISMATCH / red DO NOT SEND), a client review capsule, and a buyer-facing proof boundary: what the receipt proves, what it refuses to fake, and why the next user or AI can continue from evidence instead of the agent's story. It is labeled honestly as *"Demo tools. Real witness loop. Deterministic receipt rules."* and it renders the **exact committed receipt** from `examples/live-loop/handoff.json` — the canonical receipt that actually came through the lyhna-mcp-proxy standing-service loop — via the generated `data/handoff.js`, kept in sync by `test/web-data.test.mjs`, so the demo can never silently drift from the real receipt rules.
 
 ## Run it
 
@@ -12,7 +12,7 @@ Then open the printed URL. It also works by opening `web/index.html` directly in
 
 ## Regenerate the data module
 
-`web/data/handoff.js` is generated from the committed receipt. If `examples/hermes-zapier/handoff.json` changes, regenerate and re-commit:
+`web/data/handoff.js` is generated from the committed receipt. If `examples/live-loop/handoff.json` changes, regenerate and re-commit:
 
 ```sh
 node web/build-data.mjs

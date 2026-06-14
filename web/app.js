@@ -24,7 +24,7 @@
       return { cls: "chip-warn", text: "MISMATCH — different route than claimed" };
     }
     if (has("NEEDS_HUMAN_APPROVAL")) {
-      return { cls: "chip-info", text: "Needs human approval" };
+      return { cls: "chip-info", text: "Needs user approval" };
     }
     if (has("SUPPORTED")) {
       return { cls: "chip-ok", text: "OK — witnessed" };
@@ -120,7 +120,7 @@
   function flagNote(s) {
     var note = s.human_note || "";
     if (needsApproval(s)) {
-      return note ? "Needs human approval before proceeding. " + note : "Needs human approval before proceeding.";
+      return note ? "Needs user approval before proceeding. " + note : "Needs user approval before proceeding.";
     }
     return note;
   }
@@ -140,7 +140,7 @@
     var doNotSend = sum.do_not_send || 0;
     // Only the truly clean case earns "Safe to continue": every step supported, no mismatch, no
     // unsupported, AND safe_to_continue true. The last guard matters — an all-witnessed step that
-    // still needs human approval keeps safe_to_continue false, and must NOT read as safe here.
+    // still needs user approval keeps safe_to_continue false, and must NOT read as safe here.
     if (supported === total && mismatches === 0 && unsupported === 0 && H.safe_to_continue === true) {
       return "All " + total + " steps were witnessed and supported. Safe to continue.";
     }
@@ -148,16 +148,16 @@
     if (unsupported) parts.push(unsupported + " claimed " + (unsupported === 1 ? "action" : "actions") + " the witness never saw");
     if (mismatches) parts.push(mismatches + " route " + (mismatches === 1 ? "mismatch" : "mismatches"));
     // Tail by severity: genuinely unsafe (unsupported / do-not-send) -> do not send; approval-gated
-    // (safe_to_continue false with nothing unsupported) -> needs human approval; safe-but-flagged
+    // (safe_to_continue false with nothing unsupported) -> needs user approval; safe-but-flagged
     // (e.g. a route-only mismatch) -> review. Never says "safe" when safe_to_continue is false.
     var tail;
     if (unsupported > 0 || doNotSend > 0) tail = " — do not send.";
-    else if (H.safe_to_continue !== true) tail = " — needs human approval before sending.";
+    else if (H.safe_to_continue !== true) tail = " — needs user approval before sending.";
     else tail = " — review before sending.";
     return parts.join(" · ") + tail;
   }
 
-  // ---- capsule ("Client-Ready AI Work Receipt") ----
+  // ---- capsule ("Client Review AI Work Receipt") ----
   function renderCapsule() {
     var safe = H.safe_to_continue === true;
 
@@ -221,8 +221,8 @@
   function capsuleText() {
     var safe = H.safe_to_continue === true;
     var lines = [];
-    lines.push("Lyhna Witness — Client-Ready AI Work Receipt");
-    lines.push("Demo tools. Real witness loop. Real receipt rules.");
+    lines.push("Lyhna Witness — Client Review AI Work Receipt");
+    lines.push("Demo tools. Real witness loop. Deterministic receipt rules.");
     lines.push("");
     lines.push("Ask your AI: does this receipt overclaim what Lyhna witnessed?");
     lines.push("");
@@ -258,18 +258,22 @@
     lines.push("Safe to send: " + (safe ? "Yes" : "No"));
     lines.push("Next action: " + ((H.next_actions && H.next_actions[0]) || "(none)"));
     lines.push("");
-    lines.push("What Lyhna can say:");
-    lines.push("  - This tool call was witnessed.");
-    lines.push("  - This claim matched the witnessed action.");
-    lines.push("  - This claim had no witnessed evidence.");
-    lines.push("  - This route differed from what the agent claimed.");
-    lines.push("  - This handoff is safe / not safe to continue.");
+    lines.push("Why this matters:");
+    lines.push('  Lyhna turns "the agent said it was done" into "here is what was actually witnessed, what was not, and what is safe to continue."');
     lines.push("");
-    lines.push("What Lyhna cannot say:");
-    lines.push("  - The client read the email.");
-    lines.push("  - The document is business/legally correct.");
-    lines.push("  - Every sentence the agent wrote is true.");
-    lines.push("  - Anything that happened outside the observed workflow.");
+    lines.push("What this receipt proves:");
+    lines.push("  - The agent's story is no longer the source of truth. Lyhna shows what actually crossed the tool boundary.");
+    lines.push("  - Every claimed step is marked with evidence status: supported, unsupported, mismatched, approval-needed, or do-not-send.");
+    lines.push("  - You can see exactly where the agent's account lost witnessed support.");
+    lines.push("  - The next user or AI gets a safe continuation state: what is settled, open, needs review, and must not be trusted yet.");
+    lines.push("  - The handoff carries a defensible boundary: what was witnessed, what was not witnessed, and what should happen next.");
+    lines.push("");
+    lines.push("What this receipt refuses to fake:");
+    lines.push("  - It does not claim the client read the email.");
+    lines.push("  - It does not certify the business quality of the work.");
+    lines.push("  - It does not treat agent confidence as evidence.");
+    lines.push("  - It does not verify anything outside the observed workflow.");
+    lines.push("  - It does not let a clean-sounding summary become a dangerous handoff.");
     return lines.join("\n");
   }
 
