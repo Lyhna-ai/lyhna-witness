@@ -27,7 +27,7 @@
       <button id="run-btn" class="btn btn-primary" type="button">
         Generate Witness Capsule
       </button>
-      <p class="honest-tag">Demo tools. Real witness loop. Real receipt rules.</p>
+      <p class="honest-tag">Demo tools. Real witness loop. Deterministic receipt rules.</p>
     </section>
 
     <!-- OBJECTIVE -->
@@ -45,7 +45,7 @@
     <!-- CAPSULE -->
     <section id="capsule" class="capsule" hidden>
       <header class="capsule-head">
-        <h2>Client-Ready AI Work Receipt</h2>
+        <h2>Client Review AI Work Receipt</h2>
         <span id="capsule-status" class="capsule-status"></span>
       </header>
 
@@ -74,23 +74,31 @@
 
       <!-- HONESTY CEILING (verbatim) -->
       <div class="ceiling">
+        <div class="ceiling-intro">
+          <h3>Why this matters</h3>
+          <p>
+            Lyhna turns "the agent said it was done" into "here is what was actually witnessed,
+            what was not, and what is safe to continue."
+          </p>
+        </div>
         <div class="ceiling-col ceiling-can">
-          <h3>What Lyhna can say:</h3>
+          <h3>What this receipt proves:</h3>
           <ul>
-            <li>This tool call was witnessed.</li>
-            <li>This claim matched the witnessed action.</li>
-            <li>This claim had no witnessed evidence.</li>
-            <li>This route differed from what the agent claimed.</li>
-            <li>This handoff is safe / not safe to continue.</li>
+            <li><strong>The agent's story is no longer the source of truth.</strong> Lyhna shows what actually crossed the tool boundary.</li>
+            <li><strong>Every claimed step is marked with evidence status.</strong> Supported, unsupported, mismatched, approval-needed, or do-not-send.</li>
+            <li><strong>You can see exactly where the agent's account lost witnessed support.</strong> If it claimed Gmail, but no Gmail send was witnessed, Lyhna flags the missing evidence before a user repeats the claim.</li>
+            <li><strong>The next user or AI gets a safe continuation state.</strong> What is settled, what is open, what needs review, and what must not be trusted yet.</li>
+            <li><strong>The handoff carries a defensible boundary.</strong> It says what was witnessed, what was not witnessed, and what should happen next.</li>
           </ul>
         </div>
         <div class="ceiling-col ceiling-cannot">
-          <h3>What Lyhna cannot say:</h3>
+          <h3>What this receipt refuses to fake:</h3>
           <ul>
-            <li>The client read the email.</li>
-            <li>The document is business/legally correct.</li>
-            <li>Every sentence the agent wrote is true.</li>
-            <li>Anything that happened outside the observed workflow.</li>
+            <li><strong>It does not claim the client read the email.</strong> Lyhna saw no client behavior, so it does not invent one.</li>
+            <li><strong>It does not certify the business quality of the work.</strong> A witnessed file write or test run is not the same as legal, financial, or commercial correctness.</li>
+            <li><strong>It does not treat agent confidence as evidence.</strong> If the agent says "done" but no tool call proves it, the receipt says unsupported.</li>
+            <li><strong>It does not verify anything outside the observed workflow.</strong> No witnessed event, no claim of truth.</li>
+            <li><strong>It does not let a clean-sounding summary become a dangerous handoff.</strong> The receipt protects the next user or AI from continuing from a story that was never proven.</li>
           </ul>
         </div>
       </div>
