@@ -109,6 +109,37 @@ test("an action/result mismatch on a user-facing step makes the run NOT safe to 
   assert.equal(h.safe_to_continue, false);
 });
 
+test("derives a concrete next action for a NOT-safe run that supplied none", () => {
+  // The claimed-but-never-witnessed case: a NOT-safe receipt must never leave Next Actions empty.
+  const h = buildWitnessedHandoff({
+    objective: "Email the client the invoice.",
+    steps: [{ claimed: { system: "gmail", action: "send", user_facing: true }, witnessed: null }]
+  });
+  assert.equal(h.safe_to_continue, false);
+  assert.equal(h.next_actions.length, 1);
+  assert.match(h.next_actions[0], /Confirm step 1 actually happened/);
+});
+
+test("a mismatch+unsupported step derives a RECONCILE action, not a false 'did not succeed'", () => {
+  // Regression for the derive-order bug: claimed gmail.send but the witness saw gmail.create_draft
+  // RETURN. The step is CLAIMED_ACTUAL_MISMATCH + UNSUPPORTED, yet the witnessed call DID succeed —
+  // so the derived guidance must reconcile the claim, never say the witnessed call "did not succeed".
+  const h = buildWitnessedHandoff({
+    objective: "Email the client the signed contract.",
+    steps: [
+      {
+        claimed: { system: "gmail", action: "send", result: "sent", user_facing: true },
+        witnessed: { system: "gmail", action: "create_draft", result: "created", returned: true }
+      }
+    ]
+  });
+  assert.ok(h.steps[0].labels.includes("CLAIMED_ACTUAL_MISMATCH"));
+  assert.ok(h.steps[0].labels.includes("UNSUPPORTED"));
+  assert.equal(h.next_actions.length, 1);
+  assert.match(h.next_actions[0], /Reconcile step 1/);
+  assert.doesNotMatch(h.next_actions[0], /did not succeed/);
+});
+
 test("a fully clean run is safe_to_continue", () => {
   const h = buildWitnessedHandoff({
     objective: "Send the weekly summary.",

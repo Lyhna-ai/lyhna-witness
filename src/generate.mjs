@@ -89,10 +89,14 @@ function deriveNextActions(steps, L) {
       actions.push(
         `Confirm step ${n} actually happened — the agent claimed ${where(s)} but the witness saw no tool call — before telling anyone it is done.`
       );
+    } else if (s.labels.includes(L.CLAIMED_ACTUAL_MISMATCH)) {
+      // Check mismatch BEFORE the generic unsupported branch: a mismatch step (e.g. claimed
+      // gmail.send but the witness saw gmail.create_draft return) is ALSO labeled UNSUPPORTED, yet
+      // the witnessed call did succeed — so "did not succeed" would misstate the evidence. The honest
+      // instruction is to reconcile the claim against what the witness actually saw.
+      actions.push(`Reconcile step ${n}: the agent's account of ${where(s)} does not match what the witness saw.`);
     } else if (s.labels.includes(L.UNSUPPORTED)) {
       actions.push(`Re-run or verify step ${n}: the witnessed ${where(s)} did not succeed.`);
-    } else if (s.labels.includes(L.CLAIMED_ACTUAL_MISMATCH)) {
-      actions.push(`Reconcile step ${n}: the agent's account of ${where(s)} does not match what the witness saw.`);
     } else if (s.labels.includes(L.NEEDS_HUMAN_APPROVAL)) {
       actions.push(`Get human approval for step ${n} before proceeding.`);
     }
