@@ -35,7 +35,7 @@
         "NEEDS_EVIDENCE",
         "DO_NOT_SEND"
       ],
-      "human_note": "The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
+      "human_note": "The agent claimed a \"send\" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
     },
     {
       "index": 2,
@@ -51,7 +51,7 @@
         "NEEDS_EVIDENCE",
         "DO_NOT_SEND"
       ],
-      "human_note": "The agent claimed it create_records in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened."
+      "human_note": "The agent claimed a \"create_records\" action in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened."
     }
   ],
   "systems_touched": [

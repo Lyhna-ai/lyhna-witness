@@ -37,6 +37,15 @@ export function buildWitnessedHandoff(run) {
   const safe_to_continue =
     do_not_send.length === 0 && unsupported.length === 0 && needs_human_approval.length === 0;
 
+  // A NOT-safe receipt must never leave the reader with "(none)" under Next Actions: a flag with no
+  // accompanying instruction is a dead end. When the caller supplied no next actions, derive concrete,
+  // deterministic ones from the flagged steps. Honesty ceiling intact: every derived action is an
+  // instruction to verify / reconcile / get approval — never a claim that the work succeeded.
+  const next_actions =
+    (run.next_actions ?? []).length > 0 || safe_to_continue
+      ? (run.next_actions ?? [])
+      : deriveNextActions(steps, L);
+
   return {
     schema: WITNESSED_HANDOFF_SCHEMA,
     objective: run.objective ?? "",
@@ -56,12 +65,45 @@ export function buildWitnessedHandoff(run) {
     },
     settled: run.settled ?? [],
     open_questions: run.open_questions ?? [],
-    next_actions: run.next_actions ?? [],
+    next_actions,
     needs_human_approval,
     do_not_re_litigate: run.do_not_re_litigate ?? [],
     safe_to_continue,
     proof_refs: run.proof_refs ?? null
   };
+}
+
+// Derive concrete next actions from the flagged steps when the caller supplied none. Deterministic
+// (one action per flagged step, in step order) and strictly an instruction to verify/reconcile/seek
+// approval — never an assertion that anything happened. Called only for NOT-safe receipts.
+function deriveNextActions(steps, L) {
+  const where = (s) => {
+    if (!s.claimed) return `step ${s.index + 1}`;
+    const action = s.claimed.action ? `"${s.claimed.action}"` : "the step";
+    return `${action}${s.claimed.system ? ` in ${s.claimed.system}` : ""}`;
+  };
+  const actions = [];
+  for (const s of steps) {
+    const n = s.index + 1;
+    if (s.labels.includes(L.UNSUPPORTED) && !s.witnessed) {
+      actions.push(
+        `Confirm step ${n} actually happened — the agent claimed ${where(s)} but the witness saw no tool call — before telling anyone it is done.`
+      );
+    } else if (s.labels.includes(L.CLAIMED_ACTUAL_MISMATCH)) {
+      // Check mismatch BEFORE the generic unsupported branch: a mismatch step (e.g. claimed
+      // gmail.send but the witness saw gmail.create_draft return) is ALSO labeled UNSUPPORTED, yet
+      // the witnessed call did succeed — so "did not succeed" would misstate the evidence. The honest
+      // instruction is to reconcile the claim against what the witness actually saw.
+      actions.push(`Reconcile step ${n}: the agent's account of ${where(s)} does not match what the witness saw.`);
+    } else if (s.labels.includes(L.UNSUPPORTED)) {
+      actions.push(`Re-run or verify step ${n}: the witnessed ${where(s)} did not succeed.`);
+    } else if (s.labels.includes(L.NEEDS_HUMAN_APPROVAL)) {
+      actions.push(`Get human approval for step ${n} before proceeding.`);
+    }
+  }
+  // Defensive: a NOT-safe receipt always yields at least one action above, but never return empty.
+  if (actions.length === 0) actions.push("Resolve the flagged steps above before continuing or sending.");
+  return actions;
 }
 
 const bullet = (items) => (items.length ? items.map((x) => `- ${x}`).join("\n") : "_(none)_");

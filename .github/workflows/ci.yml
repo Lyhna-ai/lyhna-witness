@@ -38,6 +38,7 @@ jobs:
           npm run demo:live
           npm run demo:real
           npm run demo:gmail
+          npm run demo:live-loop
 
       - name: Assert committed demo output did not drift
         run: |
@@ -47,7 +48,7 @@ jobs:
           changes="$(git status --porcelain -- examples/)"
           if [ -n "$changes" ]; then
             echo "::error::Committed examples/ output is out of sync with the generator." \
-                 "Run 'npm run demo' / 'npm run demo:live' / 'npm run demo:real' / 'npm run demo:gmail' and commit the regenerated artifacts."
+                 "Run 'npm run demo' / 'npm run demo:live' / 'npm run demo:real' / 'npm run demo:gmail' / 'npm run demo:live-loop' and commit the regenerated artifacts."
             echo "$changes"
             exit 1
           fi

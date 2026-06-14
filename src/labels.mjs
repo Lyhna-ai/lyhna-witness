@@ -95,10 +95,13 @@ function actionResultMismatch(claimed, witnessed) {
   };
 }
 
+// A grammatical noun phrase for the agent's claim, e.g. `a "send" action in gmail`. Quoting the action
+// keeps the surrounding sentence readable ("The agent claimed a \"send\" action in gmail") instead of
+// splicing a bare verb into it ("claimed it send in gmail").
 function claimedPhrase(claimed) {
-  if (!claimed) return "did something";
+  if (!claimed) return "it did something";
   const sys = claimed.system ? ` in ${claimed.system}` : "";
-  return `${claimed.action || "completed a step"}${sys}`;
+  return claimed.action ? `a "${claimed.action}" action${sys}` : `it completed a step${sys}`;
 }
 
 const dedup = (arr) => [...new Set(arr)];
@@ -121,7 +124,7 @@ export function computeStepLabels(step) {
     labels.push(L.UNSUPPORTED, L.NEEDS_EVIDENCE);
     if (userFacing) labels.push(L.DO_NOT_SEND);
     notes.push(
-      `The agent claimed it ${claimedPhrase(claimed)}, but the witness saw no tool call for this step — ` +
+      `The agent claimed ${claimedPhrase(claimed)}, but the witness saw no tool call for this step — ` +
         `there is no evidence it actually happened.`
     );
     return finalize(step, labels, notes, claimed, witnessed);
