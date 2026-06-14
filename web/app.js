@@ -144,7 +144,7 @@
     var safe = H.safe_to_continue === true;
     var lines = [];
     lines.push("Lyhna Witness — Client-Ready AI Work Receipt");
-    lines.push("Demo workflow. Simulated tools. Real Lyhna receipt rules.");
+    lines.push("Demo tools. Real witness loop. Real receipt rules.");
     lines.push("");
     lines.push("Objective: " + (H.objective || ""));
     lines.push("Status: " + (safe ? "Safe to continue" : "Needs Review / DO NOT SEND"));
