@@ -1,6 +1,6 @@
 ---
 type: "Lyhna Witnessed Handoff"
-title: "Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix"
+title: "Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client"
 description: "What the agent actually did vs. what it claimed — NOT safe to continue."
 tags:
   - "lyhna"
@@ -21,13 +21,13 @@ lyhna_labels:
 handoff_resource: "live-loop.md"
 ---
 
-# Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix
+# Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client
 
 > Lyhna is the independent witness in the tool-call path. This is its testimony — not the agent's self-report.
 
 **Verdict:** ⛔ NOT safe to continue / send yet.
 
-**Objective:** Witnessed handoff for loop loop-checkout-fix
+**Objective:** Fix the checkout total rounding bug and confirm the fix with the client
 
 **Summary:** 3 steps · 2 supported · 0 mismatch · 1 unsupported · 1 do-not-send
 

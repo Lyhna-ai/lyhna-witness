@@ -1,7 +1,7 @@
 ---
 type: "Lyhna Witnessed Step"
 title: "Step 3 — gmail.send"
-description: "The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
+description: "The agent claimed a \"send\" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
 tags:
   - "lyhna"
   - "witnessed-handoff"
@@ -26,6 +26,6 @@ handoff_resource: "../handoffs/live-loop.md"
 
 **Labels:** [UNSUPPORTED](../labels/UNSUPPORTED.md), [NEEDS_EVIDENCE](../labels/NEEDS_EVIDENCE.md), [DO_NOT_SEND](../labels/DO_NOT_SEND.md)
 
-**Note:** The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+**Note:** The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
-Part of [Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix](../handoffs/live-loop.md).
+Part of [Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client](../handoffs/live-loop.md).

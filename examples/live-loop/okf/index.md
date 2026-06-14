@@ -1,6 +1,6 @@
 ---
 type: "Lyhna Witnessed Handoff Bundle"
-title: "Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix"
+title: "Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client"
 description: "What the agent actually did vs. what it claimed — NOT safe to continue."
 tags:
   - "lyhna"
@@ -21,7 +21,7 @@ lyhna_labels:
 handoff_resource: "handoffs/live-loop.md"
 ---
 
-# Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix
+# Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client
 
 An OKF-compatible export of a Lyhna witnessed handoff. OKF is the container; Lyhna is the witness.
 

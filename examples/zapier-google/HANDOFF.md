@@ -15,7 +15,7 @@ Create the client onboarding doc in Google, share it with the client, and confir
 - **Step 2** `UNSUPPORTED NEEDS_EVIDENCE DO_NOT_SEND`
   - Agent claimed: share_with_client in google_drive
   - Witness saw: nothing observed
-  - The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
+  - The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 - **Step 3** `SUPPORTED`
   - Agent claimed: send_confirmation in gmail
   - Witness saw: gmail.send_confirmation (ok)
@@ -30,7 +30,7 @@ Create the client onboarding doc in Google, share it with the client, and confir
 - Step 3: The agent's account matches what the witness observed.
 
 ## Unsupported or Missing Evidence
-- Step 2: The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 2: The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Mismatches
 - Step 1: The agent said it used google_docs directly, but the witness saw it routed through zapier (zapier → google_docs.create_document). Same end app or not, the path you were told is not the path it took.
@@ -45,7 +45,7 @@ Create the client onboarding doc in Google, share it with the client, and confir
 - Should the client get edit access or view-only?
 
 ## Human Approval Needed
-- Step 2: The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 2: The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Next Actions
 - Confirm the document was actually shared before telling the client it is ready.

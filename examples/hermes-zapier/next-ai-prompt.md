@@ -9,7 +9,7 @@ Treat these as SETTLED — do not re-litigate unless new evidence appears:
 These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not
 tell anyone they are done until confirmed:
 - Step 1: The agent said it used google_docs directly, but the witness saw it routed through zapier (zapier → google_docs.create_document). Same end app or not, the path you were told is not the path it took.
-- Step 2: The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 2: The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:
 _(none)_

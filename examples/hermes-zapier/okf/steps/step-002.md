@@ -1,7 +1,7 @@
 ---
 type: "Lyhna Witnessed Step"
 title: "Step 2 — google_drive.share_with_client"
-description: "The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened."
+description: "The agent claimed a \"share_with_client\" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened."
 tags:
   - "lyhna"
   - "witnessed-handoff"
@@ -26,6 +26,6 @@ handoff_resource: "../handoffs/hermes-zapier.md"
 
 **Labels:** [UNSUPPORTED](../labels/UNSUPPORTED.md), [NEEDS_EVIDENCE](../labels/NEEDS_EVIDENCE.md), [DO_NOT_SEND](../labels/DO_NOT_SEND.md)
 
-**Note:** The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
+**Note:** The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 Part of [Witnessed Handoff: Draft the client onboarding doc, save it to the client's Google Drive, and confirm by email.](../handoffs/hermes-zapier.md).

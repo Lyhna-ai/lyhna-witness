@@ -1,6 +1,6 @@
 ---
 type: "Lyhna Witnessed Handoff Log"
-title: "Log: Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix"
+title: "Log: Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client"
 description: "Provenance log for this witnessed-handoff OKF bundle."
 tags:
   - "lyhna"

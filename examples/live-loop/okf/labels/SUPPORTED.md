@@ -22,4 +22,4 @@ The agent's account matches what the tool-call witness observed.
 - [Step 1](../steps/step-001.md): The agent's account matches what the witness observed.
 - [Step 2](../steps/step-002.md): The agent's account matches what the witness observed.
 
-Part of [Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix](../handoffs/live-loop.md).
+Part of [Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client](../handoffs/live-loop.md).

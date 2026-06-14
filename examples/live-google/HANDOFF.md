@@ -15,11 +15,11 @@ Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log th
 - **Step 2** `UNSUPPORTED NEEDS_EVIDENCE DO_NOT_SEND`
   - Agent claimed: send in gmail
   - Witness saw: nothing observed
-  - The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+  - The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
 - **Step 3** `UNSUPPORTED NEEDS_EVIDENCE DO_NOT_SEND`
   - Agent claimed: create_records in salesforce
   - Witness saw: nothing observed
-  - The agent claimed it create_records in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
+  - The agent claimed a "create_records" action in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Systems Touched
 - google_drive
@@ -28,8 +28,8 @@ Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log th
 - Step 1: The agent's account matches what the witness observed.
 
 ## Unsupported or Missing Evidence
-- Step 2: The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
-- Step 3: The agent claimed it create_records in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 2: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 3: The agent claimed a "create_records" action in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Mismatches
 _(none)_
@@ -49,8 +49,8 @@ _(none)_
 - Were ANY of the 5 outreach emails actually sent? The witness observed none.
 
 ## Human Approval Needed
-- Step 2: The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
-- Step 3: The agent claimed it create_records in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 2: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 3: The agent claimed a "create_records" action in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Next Actions
 - Do NOT tell the prospects they were contacted — no email or CRM write was witnessed. Re-run the outreach through the proxy and confirm each send returns before reporting it as done.

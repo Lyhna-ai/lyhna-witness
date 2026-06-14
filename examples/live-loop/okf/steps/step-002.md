@@ -28,4 +28,4 @@ handoff_resource: "../handoffs/live-loop.md"
 
 **Note:** The agent's account matches what the witness observed.
 
-Part of [Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix](../handoffs/live-loop.md).
+Part of [Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client](../handoffs/live-loop.md).

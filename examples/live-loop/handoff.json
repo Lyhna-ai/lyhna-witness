@@ -1,6 +1,6 @@
 {
   "schema": "witnessed-handoff/v1",
-  "objective": "Witnessed handoff for loop loop-checkout-fix",
+  "objective": "Fix the checkout total rounding bug and confirm the fix with the client",
   "steps": [
     {
       "index": 0,
@@ -52,7 +52,7 @@
         "NEEDS_EVIDENCE",
         "DO_NOT_SEND"
       ],
-      "human_note": "The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
+      "human_note": "The agent claimed a \"send\" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened."
     }
   ],
   "systems_touched": [
@@ -70,7 +70,9 @@
     "checkout total rounding bug patched"
   ],
   "open_questions": [],
-  "next_actions": [],
+  "next_actions": [
+    "Confirm step 3 actually happened — the agent claimed \"send\" in gmail but the witness saw no tool call — before telling anyone it is done."
+  ],
   "needs_human_approval": [],
   "do_not_re_litigate": [],
   "safe_to_continue": false,

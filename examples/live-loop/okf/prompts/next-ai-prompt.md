@@ -14,9 +14,9 @@ handoff_resource: "../handoffs/live-loop.md"
 
 # Safe Continuation Prompt
 
-Continuation handoff for [Witnessed Handoff: Witnessed handoff for loop loop-checkout-fix](../handoffs/live-loop.md).
+Continuation handoff for [Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client](../handoffs/live-loop.md).
 
-**Objective:** Witnessed handoff for loop loop-checkout-fix
+**Objective:** Fix the checkout total rounding bug and confirm the fix with the client
 
 Treat these as SETTLED — do not re-litigate unless new evidence appears:
 - checkout total rounding bug patched
@@ -24,7 +24,7 @@ Treat these as SETTLED — do not re-litigate unless new evidence appears:
 **Status:** NOT safe to send/continue until the unverified steps and any required approvals are resolved.
 
 These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not tell anyone they are done until confirmed:
-- [Step 3](../steps/step-003.md): The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- [Step 3](../steps/step-003.md): The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:
 - _(none)_
@@ -33,7 +33,7 @@ These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them
 - _(none)_
 
 **Next actions:**
-- _(none)_
+- Confirm step 3 actually happened — the agent claimed "send" in gmail but the witness saw no tool call — before telling anyone it is done.
 
 **Proof / references** — carry these forward so the vouched-for work stays verifiable:
 - _(none)_

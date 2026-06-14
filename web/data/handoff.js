@@ -40,7 +40,7 @@ window.LYHNA_HANDOFF = {
         "NEEDS_EVIDENCE",
         "DO_NOT_SEND"
       ],
-      "human_note": "The agent claimed it share_with_client in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened."
+      "human_note": "The agent claimed a \"share_with_client\" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened."
     },
     {
       "index": 2,

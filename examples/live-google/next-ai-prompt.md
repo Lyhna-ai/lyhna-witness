@@ -7,8 +7,8 @@ Treat these as SETTLED — do not re-litigate unless new evidence appears:
 
 These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not
 tell anyone they are done until confirmed:
-- Step 2: The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
-- Step 3: The agent claimed it create_records in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 2: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 3: The agent claimed a "create_records" action in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 These steps REQUIRE HUMAN APPROVAL before anyone proceeds — do not act on them yourself:
 _(none)_

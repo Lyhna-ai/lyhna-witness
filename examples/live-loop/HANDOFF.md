@@ -5,7 +5,7 @@
 **⛔ NOT safe to continue / send yet — see flags below.**  ·  3 steps · 2 supported · 0 mismatch · 1 unsupported · 1 do-not-send
 
 ## Current Objective
-Witnessed handoff for loop loop-checkout-fix
+Fix the checkout total rounding bug and confirm the fix with the client
 
 ## Claimed vs. Actual Summary
 - **Step 1** `SUPPORTED`
@@ -19,7 +19,7 @@ Witnessed handoff for loop loop-checkout-fix
 - **Step 3** `UNSUPPORTED NEEDS_EVIDENCE DO_NOT_SEND`
   - Agent claimed: send in gmail
   - Witness saw: nothing observed
-  - The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+  - The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Systems Touched
 - filesystem
@@ -30,7 +30,7 @@ Witnessed handoff for loop loop-checkout-fix
 - Step 2: The agent's account matches what the witness observed.
 
 ## Unsupported or Missing Evidence
-- Step 3: The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 3: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Mismatches
 _(none)_
@@ -45,10 +45,10 @@ _(none)_
 _(none)_
 
 ## Human Approval Needed
-- Step 3: The agent claimed it send in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 3: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Next Actions
-_(none)_
+- Confirm step 3 actually happened — the agent claimed "send" in gmail but the witness saw no tool call — before telling anyone it is done.
 
 ## Safe Continuation
 Do not continue or send to anyone until the flagged steps above are resolved.
