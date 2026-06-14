@@ -99,13 +99,29 @@
     var l = s.labels || [];
     return l.indexOf("SUPPORTED") !== -1 && l.indexOf("UNSUPPORTED") === -1;
   }
+  function needsApproval(s) {
+    return (s.labels || []).indexOf("NEEDS_HUMAN_APPROVAL") !== -1;
+  }
   function isFlagged(s) {
     var l = s.labels || [];
     return (
       l.indexOf("UNSUPPORTED") !== -1 ||
       l.indexOf("DO_NOT_SEND") !== -1 ||
-      l.indexOf("CLAIMED_ACTUAL_MISMATCH") !== -1
+      l.indexOf("CLAIMED_ACTUAL_MISMATCH") !== -1 ||
+      // An approval-gated step is witnessed (so it also appears under supported) but still blocks the
+      // run — surface it in the flags so the reader sees WHICH step needs sign-off, not just a
+      // not-safe verdict with an empty flag list.
+      needsApproval(s)
     );
+  }
+  // The flag line for a step. For an approval-gated step the per-step human_note describes the
+  // witnessed match, not the blocker, so lead with the approval requirement.
+  function flagNote(s) {
+    var note = s.human_note || "";
+    if (needsApproval(s)) {
+      return note ? "Needs human approval before proceeding. " + note : "Needs human approval before proceeding.";
+    }
+    return note;
   }
   // A short, plain-language claim label, e.g. `send in gmail` → for the supported/flagged lists.
   function claimLabel(s) {
@@ -187,7 +203,7 @@
         var li = el("li");
         var sys = (s.claimed && s.claimed.system) || "step " + (s.index + 1);
         li.appendChild(el("span", "flag-system", sys + ": "));
-        li.appendChild(document.createTextNode(" " + (s.human_note || "")));
+        li.appendChild(document.createTextNode(" " + flagNote(s)));
         flags.appendChild(li);
       });
     }
@@ -234,7 +250,7 @@
     if (flagged.length) {
       lines.push("Flagged:");
       flagged.forEach(function (s) {
-        lines.push("  - " + (s.human_note || ""));
+        lines.push("  - " + flagNote(s));
       });
       lines.push("");
     }
