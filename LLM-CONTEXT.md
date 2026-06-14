@@ -19,8 +19,8 @@ compares them to what the agent *claimed* it did, and prints a deterministic, ho
 **Buyer:** AI agencies, bookkeepers, ops teams, VAs — anyone who white-labels the receipt to *their*
 clients ("before your AI tells a client 'done,' get the receipt").
 
-**The moat = the honesty ceiling.** Lyhna only asserts *action-level witnessed truth*, and it prints
-on the receipt exactly what it can and cannot say. That discipline is what lets the demo survive
+**The moat = the honesty ceiling.** Lyhna only asserts *action-level witnessed truth*, and the receipt
+shows what was proven, what lacked evidence, and what Lyhna refuses to fake. That discipline lets the demo survive
 "have your own AI audit this receipt." Never trade it away for a punchier claim.
 
 ---
@@ -28,14 +28,13 @@ on the receipt exactly what it can and cannot say. That discipline is what lets 
 ## 2. The honesty ceiling (V1 — non-negotiable)
 
 The witness is **action-level only**. It compares what crossed the tool-call boundary to what the
-agent claimed. Canonical source: `THESIS.md` (witness repo). The receipt UI ships this verbatim:
+agent claimed. Canonical source: `THESIS.md` (witness repo). The receipt UI frames this as:
 
-**Lyhna CAN say:** this tool call was witnessed · this claim matched the witnessed action · this claim
-had no witnessed evidence · this route differed from what the agent claimed · this handoff is safe /
-not safe to continue.
+**What this receipt proves:** what actually crossed the tool boundary, whether each claim has
+witnessed support, where support is missing or mismatched, and what is safe to continue from.
 
-**Lyhna CANNOT say:** the client read the email · the document is business/legally correct · every
-sentence the agent wrote is true · anything that happened outside the observed workflow.
+**What this receipt refuses to fake:** client behavior, business/legal correctness, agent confidence
+as evidence, or anything outside the observed workflow.
 
 If a change would make any surface imply more than the above (e.g. "the email was sent," "the work is
 correct," "this happened live"), it is an **overclaim** — do not ship it.
@@ -49,7 +48,7 @@ correct," "this happened live"), it is an **overclaim** — do not ship it.
 | **`lyhna-mcp-proxy`** | TypeScript | `master` | Runtime MCP proxy in the tool-call path. Witnesses real tool calls, captures agent claims, and exports a `witness-input.json`. ~503 tests. |
 | **`lyhna-witness`** | zero-dep ESM JS (Node ≥20) | `main` | Product layer: deterministic labeler + handoff generator + CLI + OKF export + the `web/` demo. ~70 tests. |
 
-The proxy **produces** the witness input; the witness **renders** it into the human receipt. Neither
+The proxy **produces** the witness input; the witness **renders** it into the user-readable receipt. Neither
 imports the other's internals — the witness mirrors the proxy's event vocabulary (Integration Option A).
 
 ---
@@ -64,9 +63,9 @@ imports the other's internals — the witness mirrors the proxy's event vocabula
 3. **Loop close → `export-pack`** pairs the agent's claims with the witnessed judgment turns
    (`assembleWitnessInput`) and emits **`witness-input.json`** (verified-context only; plaintext).
 4. **`lyhna-witness <witness-input.json>`** applies the deterministic labeler and writes the
-   receipt: `HANDOFF.md` (human) · `handoff.json` (machine) · `next-ai-prompt.md` (continuation) ·
+   receipt: `HANDOFF.md` (readable receipt) · `handoff.json` (machine) · `next-ai-prompt.md` (continuation) ·
    `okf/` (portable bundle).
-5. **`web/`** renders a committed `handoff.json` for a human/AI to audit.
+5. **`web/`** renders a committed `handoff.json` for a user or AI to audit.
 
 ### The canonical "came through the live loop" receipt
 - Proxy: `scripts/live-loop-receipt.mjs` (`npm run demo:live-loop`) drives the real loop and emits
@@ -85,14 +84,15 @@ imports the other's internals — the witness mirrors the proxy's event vocabula
 **Live (public):** https://lyhna-ai.github.io/lyhna-witness/
 
 A self-contained static page (vanilla HTML/CSS/JS, no build, no backend). A visitor clicks
-**Generate Witness Capsule**, watches the witnessed run animate, and gets a **Client-Ready AI Work
-Receipt**: a 10-second verdict line, the objective, witnessed-&-supported steps, the flagged
-DO-NOT-SEND step + why, safe-to-send, the next action, the honesty ceiling, and a **Copy receipt**
-button whose text includes *"Ask your AI: does this receipt overclaim what Lyhna witnessed?"*
+**Generate Witness Capsule**, watches the witnessed run animate, and gets a **Client Review AI Work
+Receipt**: a 10-second verdict line, the objective, witnessed-and-supported steps, the flagged
+DO-NOT-SEND step + why, safe-to-send, the next action, the buyer-facing "what this receipt proves /
+what this receipt refuses to fake" section, and a **Copy receipt** button whose text includes
+*"Ask your AI: does this receipt overclaim what Lyhna witnessed?"*
 
 - **It is a REPLAY, not live.** The page renders the committed `examples/live-loop/handoff.json` — the
   receipt that came through the real loop offline. The hero says so, and the tools shown are
-  **simulated** ("Demo tools. Real witness loop. Real receipt rules."). Do not let the copy imply the
+  **simulated** ("Demo tools. Real witness loop. Deterministic receipt rules."). Do not let the copy imply the
   browser is witnessing a live run against real systems.
 - **Files:** `index.html`, `app.js`, `styles.css`, `data/handoff.js` (generated), `build-data.mjs`
   (generator), `DEPLOY.md`.
@@ -112,11 +112,13 @@ button whose text includes *"Ask your AI: does this receipt overclaim what Lyhna
 - **Lane B** — canonical live-loop receipt: proxy `#26` (emits `witness-input.json`), witness `#9`
   (renders `examples/live-loop`).
 - **Web demo** — witness `#10` (retarget to live-loop receipt), `#11` (tagline), `#12` (sellable
-  polish), `#13` (GitHub Pages deploy), `#14` (overclaim-audit fix: "replay, not live").
+  polish), `#13` (GitHub Pages deploy), `#14` (overclaim-audit fix: "replay, not live"), `#15`
+  (Client Review receipt copy + "what this receipt proves / refuses to fake").
 - The demo is **live, public, and honesty-audited** (Codex review on every PR + an independent
   adversarial audit + a live-URL pass; no overclaims).
 
-**Health:** witness `main` green (70 tests); proxy `master` green (503 tests). No open PRs.
+**Health:** witness `main` green (70 tests); proxy `master` green (503 tests). Check GitHub for open
+PRs before starting a new lane.
 
 **Deferred / next lanes (NOT V1 blockers):** real beta-capture path (mailto/Tally/waitlist) to replace
 the static "Private beta soon"; buyer copy + MCP install instructions; proxy README repositioning onto
@@ -166,7 +168,7 @@ Public CLI: `lyhna-mcp export-pack` / `export-loop-proof` (in `dist/src/bin/cli.
    threads**.
 4. If Codex flags P1/P2 and the fix is small + unambiguous + in-scope: fix, re-run tests, push,
    **resolve the threads**, re-comment `@codex review`. If ambiguous/architectural or it touches a
-   guardrail below: stop and ask a human.
+   guardrail below: stop and ask the project owner.
 5. **Squash-merge.** Then reset the dev branch to base (`git fetch origin <base>; git reset --hard
    origin/<base>; git push -f`).
 6. GitHub MCP tools only (`mcp__github__*`); no `gh` CLI in this environment.
@@ -176,7 +178,7 @@ second engineer; don't merge around it.
 
 ---
 
-## 9. Guardrails — do NOT touch without explicit human sign-off
+## 9. Guardrails — do NOT touch without explicit project-owner sign-off
 
 - **Proof spine (proxy):** no changes to the signed bundle / receipt shape / canonicalization. The
   `witness-input.json` is an *additive*, verified-context-only sidecar.
