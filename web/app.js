@@ -120,18 +120,23 @@
     var supported = sum.supported != null ? sum.supported : (H.steps || []).filter(isSupported).length;
     var unsupported = sum.unsupported || 0;
     var mismatches = sum.mismatches || 0;
-    // "All supported" is keyed off the COUNTS, not safe_to_continue: a route-only mismatch leaves
-    // safe_to_continue true while supported < total, and that mismatch must not be erased from the
-    // verdict. Only call it fully clean when every step is supported with no mismatch/unsupported.
-    if (supported === total && mismatches === 0 && unsupported === 0) {
+    var doNotSend = sum.do_not_send || 0;
+    // Only the truly clean case earns "Safe to continue": every step supported, no mismatch, no
+    // unsupported, AND safe_to_continue true. The last guard matters — an all-witnessed step that
+    // still needs human approval keeps safe_to_continue false, and must NOT read as safe here.
+    if (supported === total && mismatches === 0 && unsupported === 0 && H.safe_to_continue === true) {
       return "All " + total + " steps were witnessed and supported. Safe to continue.";
     }
     var parts = [supported + " of " + total + " steps witnessed and supported"];
     if (unsupported) parts.push(unsupported + " claimed " + (unsupported === 1 ? "action" : "actions") + " the witness never saw");
     if (mismatches) parts.push(mismatches + " route " + (mismatches === 1 ? "mismatch" : "mismatches"));
-    // Mismatch-only receipts stay safe_to_continue (a review note, not a send-blocker); reserve
-    // "do not send" for the genuinely unsafe case so the verdict never over- or under-claims.
-    var tail = H.safe_to_continue === true ? " — review before sending." : " — do not send.";
+    // Tail by severity: genuinely unsafe (unsupported / do-not-send) -> do not send; approval-gated
+    // (safe_to_continue false with nothing unsupported) -> needs human approval; safe-but-flagged
+    // (e.g. a route-only mismatch) -> review. Never says "safe" when safe_to_continue is false.
+    var tail;
+    if (unsupported > 0 || doNotSend > 0) tail = " — do not send.";
+    else if (H.safe_to_continue !== true) tail = " — needs human approval before sending.";
+    else tail = " — review before sending.";
     return parts.join(" · ") + tail;
   }
 
