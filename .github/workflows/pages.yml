@@ -1,0 +1,58 @@
+name: deploy-pages
+
+# Publish the static demo in web/ to GitHub Pages. Deployment config ONLY — no app code.
+#
+# One-time manual step (cannot be done via the API by this workflow): in the repo,
+#   Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+# After that, every push to main that touches web/ redeploys, and the demo is live at
+#   https://lyhna-ai.github.io/lyhna-witness/
+#
+# This runs on main (not on PRs): a Pages deploy needs the github-pages environment and Pages
+# enabled, neither of which exists on a PR branch. PR gating stays with the test workflow.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; never cancel an in-flight publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Only ever publish from main. The push trigger is already main-only, but workflow_dispatch is
+    # not branch-filtered — without this guard a manual run against a feature branch/tag could upload
+    # that ref's web/ as the production Pages artifact. Deploy needs build, so a skipped build skips it.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload web/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
