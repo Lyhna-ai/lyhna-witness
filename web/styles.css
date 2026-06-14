@@ -65,11 +65,20 @@ body {
 }
 
 .subhead {
-  margin: 0 auto 30px;
+  margin: 0 auto 18px;
   max-width: 30ch;
   font-size: clamp(17px, 2.4vw, 20px);
   color: var(--ink-soft);
 }
+
+.hero-explainer {
+  margin: 0 auto 28px;
+  max-width: 56ch;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.hero-explainer em { font-style: normal; font-weight: 700; color: var(--ink); }
 
 /* ---------- BUTTONS ---------- */
 .btn {
@@ -233,6 +242,18 @@ body {
 .capsule-status.danger { background: var(--bad-bg); color: var(--bad-ink); border: 1px solid var(--bad-line); }
 .capsule-status.safe   { background: var(--ok-bg);  color: var(--ok-ink);  border: 1px solid var(--ok-line); }
 
+.cap-verdict {
+  margin: 0 0 20px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+.cap-verdict.danger { background: var(--bad-bg); color: var(--bad-ink); border: 1px solid var(--bad-line); }
+.cap-verdict.safe   { background: var(--ok-bg);  color: var(--ok-ink);  border: 1px solid var(--ok-line); }
+
 .capsule-grid {
   display: grid;
   grid-template-columns: 150px 1fr;
@@ -249,14 +270,22 @@ body {
 }
 .capsule-grid dd { margin: 0; color: var(--ink); }
 
-.flag-list { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
-.flag-list li { font-size: 14.5px; }
+.flag-list, .ok-list { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.flag-list li, .ok-list li { font-size: 14.5px; }
 .flag-system {
   font-family: var(--mono);
   font-size: 12.5px;
   color: var(--bad-ink);
   font-weight: 700;
 }
+.ok-list li::marker { color: var(--ok-ink); }
+.ok-system {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ok-ink);
+  font-weight: 700;
+}
+.muted { color: var(--ink-faint); list-style: none; margin-left: -18px; }
 
 .tag-yes { color: var(--ok-ink); font-weight: 700; }
 .tag-no  { color: var(--bad-ink); font-weight: 700; }
@@ -291,11 +320,17 @@ body {
   text-align: center;
 }
 .cta-primary {
-  margin: 0 0 16px;
+  margin: 0 0 6px;
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+.cta-sub {
+  margin: 0 0 16px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+.cta-sub em { font-style: normal; font-weight: 700; color: var(--ink); }
 .cta-actions {
   display: flex;
   align-items: center;
@@ -304,13 +339,27 @@ body {
   flex-wrap: wrap;
 }
 .copy-status { font-size: 13px; color: var(--ok-ink); min-height: 1em; }
-.install-line {
-  margin: 18px 0 0;
-  font-size: 14px;
-  color: var(--ink-soft);
+
+/* Honest static beta — no backend, no dead link, no exposed contact. */
+.beta {
+  margin: 24px auto 0;
+  max-width: 44ch;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
 }
-.beta-link { color: var(--accent); font-weight: 600; text-decoration: none; }
-.beta-link:hover { text-decoration: underline; }
+.beta-head { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+.beta-sub { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
+.beta-badge {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  background: var(--bg);
+  border: 1px dashed var(--line);
+  border-radius: 999px;
+  padding: 7px 16px;
+  cursor: default;
+}
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 560px) {

@@ -94,6 +94,41 @@
     return { card: card, lines: [claimLine, witnessLine, labelLine] };
   }
 
+  // ---- receipt summary helpers (single source of truth, also used by the clipboard text) ----
+  function isSupported(s) {
+    var l = s.labels || [];
+    return l.indexOf("SUPPORTED") !== -1 && l.indexOf("UNSUPPORTED") === -1;
+  }
+  function isFlagged(s) {
+    var l = s.labels || [];
+    return (
+      l.indexOf("UNSUPPORTED") !== -1 ||
+      l.indexOf("DO_NOT_SEND") !== -1 ||
+      l.indexOf("CLAIMED_ACTUAL_MISMATCH") !== -1
+    );
+  }
+  // A short, plain-language claim label, e.g. `send in gmail` → for the supported/flagged lists.
+  function claimLabel(s) {
+    var c = s.claimed || {};
+    if (c.action && c.system) return c.action + " in " + c.system;
+    return c.action || c.system || "step " + (s.index + 1);
+  }
+  // The 10-second verdict: how much was witnessed-and-supported vs claimed-but-never-seen.
+  function verdictLine() {
+    var sum = H.summary || {};
+    var total = sum.total_steps != null ? sum.total_steps : (H.steps || []).length;
+    var supported = sum.supported != null ? sum.supported : (H.steps || []).filter(isSupported).length;
+    if (H.safe_to_continue === true) {
+      return "All " + total + " steps were witnessed and supported. Safe to continue.";
+    }
+    var unsupported = sum.unsupported || 0;
+    var mismatches = sum.mismatches || 0;
+    var parts = [supported + " of " + total + " steps witnessed and supported"];
+    if (unsupported) parts.push(unsupported + " claimed " + (unsupported === 1 ? "action" : "actions") + " the witness never saw");
+    if (mismatches) parts.push(mismatches + " route " + (mismatches === 1 ? "mismatch" : "mismatches"));
+    return parts.join(" · ") + " — do not send.";
+  }
+
   // ---- capsule ("Client-Ready AI Work Receipt") ----
   function renderCapsule() {
     var safe = H.safe_to_continue === true;
@@ -104,23 +139,38 @@
     statusEl.classList.remove("safe", "danger");
     statusEl.classList.add(safe ? "safe" : "danger");
 
+    var verdictEl = document.getElementById("cap-verdict");
+    verdictEl.textContent = verdictLine();
+    verdictEl.classList.remove("safe", "danger");
+    verdictEl.classList.add(safe ? "safe" : "danger");
+
+    document.getElementById("cap-objective").textContent = H.objective || "(none stated)";
+
     document.getElementById("cap-systems").textContent =
       (H.systems_touched || []).join(", ") || "(none)";
+
+    // Supported, witnessed steps — make the green half of the receipt visible, not just the flags.
+    var supportedEl = document.getElementById("cap-supported");
+    supportedEl.innerHTML = "";
+    var supported = (H.steps || []).filter(isSupported);
+    if (supported.length === 0) {
+      supportedEl.appendChild(el("li", "muted", "None witnessed as supported."));
+    } else {
+      supported.forEach(function (s) {
+        var li = el("li");
+        li.appendChild(el("span", "ok-system", claimLabel(s)));
+        li.appendChild(document.createTextNode(" — witnessed (approved, returned)"));
+        supportedEl.appendChild(li);
+      });
+    }
 
     // One line per unsupported/mismatch step — print the human_note verbatim. Clear first so a
     // re-run does not append the same flags again and overstate what the receipt proves.
     var flags = document.getElementById("cap-flags");
     flags.innerHTML = "";
-    var flagged = (H.steps || []).filter(function (s) {
-      var l = s.labels || [];
-      return (
-        l.indexOf("UNSUPPORTED") !== -1 ||
-        l.indexOf("DO_NOT_SEND") !== -1 ||
-        l.indexOf("CLAIMED_ACTUAL_MISMATCH") !== -1
-      );
-    });
+    var flagged = (H.steps || []).filter(isFlagged);
     if (flagged.length === 0) {
-      flags.appendChild(el("li", null, "No mismatches or unsupported steps."));
+      flags.appendChild(el("li", "muted", "No mismatches or unsupported steps."));
     } else {
       flagged.forEach(function (s) {
         var li = el("li");
@@ -146,8 +196,11 @@
     lines.push("Lyhna Witness — Client-Ready AI Work Receipt");
     lines.push("Demo tools. Real witness loop. Real receipt rules.");
     lines.push("");
+    lines.push("Ask your AI: does this receipt overclaim what Lyhna witnessed?");
+    lines.push("");
     lines.push("Objective: " + (H.objective || ""));
     lines.push("Status: " + (safe ? "Safe to continue" : "Needs Review / DO NOT SEND"));
+    lines.push("Summary: " + verdictLine());
     lines.push("Systems touched: " + (H.systems_touched || []).join(", "));
     lines.push("");
     lines.push("Steps:");
@@ -166,14 +219,7 @@
       lines.push("     label: " + lab.text + "  [" + (s.labels || []).join(", ") + "]");
     });
     lines.push("");
-    var flagged = (H.steps || []).filter(function (s) {
-      var l = s.labels || [];
-      return (
-        l.indexOf("UNSUPPORTED") !== -1 ||
-        l.indexOf("DO_NOT_SEND") !== -1 ||
-        l.indexOf("CLAIMED_ACTUAL_MISMATCH") !== -1
-      );
-    });
+    var flagged = (H.steps || []).filter(isFlagged);
     if (flagged.length) {
       lines.push("Flagged:");
       flagged.forEach(function (s) {
