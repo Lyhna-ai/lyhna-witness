@@ -106,6 +106,26 @@ test("mismatch labels survive the export", () => {
   );
 });
 
+test("an unclaimed observed failure is never given a fabricated agent claim", () => {
+  // A witnessed tool call that failed, recorded with NO record_claim → UNSUPPORTED, claimed: null.
+  const h = buildWitnessedHandoff({
+    objective: "Run the migration.",
+    steps: [{ witnessed: { system: "db", action: "migrate", returned: false } }]
+  });
+  const mems = memoriesOf(renderPamBundle(h, { name: "t" }));
+  const ep = mems.find((m) => m.memory_type === "episodic" && m.step_index === 1);
+  assert.equal(ep.claimed, null);
+  assert.ok(ep.labels.includes("UNSUPPORTED"));
+  // No memory about this step may assert the agent claimed anything (there was no claim).
+  for (const m of mems.filter((x) => x.step_index === 1)) {
+    assert.doesNotMatch(JSON.stringify(m), /the agent claimed|unspecified step/);
+  }
+  // The semantic fact still exists, framed as an observed failure.
+  const sem = mems.find((m) => m.id === "semantic:step-1-evidence-gap");
+  assert.ok(sem);
+  assert.match(sem.content, /observed|no agent claim|did not succeed/i);
+});
+
 test("a supplied timestamp appears only in the manifest, only when supplied; never auto-generated", () => {
   const without = renderPamBundle(sampleHandoff(), { name: "t" });
   assert.equal(manifestOf(without).timestamp, undefined);

@@ -236,7 +236,11 @@ export function renderPamBundle(handoff, options = {}) {
         evidence_status: primaryEvidence(labels),
         labels,
         supported: false,
-        content: `Fact: the agent claimed ${claimPhrase(s.claimed)}, but ${s.human_note ?? "the witness could not confirm it."}`
+        // Never invent a claim: a flagged step may be an OBSERVED failure with no agent claim
+        // (claimed:null). Only say "the agent claimed …" when there actually is one.
+        content: s.claimed
+          ? `Fact: the agent claimed ${claimPhrase(s.claimed)}, but ${s.human_note ?? "the witness could not confirm it."}`
+          : `Fact (observed, no agent claim): ${s.human_note ?? "a witnessed tool call did not succeed; recorded as an observed failure, not supported work."}`
       })
     );
   }
@@ -261,7 +265,9 @@ export function renderPamBundle(handoff, options = {}) {
         step_index: s.index + 1,
         evidence_status: "DO_NOT_SEND",
         labels: s.labels ?? [],
-        content: `Rule: do not send or act outward on step ${s.index + 1} (claimed ${claimPhrase(s.claimed)}) until a witnessed tool call confirms it.`
+        content: s.claimed
+          ? `Rule: do not send or act outward on step ${s.index + 1} (claimed ${claimPhrase(s.claimed)}) until a witnessed tool call confirms it.`
+          : `Rule: do not send or act outward on step ${s.index + 1} until a witnessed tool call confirms it.`
       })
     );
   }
