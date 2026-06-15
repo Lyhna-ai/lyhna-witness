@@ -147,7 +147,7 @@ try {
 // beside the handoff trio. Each is a deterministic projection of the same handoff (renderOkfBundle /
 // renderPamBundle return a { bundle-relative path: contents } map); we never pass a timestamp, so the
 // output stays byte-deterministic.
-const written = ["HANDOFF.md", "handoff.json", "next-ai-prompt.md"];
+const extraExports = [];
 try {
   if (emitOkf) {
     for (const [rel, content] of Object.entries(renderOkfBundle(handoff, { name: "handoff" }))) {
@@ -155,7 +155,7 @@ try {
       mkdirSync(dirname(fp), { recursive: true });
       writeFileSync(fp, content);
     }
-    written.push("okf/");
+    extraExports.push("okf/");
   }
   if (emitPam) {
     const pamDir = join(outDir, "pam");
@@ -163,17 +163,23 @@ try {
     for (const [rel, content] of Object.entries(renderPamBundle(handoff, { name: "handoff" }))) {
       writeFileSync(join(pamDir, rel), content);
     }
-    written.push("pam/");
+    extraExports.push("pam/");
   }
 } catch (err) {
   fail(`cannot write exports to '${outDir}': ${err.message}`);
 }
 
 const s = handoff.summary;
+// Default (no export flags) keeps the legacy status path EXACTLY: `→ <outDir>/HANDOFF.md` — so a
+// wrapper that parses stdout for the receipt path is unaffected. Only the flagged case appends the
+// extra bundles it wrote.
+const dest = extraExports.length
+  ? `${outDir}/ (HANDOFF.md + ${extraExports.join(", ")})`
+  : `${outDir}/HANDOFF.md`;
 process.stdout.write(
   `${handoff.safe_to_continue ? "SAFE_TO_CONTINUE" : "DO_NOT_CONTINUE"} — ` +
     `${s.total_steps} steps · ${s.supported} supported · ${s.mismatches} mismatch · ` +
-    `${s.unsupported} unsupported · ${s.do_not_send} do-not-send → ${outDir}/ (${written.join(", ")})\n`
+    `${s.unsupported} unsupported · ${s.do_not_send} do-not-send → ${dest}\n`
 );
 
 // Fail-closed when asked to gate: a non-safe handoff (DO_NOT_SEND / unsupported / needs-approval)

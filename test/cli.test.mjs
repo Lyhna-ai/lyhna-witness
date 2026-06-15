@@ -53,13 +53,17 @@ test("CLI writes the handoff trio and reports the verdict", () => {
   assert.equal(handoff.proof_refs.draft, "id-123");
 });
 
-test("CLI does NOT emit okf/ or pam/ without the flags (default trio only)", () => {
+test("CLI does NOT emit okf/ or pam/ without the flags, and keeps the legacy status path", () => {
   const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
   writeFileSync(join(dir, "input.json"), JSON.stringify(input));
-  const { code } = run([join(dir, "input.json"), dir]);
+  const { code, stdout } = run([join(dir, "input.json"), dir]);
   assert.equal(code, 0);
   assert.ok(!existsSync(join(dir, "okf")), "okf/ must not be written without --okf");
   assert.ok(!existsSync(join(dir, "pam")), "pam/ must not be written without --pam");
+  // Default behavior unchanged: the status line still ends in `→ <outDir>/HANDOFF.md` (no bundle list),
+  // so a wrapper parsing stdout for the receipt path is unaffected.
+  assert.match(stdout, /→ .*\/HANDOFF\.md\n$/);
+  assert.doesNotMatch(stdout, /\(HANDOFF\.md \+/);
 });
 
 test("CLI --okf --pam also emit the OKF and PAM bundles, carrying the receipt's evidence labels", () => {
