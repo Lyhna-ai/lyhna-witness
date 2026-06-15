@@ -128,7 +128,16 @@ are blocked before execution). Also: HANDOFF.md now has a dedicated "Do Not Send
 "Human Approval Needed" for true `NEEDS_HUMAN_APPROVAL` steps. Known residual: ordinal claim↔turn pairing
 fails safe but can mis-attribute an out-of-order unwitnessed claim (deferred: claim↔turn correlation).
 
-**Health:** witness `main` green (85 tests); proxy `master` green (509 tests). Check GitHub for open
+**Testing in earnest (2026-06-15):** beyond the gauntlet, a fresh-stranger install, 10 real dogfood
+loops (`dogfood/`), and a 2-auditor adversarial receipt audit were run. Reports: `STRANGER-INSTALL-REPORT.md`,
+`dogfood/DOGFOOD-LOG.md`, `RECEIPT-AUDIT.md`, `BETA-READINESS-REPORT.md`. Zero truth breaks in the
+receipts; the one real failure was that **OKF/PAM had no user-facing command** — fixed by adding
+`--okf`/`--pam` to the CLI. Verdict: **GO for a small private/invited beta** of the AI Work Receipt,
+conditioned on a small docs PR (proxy README → receipt path; cross-platform RUNNING.md) and honest buyer
+expectations. Open follow-ups: ordinal claim↔turn correlation; live-MCP real-traffic run; npm packaging
+for a public beta; optional `settled`-section attribution (audit N1).
+
+**Health:** witness `main` green (87 tests); proxy `master` green (512 tests). Check GitHub for open
 PRs before starting a new lane.
 
 **Carriers vs. the witness (the export bet):** OKF and PAM are *carriers* (transport integrity — a
@@ -158,7 +167,10 @@ npm run demo:gmail       # examples/live-gmail
 npm run demo:live-loop   # examples/live-loop  (the canonical receipt)
 node web/build-data.mjs  # regenerate web/data/handoff.js from examples/live-loop/handoff.json
 ```
-CLI: `node src/cli.mjs <witness-input.json> [outDir] [--gate]`.
+CLI: `node src/cli.mjs <witness-input.json> [outDir] [--gate] [--okf] [--pam]`. `--okf`/`--pam` are
+additive — they also write the OKF knowledge bundle (`<outDir>/okf/`) and the PAM-shaped memory bundle
+(`<outDir>/pam/`); without them the output is exactly the handoff trio. `npm run gauntlet` runs the
+reliability gauntlet; `node dogfood/run-dogfood.mjs` runs the dogfood loops (both need the sibling proxy).
 
 ### `lyhna-mcp-proxy` (TypeScript)
 ```bash

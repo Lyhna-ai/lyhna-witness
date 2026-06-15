@@ -53,6 +53,36 @@ test("CLI writes the handoff trio and reports the verdict", () => {
   assert.equal(handoff.proof_refs.draft, "id-123");
 });
 
+test("CLI does NOT emit okf/ or pam/ without the flags (default trio only)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  writeFileSync(join(dir, "input.json"), JSON.stringify(input));
+  const { code } = run([join(dir, "input.json"), dir]);
+  assert.equal(code, 0);
+  assert.ok(!existsSync(join(dir, "okf")), "okf/ must not be written without --okf");
+  assert.ok(!existsSync(join(dir, "pam")), "pam/ must not be written without --pam");
+});
+
+test("CLI --okf --pam also emit the OKF and PAM bundles, carrying the receipt's evidence labels", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  writeFileSync(join(dir, "input.json"), JSON.stringify(input));
+
+  const { code, stdout } = run([join(dir, "input.json"), dir, "--okf", "--pam"]);
+  assert.equal(code, 0);
+  assert.match(stdout, /okf\/, pam\//);
+
+  // OKF: the index + the per-step concept exist, and the step carries the mismatch label (no laundering).
+  assert.ok(existsSync(join(dir, "okf", "index.md")), "okf/index.md written");
+  const okfStep = readFileSync(join(dir, "okf", "steps", "step-001.md"), "utf8");
+  assert.match(okfStep, /CLAIMED_ACTUAL_MISMATCH/);
+
+  // PAM: manifest mirrors the not-safe verdict; every memory item carries an evidence_status.
+  const manifest = JSON.parse(readFileSync(join(dir, "pam", "manifest.json"), "utf8"));
+  assert.equal(manifest.safe_to_continue, false);
+  const mems = readFileSync(join(dir, "pam", "memories.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  assert.ok(mems.length > 0);
+  assert.ok(mems.every((m) => typeof m.evidence_status === "string" && m.evidence_status.length > 0), "every PAM item has an evidence_status");
+});
+
 test("CLI reads from stdin with '-'", () => {
   const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
   const { code, stdout } = run(["-", dir], { input: JSON.stringify(input) });

@@ -14,13 +14,21 @@
 //                                              do_not_re_litigate?, proof_refs? }
 //   lyhna-witness <input.json> [outDir] --gate   exit 3 when the handoff is NOT safe_to_continue,
 //                                                 so a caller can fail-closed on DO_NOT_SEND.
+//   lyhna-witness <input.json> [outDir] --okf    ALSO write the OKF knowledge bundle under <outDir>/okf/.
+//   lyhna-witness <input.json> [outDir] --pam    ALSO write the PAM-shaped memory bundle under <outDir>/pam/.
 //   lyhna-witness -                          read the input JSON from stdin instead of a file.
+//
+// --okf / --pam are additive: without them the output is exactly the handoff trio (unchanged). The
+// exports are deterministic projections of the SAME handoff (no clock, no extra witnessing) — every OKF
+// step / PAM item carries the receipt's evidence labels, so a consumer inherits the honesty ceiling.
 
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 
 import { runFromWitnessedEvents } from "./witnessed-event.mjs";
 import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt } from "./generate.mjs";
+import { renderOkfBundle } from "./okf.mjs";
+import { renderPamBundle } from "./pam.mjs";
 
 function fail(message, code = 2) {
   process.stderr.write(`lyhna-witness: ${message}\n`);
@@ -82,12 +90,15 @@ function validateSteps(steps) {
 
 const argv = process.argv.slice(2);
 const gate = argv.includes("--gate");
-const positional = argv.filter((a) => a !== "--gate");
+const emitOkf = argv.includes("--okf");
+const emitPam = argv.includes("--pam");
+// Positional args are everything that is not a `--flag` ("-" for stdin is kept, it is not "--").
+const positional = argv.filter((a) => !a.startsWith("--"));
 const inputPath = positional[0];
 const outDir = positional[1] ?? ".";
 
 if (!inputPath) {
-  fail("usage: lyhna-witness <input.json|-> [outDir] [--gate]");
+  fail("usage: lyhna-witness <input.json|-> [outDir] [--gate] [--okf] [--pam]");
 }
 
 let raw;
@@ -132,11 +143,37 @@ try {
   fail(`cannot write handoff to '${outDir}': ${err.message}`);
 }
 
+// Optional, additive exports: the OKF knowledge bundle and/or the PAM-shaped memory bundle, written
+// beside the handoff trio. Each is a deterministic projection of the same handoff (renderOkfBundle /
+// renderPamBundle return a { bundle-relative path: contents } map); we never pass a timestamp, so the
+// output stays byte-deterministic.
+const written = ["HANDOFF.md", "handoff.json", "next-ai-prompt.md"];
+try {
+  if (emitOkf) {
+    for (const [rel, content] of Object.entries(renderOkfBundle(handoff, { name: "handoff" }))) {
+      const fp = join(outDir, "okf", rel);
+      mkdirSync(dirname(fp), { recursive: true });
+      writeFileSync(fp, content);
+    }
+    written.push("okf/");
+  }
+  if (emitPam) {
+    const pamDir = join(outDir, "pam");
+    mkdirSync(pamDir, { recursive: true });
+    for (const [rel, content] of Object.entries(renderPamBundle(handoff, { name: "handoff" }))) {
+      writeFileSync(join(pamDir, rel), content);
+    }
+    written.push("pam/");
+  }
+} catch (err) {
+  fail(`cannot write exports to '${outDir}': ${err.message}`);
+}
+
 const s = handoff.summary;
 process.stdout.write(
   `${handoff.safe_to_continue ? "SAFE_TO_CONTINUE" : "DO_NOT_CONTINUE"} — ` +
     `${s.total_steps} steps · ${s.supported} supported · ${s.mismatches} mismatch · ` +
-    `${s.unsupported} unsupported · ${s.do_not_send} do-not-send → ${outDir}/HANDOFF.md\n`
+    `${s.unsupported} unsupported · ${s.do_not_send} do-not-send → ${outDir}/ (${written.join(", ")})\n`
 );
 
 // Fail-closed when asked to gate: a non-safe handoff (DO_NOT_SEND / unsupported / needs-approval)
