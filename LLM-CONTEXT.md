@@ -83,29 +83,49 @@ imports the other's internals — the witness mirrors the proxy's event vocabula
 
 **Live (public):** https://lyhna-ai.github.io/lyhna-witness/
 
-A self-contained static page (vanilla HTML/CSS/JS, no build, no backend). A visitor clicks
-**Generate Witness Capsule**, watches the witnessed run animate, and gets a **Client Review AI Work
-Receipt**: a 10-second verdict line, the objective, witnessed-and-supported steps, the flagged
-DO-NOT-SEND step + why, safe-to-send, the next action, the buyer-facing "what this receipt proves /
-what this receipt refuses to fake" section, and a **Copy receipt** button whose text includes
-*"Ask your AI: does this receipt overclaim what Lyhna witnessed?"*
+A self-contained, multi-page **marketing site** (vanilla HTML/CSS/JS, no build, no backend) on the
+**receipt grammar** — the green/amber/red verdict palette on a clean, monospace-tinged document surface.
+Anchor noun: **proof** (proof of *witnessed tool-boundary action* — never outcome/delivery/correctness).
+Pages (each links the others via a shared header/footer nav):
 
-- **It is a REPLAY, not live.** The page renders the committed `examples/live-loop/handoff.json` — the
-  receipt that came through the real loop offline. The hero says so, and the tools shown are
-  **simulated** ("Demo tools. Real witness loop. Deterministic receipt rules."). Do not let the copy imply the
-  browser is witnessing a live run against real systems.
-- **Files:** `index.html`, `app.js`, `styles.css`, `data/handoff.js` (generated), `build-data.mjs`
-  (generator), `DEPLOY.md`.
+- **`index.html`** — the homepage. Sells the why: hero ("Prove what your agents did"), the receipt's
+  three verdict states (SUPPORTED / MISMATCH / DO-NOT-SEND), the **honesty ceiling as the differentiator**
+  ("It tells you less than other tools. On purpose."), the agent-native trio (MCP / OKF / PAM-shaped
+  memory bundle), carrier-vs-witness, and a demo CTA. Static, no JS.
+- **`demo.html`** — the demo, *replayed*. A visitor clicks **Generate Witness Capsule**, watches the
+  witnessed run animate, and gets the **Client Review AI Work Receipt** (10-second verdict, supported
+  steps, the flagged DO-NOT-SEND + why, the "proves / refuses to fake" section, and a **Copy receipt**
+  button: *"Ask your AI: does this receipt overclaim?"*). Loads `app.js` + `data/handoff.js`.
+- **`install.html`** — honest **private-beta** install: an MCP proof layer in the tool path; setup is
+  stated as *guided, not one-command*; the one concrete command is the real witness CLI render. No
+  `lyhna.com`, no one-command promise.
+- **`pricing.html`** — the billing **model** only ("metered by witnessed action"; billing keys on
+  *was a tool call observed?*, whatever its verdict — a claim with no observed call isn't billed).
+  **No pricing numbers** — they "open with the private beta."
+
+- **The demo is a REPLAY, not live.** `demo.html` renders the committed `examples/live-loop/handoff.json`
+  — the receipt that came through the real loop offline. Tools are **simulated** ("Demo tools. Real
+  witness loop. Deterministic receipt rules."); framed as a "demo scenario, replay." Never imply the
+  browser is witnessing a live run.
+- **Honesty ceiling applies to the marketing too** — tighter than any deck. No surface may imply
+  outcome/delivery/correctness/client-behavior truth; prefer "what crossed the tool boundary"; keep
+  "AI Work Receipt"; **PAM-shaped** (never "PAM-compatible"); no pricing numbers and no open/one-command
+  install claim until they are real/approved; kill-list scrubbed (no gate/authority/governance/
+  judgment-ledger/binding/SDK on buyer surfaces). Codex review on each web PR catches copy overclaims
+  (e.g. it caught an absolute "It didn't" non-occurrence claim, fixed to "Lyhna saw no such call").
+- **Files:** `index.html`, `demo.html`, `install.html`, `pricing.html`, `styles.css`, `app.js`
+  (demo only), `data/handoff.js` (generated), `build-data.mjs` (generator), `README.md`, `DEPLOY.md`.
 - **Data flow:** `examples/live-loop/handoff.json` --(`node web/build-data.mjs`)--> `web/data/handoff.js`
-  (the browser payload). Guarded by `test/web-data.test.mjs` (byte-for-byte). If you change the
+  (the demo's browser payload). Guarded by `test/web-data.test.mjs` (byte-for-byte). If you change the
   receipt, regenerate the web data or CI fails.
 - **Deploy:** `.github/workflows/pages.yml` publishes `web/` to GitHub Pages on push to `main`
-  (main-only guard on both jobs). **Pages Source must be "GitHub Actions"** (Settings → Pages) — not
-  "Deploy from a branch" (that would serve the repo root, which has no index.html).
+  (main-only guard on both jobs). **Pages Source must be "GitHub Actions"** (Settings → Pages). `/` is the
+  homepage, `/demo.html` the demo. Pixel/mobile QA needs a real browser (none in the sandbox) — do a
+  desktop+mobile look on the deployed preview per web PR.
 
 ---
 
-## 6. Current state (as of 2026-06-14)
+## 6. Current state (as of 2026-06-15)
 
 **Shipped & merged (packaging phase complete):**
 - Backend/spine + the full claimed-vs-actual loop (proxy `#21–#25`, witness `#3–#8`) — merged earlier.
@@ -137,7 +157,13 @@ conditioned on a small docs PR (proxy README → receipt path; cross-platform RU
 expectations. Open follow-ups: ordinal claim↔turn correlation; live-MCP real-traffic run; npm packaging
 for a public beta; optional `settled`-section attribution (audit N1).
 
-**Health:** witness `main` green (87 tests); proxy `master` green (512 tests). Check GitHub for open
+**Website relaunch (2026-06-15):** the `web/` site became a multi-page **marketing site** on the receipt
+grammar (see §5): homepage (merged), honest private-beta install (merged), pricing-model page (numbers
+held), and a demo-page redesign — implemented page-by-page from a copy deck, each a gated PR with an
+overclaim audit. Pricing/free-tier numbers and an open install flow are intentionally **not** published
+(owner decisions). The demo is preserved at `/demo.html`.
+
+**Health:** witness `main` green (88 tests); proxy `master` green (512 tests). Check GitHub for open
 PRs before starting a new lane.
 
 **Carriers vs. the witness (the export bet):** OKF and PAM are *carriers* (transport integrity — a

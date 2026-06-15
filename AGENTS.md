@@ -22,8 +22,13 @@ OKF export + the `web/` demo. Zero runtime dependencies, ESM JavaScript, Node �
    `web/data/handoff.js` are generated. After any labeler/generator/receipt change, run the relevant
    `demo*` script(s) **and** `node web/build-data.mjs`, then commit the regenerated output — CI's
    `examples/` drift gate and `test/web-data.test.mjs` fail otherwise.
-4. **No overclaim in the web demo.** The page **replays** a committed receipt; tools are simulated. Keep
-   the "Demo tools. Real witness loop. Deterministic receipt rules." framing honest.
+4. **No overclaim on the website.** `web/` is now a multi-page marketing site (homepage, demo, install,
+   pricing — see `LLM-CONTEXT.md` §5). The honesty ceiling applies to **all** marketing copy, not just
+   the demo: action-level only; prefer "what crossed the tool boundary"; **PAM-shaped** (never
+   "PAM-compatible"); **no pricing numbers** and **no open/one-command install claim** until they are
+   real/approved; kill-list scrubbed (no gate/authority/governance/judgment-ledger/binding/SDK on buyer
+   surfaces). `demo.html` **replays** a committed receipt with simulated tools — keep the "Demo tools.
+   Real witness loop. Deterministic receipt rules." / "demo scenario, replay" framing honest.
 
 ## Commands
 
