@@ -629,8 +629,9 @@ a.btn, .btn { display: inline-block; text-decoration: none; text-align: center; 
   background: #fcfdff;
 }
 .bill-rules li strong { color: var(--ink); }
-.bill-yes { border-left-color: var(--ok-line); }
-.bill-no  { border-left-color: var(--bad-line); }
+/* Scoped to out-specify `.bill-rules li` (which sets the base border) so the verdict colors win. */
+.bill-rules li.bill-yes { border-left-color: var(--ok-line); }
+.bill-rules li.bill-no  { border-left-color: var(--bad-line); }
 .bill-punch { font-weight: 700; color: var(--ink); }
 
 .tiers {
