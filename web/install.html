@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lyhna — Install (private beta)</title>
+  <meta
+    name="description"
+    content="Lyhna is an MCP proof layer that rides in your agent's tool path, witnesses the real calls, and prints the AI Work Receipt. Installs are invite-only during the private beta."
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">proof for AI work</span></a>
+    <nav class="nav">
+      <a href="index.html#how">How it works</a>
+      <a href="demo.html">Demo</a>
+      <a href="install.html" aria-current="page">Install</a>
+    </nav>
+  </header>
+
+  <main class="page page-wide">
+    <section class="home-hero">
+      <p class="eyebrow">Install · private beta</p>
+      <h1>Add Lyhna to your agent's tool path.</h1>
+      <p class="subhead">
+        Lyhna is an MCP proof layer. It rides in where your agent already makes tool calls, witnesses
+        them, and prints the AI Work Receipt. Here's the shape — the exact setup ships when your access
+        opens.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="demo.html">Run the demo</a>
+        <a class="btn btn-secondary" href="index.html#how">How it works</a>
+      </div>
+    </section>
+
+    <section class="block">
+      <p class="beta-banner">
+        <strong>Private beta.</strong> Installs are invite-only right now, and setup today is a guided
+        process rather than a one-command install — hardening that into a clean install is part of what
+        the beta is for. The copy below is honest about that.
+      </p>
+
+      <h2>The shape, in three steps</h2>
+      <ol class="install-steps">
+        <li>
+          <strong>Add Lyhna to your agent's MCP tool path.</strong>
+          The proxy sits in the tool-call path your agent already uses — no new platform, no rewrite. It
+          witnesses the real calls and captures the agent's own claims about what it did.
+        </li>
+        <li>
+          <strong>Run one witnessed task.</strong>
+          Your agent works as normal. Lyhna records what crossed the tool boundary and what the agent
+          claimed, closes the loop, and emits a <span class="mono">witness-input.json</span>.
+        </li>
+        <li>
+          <strong>Read the receipt — then export it.</strong>
+          Render the AI Work Receipt with the witness CLI; add <span class="mono">--okf --pam</span> to
+          also emit the knowledge and PAM-shaped memory bundles:
+          <pre class="cmd mono">node src/cli.mjs &lt;witness-input.json&gt; &lt;outDir&gt; --okf --pam</pre>
+          You get <span class="mono">HANDOFF.md</span>, <span class="mono">handoff.json</span>,
+          <span class="mono">next-ai-prompt.md</span>, plus <span class="mono">okf/</span> and
+          <span class="mono">pam/</span>.
+        </li>
+      </ol>
+    </section>
+
+    <section class="block">
+      <h2>Getting access</h2>
+      <p>
+        Installs open in waves during the private beta. The best way in is to see the proof for yourself
+        first: run the demo, copy the receipt, and audit it with your own AI. When installs open, the
+        same loop runs against your real tool calls.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="demo.html">Run the demo</a>
+      </div>
+      <p class="install-foot-note">
+        No pricing or free-tier is published yet — it opens with the beta. Until then there's nothing to
+        buy and no card to enter.
+      </p>
+    </section>
+  </main>
+
+  <footer class="home-foot">
+    <p class="foot-beta">Private beta opening soon.</p>
+    <p class="foot-ceiling">
+      Lyhna asserts action-level witnessed truth only — what crossed the tool boundary vs. what the agent
+      claimed. It does not verify outcomes, delivery, correctness, or anything outside the observed
+      tool-call path.
+    </p>
+    <nav class="foot-nav">
+      <a href="index.html#how">How it works</a>
+      <a href="demo.html">Demo</a>
+      <a href="install.html">Install</a>
+    </nav>
+  </footer>
+</body>
+</html>
