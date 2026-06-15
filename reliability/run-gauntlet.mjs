@@ -31,9 +31,16 @@ const DRIVER_PATH = join(PROXY_DIR, "scripts", "gauntlet", "driver.mjs");
 
 function parseArgs(argv) {
   const out = { category: null, ids: null };
-  for (const a of argv) {
-    if (a.startsWith("--ids")) out.ids = new Set((a.split("=")[1] ?? argv[argv.indexOf(a) + 1] ?? "").split(",").map((s) => s.trim()).filter(Boolean));
-    else if (!a.startsWith("--")) out.category = a;
+  for (let i = 0; i < argv.length; i += 1) {
+    const a = argv[i];
+    if (a === "--ids") {
+      i += 1;
+      out.ids = new Set((argv[i] ?? "").split(",").map((s) => s.trim()).filter(Boolean));
+    } else if (a.startsWith("--ids=")) {
+      out.ids = new Set(a.slice("--ids=".length).split(",").map((s) => s.trim()).filter(Boolean));
+    } else if (!a.startsWith("--")) {
+      out.category = a;
+    }
   }
   return out;
 }
