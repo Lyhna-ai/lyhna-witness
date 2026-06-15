@@ -15,7 +15,7 @@
 //
 //   node dogfood/run-dogfood.mjs [outDir]      default outDir: /tmp/lyhna-dogfood
 
-import { mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname, resolve, sep } from "node:path";
 import { homedir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -238,11 +238,31 @@ function summarize(rendered) {
   };
 }
 
+// A marker file the runner drops in OUT to claim ownership. The runner only ever clears subdirectories
+// inside a directory it OWNS — an empty dir, or one carrying this marker from a prior run — so it can
+// never delete a pre-existing directory that merely happens to share a fixed loop-id name in a shared
+// scratch area the user pointed at.
+const OWNERSHIP_MARKER = ".lyhna-dogfood-output";
+
 async function main() {
   const { runScenario } = await import(pathToFileURL(DRIVER).href);
-  // Create OUT if needed, but never recursively delete it — each loop clears only its own subdir (see
-  // writeArtifacts). This removes any wholesale delete of the user-supplied path.
+  // Require an owned OUT: it must not exist, be empty, or already carry our marker. Refuse a non-empty
+  // unmarked directory rather than clear loop subdirs inside it (which could be unrelated user data).
+  if (existsSync(OUT)) {
+    const entries = readdirSync(OUT).filter((e) => e !== OWNERSHIP_MARKER);
+    if (entries.length > 0 && !existsSync(join(OUT, OWNERSHIP_MARKER))) {
+      console.error(
+        `refusing to use non-empty '${OUT}' as the dogfood outDir — it is not a lyhna-dogfood output ` +
+          `directory (no ${OWNERSHIP_MARKER} marker). Pass a dedicated or empty path so the runner only ` +
+          `manages directories it owns.`
+      );
+      process.exit(2);
+    }
+  }
+  // Create OUT if needed and claim it. The runner never recursively deletes OUT — each loop clears only
+  // its own subdir (see writeArtifacts).
   mkdirSync(OUT, { recursive: true });
+  writeFileSync(join(OUT, OWNERSHIP_MARKER), "Lyhna dogfood output directory — safe to regenerate.\n");
   const log = [];
 
   for (const loop of loops) {
