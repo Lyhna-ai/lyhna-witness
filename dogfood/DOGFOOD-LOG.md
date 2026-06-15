@@ -4,9 +4,12 @@
 > (claim capture → scope gate → judgment ledger → `export-pack`) and rendered to the full buyer-facing
 > artifact set (HANDOFF.md / handoff.json / next-ai-prompt.md / OKF / PAM). Run 2026-06-15.
 
-Reproduce: `node dogfood/run-dogfood.mjs [outDir]` (default `/tmp/lyhna-dogfood`), with the sibling
-`lyhna-mcp-proxy` checkout beside this repo. Artifacts are regenerable and deterministic; this log is the
-record. Scenarios + framing live in `dogfood/run-dogfood.mjs`.
+How these were produced: each loop was driven through the **real** proxy standing-service loop via the
+merged gauntlet driver (`lyhna-mcp-proxy/scripts/gauntlet/driver.mjs`) and rendered with the witness
+library (`src/okf.mjs` / `src/pam.mjs` / the CLI `--okf`/`--pam`). The standalone orchestration script
+that ran the batch is deferred to a follow-up dedicated harness PR (it accumulated review churn on
+dev-script path handling unrelated to the product); **this log is the record of the run**, and each loop
+is reproducible by driving the gauntlet driver with the scenario described below + the witness CLI.
 
 **What is real:** the whole loop machinery, claim capture, scope/bind verdicts, the judgment ledger,
 `export-pack`, and the deterministic receipt/OKF/PAM rendering. **What is synthetic** (same posture as

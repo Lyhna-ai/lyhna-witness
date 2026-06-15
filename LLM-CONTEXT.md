@@ -170,7 +170,7 @@ node web/build-data.mjs  # regenerate web/data/handoff.js from examples/live-loo
 CLI: `node src/cli.mjs <witness-input.json> [outDir] [--gate] [--okf] [--pam]`. `--okf`/`--pam` are
 additive — they also write the OKF knowledge bundle (`<outDir>/okf/`) and the PAM-shaped memory bundle
 (`<outDir>/pam/`); without them the output is exactly the handoff trio. `npm run gauntlet` runs the
-reliability gauntlet; `node dogfood/run-dogfood.mjs` runs the dogfood loops (both need the sibling proxy).
+reliability gauntlet (needs the sibling proxy).
 
 ### `lyhna-mcp-proxy` (TypeScript)
 ```bash
