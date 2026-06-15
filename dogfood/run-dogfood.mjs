@@ -16,15 +16,34 @@
 //   node dogfood/run-dogfood.mjs [outDir]      default outDir: /tmp/lyhna-dogfood
 
 import { mkdirSync, writeFileSync, rmSync } from "node:fs";
-import { join, dirname, resolve } from "node:path";
+import { join, dirname, resolve, sep } from "node:path";
+import { homedir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { renderAll } from "../reliability/gauntlet-lib.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(HERE, "..");
 const PROXY_DIR = process.env.LYHNA_PROXY_DIR ?? resolve(HERE, "..", "..", "lyhna-mcp-proxy");
 const DRIVER = join(PROXY_DIR, "scripts", "gauntlet", "driver.mjs");
 const OUT = resolve(process.argv[2] ?? "/tmp/lyhna-dogfood");
+
+// The runner clears OUT before writing, and OUT is a user-supplied arg — so fail closed on any path
+// whose deletion would be destructive (root, home, the cwd, the repo, or an ancestor of any of them).
+// A typo or `.` must never wipe a checkout or user data; pass a dedicated scratch path instead.
+const cwd = process.cwd();
+const isDangerousOut = (p) =>
+  p === resolve("/") ||
+  p === resolve(homedir()) ||
+  p === cwd ||
+  p === REPO_ROOT ||
+  cwd === p ||
+  cwd.startsWith(p + sep) ||
+  REPO_ROOT.startsWith(p + sep);
+if (isDangerousOut(OUT)) {
+  console.error(`refusing to use '${OUT}' as the dogfood outDir — it would recursively delete an important directory. Pass a dedicated scratch path (default: /tmp/lyhna-dogfood).`);
+  process.exit(2);
+}
 
 const FS_WRITE = "mcp__filesystem__write_file";
 const FS_READ = "mcp__filesystem__read_file";

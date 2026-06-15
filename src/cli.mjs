@@ -22,7 +22,7 @@
 // exports are deterministic projections of the SAME handoff (no clock, no extra witnessing) — every OKF
 // step / PAM item carries the receipt's evidence labels, so a consumer inherits the honesty ceiling.
 
-import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 
 import { runFromWitnessedEvents } from "./witnessed-event.mjs";
@@ -150,6 +150,10 @@ try {
 const extraExports = [];
 try {
   if (emitOkf) {
+    // Clear any prior bundle first so a re-render into the same dir cannot leave STALE files behind
+    // (e.g. a previous receipt's okf/steps/step-002.md), which a consumer scanning okf/ could read as
+    // evidence from a different handoff. The bundle is then the sole, coherent content under okf/.
+    rmSync(join(outDir, "okf"), { recursive: true, force: true });
     for (const [rel, content] of Object.entries(renderOkfBundle(handoff, { name: "handoff" }))) {
       const fp = join(outDir, "okf", rel);
       mkdirSync(dirname(fp), { recursive: true });
@@ -159,6 +163,7 @@ try {
   }
   if (emitPam) {
     const pamDir = join(outDir, "pam");
+    rmSync(pamDir, { recursive: true, force: true });
     mkdirSync(pamDir, { recursive: true });
     for (const [rel, content] of Object.entries(renderPamBundle(handoff, { name: "handoff" }))) {
       writeFileSync(join(pamDir, rel), content);
