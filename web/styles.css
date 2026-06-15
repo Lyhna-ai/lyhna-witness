@@ -392,3 +392,184 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .step, .line, .capsule { transition: none; }
 }
+
+/* =========================================================================
+   MARKETING SITE (homepage + shared header). Same receipt grammar: verdict
+   palette does the visual work, document/monospace-tinged surface, one accent.
+   ========================================================================= */
+
+a.btn, .btn { display: inline-block; text-decoration: none; text-align: center; }
+
+/* ---------- SHARED HEADER ---------- */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.wordmark-sub {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  text-transform: lowercase;
+}
+.nav { display: flex; gap: 18px; }
+.nav a {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.nav a:hover { color: var(--ink); }
+
+.page-wide { max-width: 860px; }
+
+/* ---------- HOMEPAGE HERO ---------- */
+.home-hero { text-align: center; padding: 48px 0 30px; }
+.home-hero h1 {
+  margin: 0 0 16px;
+  font-size: clamp(32px, 6.4vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+.home-hero .subhead {
+  max-width: 60ch;
+  font-size: clamp(16px, 2.2vw, 19px);
+  line-height: 1.55;
+}
+.home-hero .subhead em { font-style: normal; font-weight: 700; color: var(--ink); }
+
+.cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 8px 0 0;
+}
+.surface-line {
+  margin: 20px 0 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* ---------- HOMEPAGE BLOCKS ---------- */
+.block {
+  margin-top: 30px;
+  padding: 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  scroll-margin-top: 84px; /* so #how anchor clears the header */
+}
+.block > h2 {
+  margin: 0 0 10px;
+  font-size: clamp(20px, 3vw, 26px);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.block p { margin: 0 0 12px; color: var(--ink-soft); font-size: 16px; line-height: 1.6; }
+.block p:last-child { margin-bottom: 0; }
+.block .lede { color: var(--ink); font-weight: 500; }
+
+/* receipt cards (verdict palette is the brand) */
+.verdict-cards {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.verdict-card {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 16px 16px 18px;
+  background: #fcfdff;
+}
+.verdict-card p { margin: 10px 0 0; font-size: 14.5px; color: var(--ink-soft); }
+.vc-ok   { border-left-color: var(--ok-line); }
+.vc-warn { border-left-color: var(--warn-line); }
+.vc-bad  { border-left-color: var(--bad-line); }
+
+/* ceiling-as-sell */
+.sell { background: #fcfdff; }
+.sell h2 { color: var(--ink); }
+
+/* agent-native trio */
+.trio { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.trio-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 16px 18px;
+  background: #fcfdff;
+}
+.trio-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--info-bg);
+  border: 1px solid var(--info-line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  letter-spacing: 0.02em;
+}
+.trio-item p { margin: 10px 0 0; font-size: 14.5px; }
+
+/* carrier vs witness */
+.compare-punch {
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* demo CTA block */
+.demo-cta { text-align: center; }
+.demo-cta p { max-width: 60ch; margin-left: auto; margin-right: auto; }
+.demo-cta em { font-style: normal; font-weight: 700; color: var(--ink); }
+.demo-cta .btn { margin-top: 6px; }
+
+/* ---------- HOMEPAGE FOOTER ---------- */
+.home-foot {
+  max-width: 860px;
+  margin: 40px auto 0;
+  padding: 26px 20px 60px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.foot-beta { margin: 0 0 10px; font-weight: 700; font-size: 15px; }
+.foot-ceiling {
+  margin: 0 auto 16px;
+  max-width: 70ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-faint);
+}
+.foot-nav { display: flex; gap: 18px; justify-content: center; }
+.foot-nav a { font-size: 14px; font-weight: 600; color: var(--ink-soft); text-decoration: none; }
+.foot-nav a:hover { color: var(--ink); }
+
+@media (max-width: 640px) {
+  .verdict-cards, .trio { grid-template-columns: 1fr; }
+  .site-header { padding: 14px 16px; }
+}

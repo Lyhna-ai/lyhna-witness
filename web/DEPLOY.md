@@ -22,13 +22,15 @@ required.
 - The `deploy-pages` workflow runs on every push to `main` that touches `web/**` (or the workflow
   file), and can also be run on demand from the Actions tab (**Run workflow**).
 - It uploads the `web/` directory as the Pages artifact and publishes it. The site root is `web/`,
-  so `web/index.html` is served at the URL above and the relative assets (`styles.css`, `app.js`,
-  `data/handoff.js`) resolve under `/lyhna-witness/`.
+  so `web/index.html` (the homepage) is served at the URL above, `web/demo.html` at `/demo.html`, and
+  the relative assets (`styles.css`, `app.js`, `data/handoff.js`) resolve under `/lyhna-witness/`.
 - Until the one-time **Source: GitHub Actions** step above is done, the workflow run will fail at the
   deploy step with a "Pages not enabled" error — that is expected; enable Pages and re-run it.
 
-## What the page serves
+## What the site serves
 
-The exact committed receipt from `examples/live-loop/handoff.json` (via the generated
-`web/data/handoff.js`, kept in sync by `test/web-data.test.mjs`) — the receipt that came through the
-real lyhna-mcp-proxy witness loop. The page never invents data; it renders what the witness recorded.
+- **`/` (homepage)** — static marketing copy on the receipt grammar. No data, no backend.
+- **`/demo.html`** — replays the exact committed receipt from `examples/live-loop/handoff.json` (via the
+  generated `web/data/handoff.js`, kept in sync by `test/web-data.test.mjs`) — the receipt that came
+  through the real lyhna-mcp-proxy witness loop. The demo never invents data; it renders what the witness
+  recorded.
