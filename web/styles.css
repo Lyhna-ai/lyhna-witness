@@ -573,3 +573,45 @@ a.btn, .btn { display: inline-block; text-decoration: none; text-align: center; 
   .verdict-cards, .trio { grid-template-columns: 1fr; }
   .site-header { padding: 14px 16px; }
 }
+
+/* ---------- INSTALL PAGE ---------- */
+.nav a[aria-current="page"] { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+
+.beta-banner {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 12px;
+  font-size: 14.5px;
+  color: var(--warn-ink);
+  line-height: 1.55;
+}
+.beta-banner strong { color: var(--warn-ink); }
+
+.install-steps {
+  margin: 16px 0 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 16px;
+}
+.install-steps li { font-size: 16px; color: var(--ink-soft); line-height: 1.6; }
+.install-steps li strong { color: var(--ink); }
+
+.cmd {
+  margin: 12px 0 10px;
+  padding: 12px 14px;
+  background: var(--ink);
+  color: #e8ecf6;
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.install-foot-note {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+}
