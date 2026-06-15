@@ -3,127 +3,129 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lyhna Witness — AI Work Receipts your clients can trust</title>
+  <title>Lyhna — Prove what your agents did.</title>
   <meta
     name="description"
-    content="Before your AI tells a client 'done,' get the receipt. Lyhna witnesses an agent's real tool calls, compares them to what it claimed, and prints a deterministic, honest receipt."
+    content="Lyhna sits in your agent's tool path and prints an AI Work Receipt: what the agent claimed, what crossed the tool boundary, and when the work deserves a clear DO-NOT-SEND. Proof, not hope."
   />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="page">
+  <header class="site-header">
+    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">proof for AI work</span></a>
+    <nav class="nav">
+      <a href="#how">How it works</a>
+      <a href="demo.html">Demo</a>
+    </nav>
+  </header>
+
+  <main class="page page-wide">
     <!-- HERO -->
-    <section class="hero">
-      <p class="eyebrow">Lyhna Witness</p>
-      <h1>AI Work Receipts your clients can trust.</h1>
-      <p class="subhead">Before your AI tells a client "done," get the receipt.</p>
-      <p class="hero-explainer">
-        In production, Lyhna sits in the tool-call path and witnesses what actually crosses the wire,
-        then prints a receipt comparing what the agent <em>claimed</em> to what the witness
-        <em>saw</em> — green where they match, red where a claim was never witnessed. This demo
-        <em>replays</em> one real receipt from that loop; the tools in it are simulated, so no real
-        inbox or files were touched.
+    <section class="home-hero">
+      <h1>Prove what your agents did.</h1>
+      <p class="subhead">
+        Lyhna sits in your agent's tool path and shows what crossed the tool boundary: what the agent
+        <em>claimed</em>, what was <em>witnessed</em>, and when the work deserves a clear DO-NOT-SEND —
+        so client-facing AI work leaves with proof, not hope.
       </p>
-      <button id="run-btn" class="btn btn-primary" type="button">
-        Generate Witness Capsule
-      </button>
-      <p class="honest-tag">Demo tools. Real witness loop. Deterministic receipt rules.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="demo.html">Run the demo</a>
+        <a class="btn btn-secondary" href="#how">How it works</a>
+      </div>
+      <p class="surface-line">An MCP proof layer for MCP-capable agents — Claude Code, Codex, Cursor, and more.</p>
     </section>
 
-    <!-- OBJECTIVE -->
-    <section id="objective" class="objective" hidden>
-      <p class="objective-label">Objective the agent was given</p>
-      <p id="objective-text" class="objective-text"></p>
-    </section>
-
-    <!-- RUN (the three beats per step) -->
-    <section id="run" class="run" hidden>
-      <h2 class="section-title">Witnessing the run</h2>
-      <ol id="steps" class="steps"></ol>
-    </section>
-
-    <!-- CAPSULE -->
-    <section id="capsule" class="capsule" hidden>
-      <header class="capsule-head">
-        <h2>Client Review AI Work Receipt</h2>
-        <span id="capsule-status" class="capsule-status"></span>
-      </header>
-
-      <!-- the 10-second verdict -->
-      <p id="cap-verdict" class="cap-verdict"></p>
-
-      <dl class="capsule-grid">
-        <dt>Objective</dt>
-        <dd id="cap-objective"></dd>
-
-        <dt>Systems touched</dt>
-        <dd id="cap-systems"></dd>
-
-        <dt>Witnessed &amp; supported</dt>
-        <dd><ul id="cap-supported" class="ok-list"></ul></dd>
-
-        <dt>Flagged — review before sending</dt>
-        <dd><ul id="cap-flags" class="flag-list"></ul></dd>
-
-        <dt>Safe to send</dt>
-        <dd id="cap-safe"></dd>
-
-        <dt>Next action</dt>
-        <dd id="cap-next"></dd>
-      </dl>
-
-      <!-- HONESTY CEILING (verbatim) -->
-      <div class="ceiling">
-        <div class="ceiling-intro">
-          <h3>Why this matters</h3>
-          <p>
-            Lyhna turns "the agent said it was done" into "here is what was actually witnessed,
-            what was not, and what is safe to continue."
-          </p>
+    <!-- THE RECEIPT, SHOWN -->
+    <section class="block">
+      <h2>Your agent's word, checked against its work.</h2>
+      <p class="lede">Every Lyhna receipt separates the story from the evidence.</p>
+      <div class="verdict-cards">
+        <div class="verdict-card vc-ok">
+          <span class="chip chip-ok">🟢 SUPPORTED</span>
+          <p>The agent claimed it. The tool call was witnessed.</p>
         </div>
-        <div class="ceiling-col ceiling-can">
-          <h3>What this receipt proves:</h3>
-          <ul>
-            <li><strong>The agent's story is no longer the source of truth.</strong> Lyhna shows what actually crossed the tool boundary.</li>
-            <li><strong>Every claimed step is marked with evidence status.</strong> Supported, unsupported, mismatched, approval-needed, or do-not-send.</li>
-            <li><strong>You can see exactly where the agent's account lost witnessed support.</strong> If it claimed Gmail, but no Gmail send was witnessed, Lyhna flags the missing evidence before a user repeats the claim.</li>
-            <li><strong>The next user or AI gets a safe continuation state.</strong> What is settled, what is open, what needs review, and what must not be trusted yet.</li>
-            <li><strong>The handoff carries a defensible boundary.</strong> It says what was witnessed, what was not witnessed, and what should happen next.</li>
-          </ul>
+        <div class="verdict-card vc-warn">
+          <span class="chip chip-warn">🟡 MISMATCH</span>
+          <p>The agent claimed one thing. The witness saw another.</p>
         </div>
-        <div class="ceiling-col ceiling-cannot">
-          <h3>What this receipt refuses to fake:</h3>
-          <ul>
-            <li><strong>It does not claim the client read the email.</strong> Lyhna saw no client behavior, so it does not invent one.</li>
-            <li><strong>It does not certify the business quality of the work.</strong> A witnessed file write or test run is not the same as legal, financial, or commercial correctness.</li>
-            <li><strong>It does not treat agent confidence as evidence.</strong> If the agent says "done" but no tool call proves it, the receipt says unsupported.</li>
-            <li><strong>It does not verify anything outside the observed workflow.</strong> No witnessed event, no claim of truth.</li>
-            <li><strong>It does not let a clean-sounding summary become a dangerous handoff.</strong> The receipt protects the next user or AI from continuing from a story that was never proven.</li>
-          </ul>
+        <div class="verdict-card vc-bad">
+          <span class="chip chip-bad">🔴 DO-NOT-SEND</span>
+          <p>The agent claimed it. No tool call backs it up. Don't put this in front of a client.</p>
         </div>
       </div>
+    </section>
 
-      <!-- CTA FOOTER -->
-      <footer class="cta">
-        <p class="cta-primary">Don't take our word for it — audit it.</p>
-        <p class="cta-sub">Copy the receipt and ask your own AI: <em>does this overclaim what Lyhna witnessed?</em></p>
-        <div class="cta-actions">
-          <button id="copy-btn" class="btn btn-secondary" type="button">Copy receipt</button>
-          <span id="copy-status" class="copy-status" aria-live="polite"></span>
-        </div>
+    <!-- THE CEILING AS THE SELL -->
+    <section class="block sell">
+      <h2>It tells you less than other tools. On purpose.</h2>
+      <p>
+        Lyhna will never tell you the email was delivered, the work is correct, or the client was happy.
+        It can't witness those things, so it won't claim them.
+      </p>
+      <p>
+        It tells you exactly one thing, and tells it true: what your agent did at the tool boundary —
+        what it claimed, and what was witnessed. Every Lyhna label is tied to what was witnessed, what was
+        not witnessed, or what stayed outside the observed workflow.
+      </p>
+    </section>
 
-        <div class="beta">
-          <p class="beta-head">Private beta opening soon.</p>
-          <p class="beta-sub">
-            Want early access? Ask your AI to review this receipt, then come back when installs open.
-          </p>
-          <span class="beta-badge" role="note" aria-disabled="true">Private beta soon</span>
+    <!-- AGENT-NATIVE TRIO -->
+    <section id="how" class="block">
+      <h2>Witness once. Export everywhere.</h2>
+      <div class="trio">
+        <div class="trio-item">
+          <span class="trio-tag mono">MCP</span>
+          <p>Lyhna installs in your agent's tool path. No new platform, no rewrite. It sits where the work happens.</p>
         </div>
-      </footer>
+        <div class="trio-item">
+          <span class="trio-tag mono">OKF</span>
+          <p>Every receipt can export to <strong>Open Knowledge Format</strong> — an open spec for portable, agent-readable knowledge.</p>
+        </div>
+        <div class="trio-item">
+          <span class="trio-tag mono">Portable memory bundle</span>
+          <p>Lyhna can also produce a <strong>PAM-shaped</strong> memory bundle the next agent can carry: not just a summary, but what was witnessed, what changed, and what should not be trusted yet.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARRIER VS WITNESS -->
+    <section class="block compare">
+      <h2>Memory moves. Lyhna checks it first.</h2>
+      <p>
+        The industry is racing to move agent memory between tools — OKF, PAM, Mem0, and whatever's next.
+        They make memory portable.
+      </p>
+      <p class="compare-punch">Lyhna makes it honest.</p>
+      <p>
+        It marks what crossed the tool boundary — and what didn't — before the memory travels. The
+        carrier is a consumer of Lyhna. It is not Lyhna.
+      </p>
+    </section>
+
+    <!-- DEMO CTA -->
+    <section class="block demo-cta">
+      <h2>Don't take our word for it. Don't take the agent's either.</h2>
+      <p>
+        Run the demo. Watch the loop replay, and the receipt print. Then copy it, paste it into your own
+        AI, and ask: <em>does this overclaim?</em> It should come back with the same boundary the receipt
+        draws — what was witnessed, what was unsupported, and what stayed outside the observed workflow.
+        That's the whole product.
+      </p>
+      <a class="btn btn-primary" href="demo.html">Run the demo</a>
     </section>
   </main>
 
-  <script src="data/handoff.js"></script>
-  <script src="app.js"></script>
+  <footer class="home-foot">
+    <p class="foot-beta">Private beta opening soon.</p>
+    <p class="foot-ceiling">
+      Lyhna asserts action-level witnessed truth only — what crossed the tool boundary vs. what the agent
+      claimed. It does not verify outcomes, delivery, correctness, or anything outside the observed
+      tool-call path.
+    </p>
+    <nav class="foot-nav">
+      <a href="#how">How it works</a>
+      <a href="demo.html">Demo</a>
+    </nav>
+  </footer>
 </body>
 </html>
