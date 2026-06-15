@@ -149,11 +149,13 @@ try {
 // output stays byte-deterministic.
 const extraExports = [];
 try {
+  // The output dir always reflects EXACTLY this invocation. Clear any prior okf/ and pam/ bundles
+  // UNCONDITIONALLY first — so a no-flag render leaves only the handoff trio (never a stale bundle from
+  // an earlier --okf/--pam run), and a flagged render leaves a fresh, coherent bundle (never a previous,
+  // different receipt's files). A consumer scanning the dir can't read evidence from another handoff.
+  rmSync(join(outDir, "okf"), { recursive: true, force: true });
+  rmSync(join(outDir, "pam"), { recursive: true, force: true });
   if (emitOkf) {
-    // Clear any prior bundle first so a re-render into the same dir cannot leave STALE files behind
-    // (e.g. a previous receipt's okf/steps/step-002.md), which a consumer scanning okf/ could read as
-    // evidence from a different handoff. The bundle is then the sole, coherent content under okf/.
-    rmSync(join(outDir, "okf"), { recursive: true, force: true });
     for (const [rel, content] of Object.entries(renderOkfBundle(handoff, { name: "handoff" }))) {
       const fp = join(outDir, "okf", rel);
       mkdirSync(dirname(fp), { recursive: true });
@@ -163,7 +165,6 @@ try {
   }
   if (emitPam) {
     const pamDir = join(outDir, "pam");
-    rmSync(pamDir, { recursive: true, force: true });
     mkdirSync(pamDir, { recursive: true });
     for (const [rel, content] of Object.entries(renderPamBundle(handoff, { name: "handoff" }))) {
       writeFileSync(join(pamDir, rel), content);

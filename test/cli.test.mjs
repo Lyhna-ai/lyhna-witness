@@ -87,6 +87,18 @@ test("CLI --okf --pam also emit the OKF and PAM bundles, carrying the receipt's 
   assert.ok(mems.every((m) => typeof m.evidence_status === "string" && m.evidence_status.length > 0), "every PAM item has an evidence_status");
 });
 
+test("a later no-flag render clears stale okf/ and pam/ (no-flag output is exactly the trio)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  writeFileSync(join(dir, "input.json"), JSON.stringify(input));
+  // First render WITH exports, then re-render the same dir WITHOUT flags.
+  assert.equal(run([join(dir, "input.json"), dir, "--okf", "--pam"]).code, 0);
+  assert.ok(existsSync(join(dir, "okf")) && existsSync(join(dir, "pam")));
+  assert.equal(run([join(dir, "input.json"), dir]).code, 0);
+  assert.ok(!existsSync(join(dir, "okf")), "stale okf/ must be cleared by a no-flag render");
+  assert.ok(!existsSync(join(dir, "pam")), "stale pam/ must be cleared by a no-flag render");
+  assert.ok(existsSync(join(dir, "HANDOFF.md")), "the trio remains");
+});
+
 test("CLI reads from stdin with '-'", () => {
   const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
   const { code, stdout } = run(["-", dir], { input: JSON.stringify(input) });

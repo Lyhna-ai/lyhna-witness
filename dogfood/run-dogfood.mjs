@@ -32,14 +32,12 @@ const OUT = resolve(process.argv[2] ?? "/tmp/lyhna-dogfood");
 // whose deletion would be destructive (root, home, the cwd, the repo, or an ancestor of any of them).
 // A typo or `.` must never wipe a checkout or user data; pass a dedicated scratch path instead.
 const cwd = process.cwd();
+// `p` is unsafe if it IS, CONTAINS (is an ancestor of), or is INSIDE (a descendant of) the cwd or the
+// repo — or is root/home. This rejects `.` (the repo), `src` (a descendant — would delete <repo>/src),
+// and any ancestor, while allowing a dedicated scratch path like /tmp/lyhna-dogfood.
+const within = (p, base) => p === base || p.startsWith(base + sep) || base.startsWith(p + sep);
 const isDangerousOut = (p) =>
-  p === resolve("/") ||
-  p === resolve(homedir()) ||
-  p === cwd ||
-  p === REPO_ROOT ||
-  cwd === p ||
-  cwd.startsWith(p + sep) ||
-  REPO_ROOT.startsWith(p + sep);
+  p === resolve("/") || p === resolve(homedir()) || within(p, cwd) || within(p, REPO_ROOT);
 if (isDangerousOut(OUT)) {
   console.error(`refusing to use '${OUT}' as the dogfood outDir — it would recursively delete an important directory. Pass a dedicated scratch path (default: /tmp/lyhna-dogfood).`);
   process.exit(2);
