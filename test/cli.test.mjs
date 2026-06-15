@@ -53,6 +53,55 @@ test("CLI writes the handoff trio and reports the verdict", () => {
   assert.equal(handoff.proof_refs.draft, "id-123");
 });
 
+test("CLI does NOT emit okf/ or pam/ without the flags, and keeps the legacy status path", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  writeFileSync(join(dir, "input.json"), JSON.stringify(input));
+  const { code, stdout } = run([join(dir, "input.json"), dir]);
+  assert.equal(code, 0);
+  assert.ok(!existsSync(join(dir, "okf")), "okf/ must not be written without --okf");
+  assert.ok(!existsSync(join(dir, "pam")), "pam/ must not be written without --pam");
+  // Default behavior unchanged: the status line still ends in `→ <outDir>/HANDOFF.md` (no bundle list),
+  // so a wrapper parsing stdout for the receipt path is unaffected.
+  assert.match(stdout, /→ .*\/HANDOFF\.md\n$/);
+  assert.doesNotMatch(stdout, /\(HANDOFF\.md \+/);
+});
+
+test("CLI --okf --pam also emit the OKF and PAM bundles, carrying the receipt's evidence labels", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  writeFileSync(join(dir, "input.json"), JSON.stringify(input));
+
+  const { code, stdout } = run([join(dir, "input.json"), dir, "--okf", "--pam"]);
+  assert.equal(code, 0);
+  assert.match(stdout, /okf\/, pam\//);
+
+  // OKF: the index + the per-step concept exist, and the step carries the mismatch label (no laundering).
+  assert.ok(existsSync(join(dir, "okf", "index.md")), "okf/index.md written");
+  const okfStep = readFileSync(join(dir, "okf", "steps", "step-001.md"), "utf8");
+  assert.match(okfStep, /CLAIMED_ACTUAL_MISMATCH/);
+
+  // PAM: manifest mirrors the not-safe verdict; every memory item carries an evidence_status.
+  const manifest = JSON.parse(readFileSync(join(dir, "pam", "manifest.json"), "utf8"));
+  assert.equal(manifest.safe_to_continue, false);
+  const mems = readFileSync(join(dir, "pam", "memories.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  assert.ok(mems.length > 0);
+  assert.ok(mems.every((m) => typeof m.evidence_status === "string" && m.evidence_status.length > 0), "every PAM item has an evidence_status");
+});
+
+test("--okf re-render clears stale bundle files, but a no-flag render leaves a pre-existing okf/ untouched", () => {
+  const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
+  writeFileSync(join(dir, "input.json"), JSON.stringify(input));
+  assert.equal(run([join(dir, "input.json"), dir, "--okf"]).code, 0);
+  // A stale file from a hypothetical earlier/larger receipt must not survive an --okf re-render.
+  const stale = join(dir, "okf", "steps", "step-999.md");
+  writeFileSync(stale, "stale evidence from another handoff");
+  assert.equal(run([join(dir, "input.json"), dir, "--okf"]).code, 0);
+  assert.ok(!existsSync(stale), "an --okf re-render clears stale bundle files it did not produce");
+  // A no-flag render must NOT delete a pre-existing okf/ — the CLI only touches a bundle it was asked
+  // to write, never an okf/ the user may keep for unrelated reasons.
+  assert.equal(run([join(dir, "input.json"), dir]).code, 0);
+  assert.ok(existsSync(join(dir, "okf")), "no-flag render leaves a pre-existing okf/ in place");
+});
+
 test("CLI reads from stdin with '-'", () => {
   const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
   const { code, stdout } = run(["-", dir], { input: JSON.stringify(input) });

@@ -29,6 +29,22 @@ npm test     # node:test, no install needed (Node >= 20)
 npm run demo # the Hermes/Zapier "claimed Google, used Zapier" demo
 ```
 
+### Render a receipt from a capture (CLI)
+
+Given a `witness-input.json` (the proxy emits one at loop close; see `lyhna-mcp-proxy`), render the
+receipt with the zero-dependency CLI:
+
+```bash
+node src/cli.mjs <witness-input.json> <outDir>            # writes HANDOFF.md, handoff.json, next-ai-prompt.md
+node src/cli.mjs <witness-input.json> <outDir> --okf --pam  # ALSO write the OKF and PAM bundles
+node src/cli.mjs <witness-input.json> <outDir> --gate       # exit 3 when NOT safe_to_continue (fail-closed)
+node src/cli.mjs - <outDir>                                 # read the capture from stdin
+```
+
+`--okf` / `--pam` are additive — without them you get exactly the handoff trio. Each export is a
+deterministic projection of the same handoff (every OKF step / PAM item carries the receipt's evidence
+labels), so a downstream knowledge/memory system inherits the honesty ceiling instead of stripping it.
+
 The demo reproduces the real failure on purpose: the agent reports a clean story; the witness saw
 something different. See the committed output in [`examples/hermes-zapier/`](./examples/hermes-zapier/) —
 `HANDOFF.md` is the human face, readable without running anything. The demo flags two things a
@@ -85,9 +101,10 @@ examples/hermes-zapier/
     prompts/next-ai-prompt.md      # type: Lyhna Safe Continuation Prompt
 ```
 
-`renderOkfBundle(handoff, options)` returns the bundle as a `{ path: contents }` map (the demo writes
-it under `okf/`). It is deterministic — no clock, no model calls; a `timestamp` appears only if you
-pass one in `options`. Frontmatter carries the witness facts the format should preserve:
+`renderOkfBundle(handoff, options)` returns the bundle as a `{ path: contents }` map. Emit it from the
+CLI with `--okf` (writes `<outDir>/okf/`), or call the function directly. It is deterministic — no clock,
+no model calls; a `timestamp` appears only if you pass one in `options`. Frontmatter carries the witness
+facts the format should preserve:
 `safe_to_continue`, `lyhna_labels`, the mismatch / unsupported / do-not-send counts, and `proof_refs`.
 
 **OKF is the container; Lyhna is the witness.** The bundle is a *portable export* for agents, repos,
@@ -111,9 +128,9 @@ examples/live-loop/
     README.md
 ```
 
-`renderPamBundle(handoff, options)` returns a `{ path: contents }` map (the demo writes it under
-`pam/`), deterministic — no clock, no model calls; a `timestamp` appears (manifest only) solely if you
-pass one. The receipt projects across PAM's five memory classes: **episodic** (the witnessed steps),
+`renderPamBundle(handoff, options)` returns a `{ path: contents }` map. Emit it from the CLI with
+`--pam` (writes `<outDir>/pam/`), or call the function directly. Deterministic — no clock, no model
+calls; a `timestamp` appears (manifest only) solely if you pass one. The receipt projects across PAM's five memory classes: **episodic** (the witnessed steps),
 **semantic** (evidence-bound facts), **procedural** (continuation rules / do-not-send / do-not-re-litigate),
 **working** (objective, open questions, settled, continuation state), and **identity** (explicit
 user/org/client preferences only — never inferred; clearly absent otherwise).
