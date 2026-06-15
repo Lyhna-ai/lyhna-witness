@@ -35,6 +35,9 @@ Draft the client onboarding doc, save it to the client's Google Drive, and confi
 ## Mismatches
 - Step 1: The agent said it used google_docs directly, but the witness saw it routed through zapier (zapier → google_docs.create_document). Same end app or not, the path you were told is not the path it took.
 
+## Do Not Send
+- Step 2: The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
+
 ## Settled Decisions
 - Client onboarding template v2 is the agreed format.
 
@@ -45,7 +48,7 @@ Draft the client onboarding doc, save it to the client's Google Drive, and confi
 - Should the client get edit access or view-only?
 
 ## Human Approval Needed
-- Step 2: The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
+_(none)_
 
 ## Next Actions
 - Confirm the document was actually shared before telling the client it is ready.

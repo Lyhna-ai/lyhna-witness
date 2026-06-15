@@ -1,0 +1,14 @@
+{
+  "objective": "Post the client update",
+  "steps": [
+    {
+      "claim": {
+        "system": "linkedin",
+        "action": "post",
+        "result": "posted the update",
+        "user_facing": true
+      },
+      "event": null
+    }
+  ]
+}

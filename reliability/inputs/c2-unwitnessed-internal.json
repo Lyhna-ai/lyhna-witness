@@ -1,0 +1,12 @@
+{
+  "objective": "Sync internal state (claimed, not witnessed, NOT user-facing)",
+  "steps": [
+    {
+      "claim": {
+        "system": "internal_api",
+        "action": "sync"
+      },
+      "event": null
+    }
+  ]
+}

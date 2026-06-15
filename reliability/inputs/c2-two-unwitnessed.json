@@ -1,0 +1,21 @@
+{
+  "objective": "Email and Slack the client (both claimed, neither witnessed)",
+  "steps": [
+    {
+      "claim": {
+        "system": "gmail",
+        "action": "send",
+        "user_facing": true
+      },
+      "event": null
+    },
+    {
+      "claim": {
+        "system": "slack",
+        "action": "post_message",
+        "user_facing": true
+      },
+      "event": null
+    }
+  ]
+}

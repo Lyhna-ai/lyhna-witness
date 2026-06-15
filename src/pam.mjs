@@ -146,8 +146,8 @@ export function renderPamBundle(handoff, options = {}) {
       evidence_status: runEvidence,
       safe_to_continue: safe,
       content: safe
-        ? "Lyhna witnessed this run as safe to continue."
-        : "Lyhna did NOT witness this run as safe to continue — it has unsupported, mismatched, or approval-gated steps. Resolve them before relying on it.",
+        ? "Lyhna recorded no step that blocks continuation (no unsupported, do-not-send, or approval-gated step); safe to continue on that basis. Witnessing is action-level — Lyhna does not witness 'safety' itself."
+        : "Lyhna did NOT mark this run safe to continue — it has unsupported, mismatched, or approval-gated steps. Resolve them before relying on it.",
       summary: {
         total_steps: summary.total_steps ?? 0,
         supported: summary.supported ?? 0,
@@ -210,7 +210,7 @@ export function renderPamBundle(handoff, options = {}) {
       evidence_status: runEvidence,
       safe_to_continue: safe,
       content: safe
-        ? "Fact: Lyhna witnessed this run as safe to continue."
+        ? "Fact: Lyhna recorded no step that blocks continuation (no unsupported, do-not-send, or approval-gated step); the run is safe to continue on that basis."
         : "Fact: this run is NOT safe to continue per Lyhna — at least one step lacks witnessed support or needs approval." // claim-neutral: a gap may be an unclaimed observed failure
     })
   );
@@ -237,8 +237,11 @@ export function renderPamBundle(handoff, options = {}) {
         supported: false,
         // Never invent a claim: a flagged step may be an OBSERVED failure with no agent claim
         // (claimed:null). Only say "the agent claimed …" when there actually is one.
+        // The human_note already names the claim and what the witness saw, so use it verbatim rather
+        // than prepending a second "the agent claimed …" clause (which produced a duplicated, run-on
+        // sentence). The framing makes the evidence boundary explicit without restating the claim twice.
         content: s.claimed
-          ? `Fact: the agent claimed ${claimPhrase(s.claimed)}, but ${s.human_note ?? "the witness could not confirm it."}`
+          ? `Fact (claim not confirmed by the witness): ${s.human_note ?? "the agent's claim could not be confirmed."}`
           : `Fact (observed, no agent claim): ${s.human_note ?? "a witnessed tool call did not succeed; recorded as an observed failure, not supported work."}`
       })
     );

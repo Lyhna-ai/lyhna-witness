@@ -1,0 +1,21 @@
+{
+  "objective": "Claimed it sent the invoice — the witness saw the call refused",
+  "steps": [
+    {
+      "claim": {
+        "system": "gmail",
+        "action": "send",
+        "result": "sent the invoice",
+        "user_facing": true
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__gmail__send"
+        },
+        "verdict": {
+          "kind": "REFUSED"
+        }
+      }
+    }
+  ]
+}

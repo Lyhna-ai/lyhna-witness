@@ -34,6 +34,10 @@ Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log th
 ## Mismatches
 _(none)_
 
+## Do Not Send
+- Step 2: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+- Step 3: The agent claimed a "create_records" action in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
+
 ## Proof / References
 - google_doc: https://docs.google.com/document/d/19KXYrVUZSY40XbVLw9CSzCV0WUU-zi018BYWm2mza30/edit
 - result_hash: sha256:672f0118c87f2850
@@ -49,8 +53,7 @@ _(none)_
 - Were ANY of the 5 outreach emails actually sent? The witness observed none.
 
 ## Human Approval Needed
-- Step 2: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
-- Step 3: The agent claimed a "create_records" action in salesforce, but the witness saw no tool call for this step — there is no evidence it actually happened.
+_(none)_
 
 ## Next Actions
 - Do NOT tell the prospects they were contacted — no email or CRM write was witnessed. Re-run the outreach through the proxy and confirm each send returns before reporting it as done.

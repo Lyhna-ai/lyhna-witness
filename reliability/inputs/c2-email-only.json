@@ -1,0 +1,14 @@
+{
+  "objective": "Email the client the invoice",
+  "steps": [
+    {
+      "claim": {
+        "system": "gmail",
+        "action": "send",
+        "result": "emailed the client the invoice",
+        "user_facing": true
+      },
+      "event": null
+    }
+  ]
+}

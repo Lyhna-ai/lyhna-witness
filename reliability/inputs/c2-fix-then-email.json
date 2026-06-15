@@ -1,0 +1,32 @@
+{
+  "objective": "Patch the bug, then email the client",
+  "steps": [
+    {
+      "claim": {
+        "system": "filesystem",
+        "action": "write_file"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__filesystem__write_file"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:377057b9961590565c14768d19c2d2d1a1cf34a7a613c375901c49295434d687"
+        }
+      }
+    },
+    {
+      "claim": {
+        "system": "gmail",
+        "action": "send",
+        "result": "emailed the client",
+        "user_facing": true
+      },
+      "event": null
+    }
+  ]
+}

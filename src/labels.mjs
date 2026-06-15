@@ -28,6 +28,29 @@ function isErrorResult(result) {
 }
 
 /**
+ * A result string that denotes the call was BLOCKED BEFORE EXECUTION (refused at the gate, or held for
+ * human approval). Unlike an `error`, the tool never RAN — so the note must not say it "ran". This is a
+ * precision point of the honesty ceiling: the witness only saw the call blocked, not executed.
+ */
+function isBlockedResult(result) {
+  const r = norm(result);
+  return r === "refused" || r === "escalated";
+}
+
+// The plain-language note for a non-successful witnessed call. A refused/escalated call was blocked
+// before it ran (the tool did not execute); only a returned-but-errored call actually ran.
+function failureNote(result) {
+  const r = norm(result);
+  if (r === "refused") {
+    return `The witness saw this call refused — it was blocked before it ran, so the tool did not execute and there is no evidence the work happened.`;
+  }
+  if (r === "escalated") {
+    return `The witness saw this call escalated for human approval — it was held before it ran, so the tool did not execute and the work has not happened yet.`;
+  }
+  return `The tool call ran but did not succeed (result: ${result ?? "error"}).`;
+}
+
+/**
  * Path mismatch = the agent's claimed route is not the route the witness observed. Two cases:
  *  (a) the call was routed through an undisclosed wrapper family (e.g. the agent claimed a direct
  *      app but the witness saw it go through Zapier) — the Hermes catch; OR
@@ -156,11 +179,11 @@ export function computeStepLabels(step) {
   }
 
   // 2) Witnessed failure.
-  const failed = witnessed.returned === false || isErrorResult(witnessed.result);
+  const failed = witnessed.returned === false || isErrorResult(witnessed.result) || isBlockedResult(witnessed.result);
   if (failed) {
     labels.push(L.UNSUPPORTED);
     if (userFacing) labels.push(L.DO_NOT_SEND);
-    notes.push(`The tool call ran but did not succeed (result: ${witnessed.result ?? "error"}).`);
+    notes.push(failureNote(witnessed.result));
   }
 
   // 2b) Wrapper route seen, but the operation under it was UNREADABLE. The witness saw a call go

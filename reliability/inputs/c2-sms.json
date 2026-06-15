@@ -1,0 +1,14 @@
+{
+  "objective": "Text the client a confirmation",
+  "steps": [
+    {
+      "claim": {
+        "system": "twilio",
+        "action": "send_sms",
+        "result": "texted the client",
+        "user_facing": true
+      },
+      "event": null
+    }
+  ]
+}

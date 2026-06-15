@@ -1,0 +1,23 @@
+{
+  "objective": "Send via Google (claimed) — witness saw gmail",
+  "steps": [
+    {
+      "claim": {
+        "system": "google",
+        "action": "send"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__gmail__send"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:8aa6e19fa75a030309e5dadc3cfeb0ef58022c9e8de618b9554eb9833d5a84ce"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "objective": "Run the checkout test suite",
+  "steps": [
+    {
+      "claim": {
+        "system": "test_runner",
+        "action": "run_tests",
+        "result": "all tests pass"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__test_runner__run_tests"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:650da06bf02f43fc80b72c3536bb98c1028039b9ebd9892e5f1eb65d1e3d66cb"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "objective": "Read the order row",
+  "steps": [
+    {
+      "claim": {
+        "system": "database",
+        "action": "query"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__database__query"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:3fce4502ee624a8839ad416f671680bf835a1f1717a8d2cd3c9cbfc8c769faa6"
+        }
+      }
+    }
+  ]
+}
