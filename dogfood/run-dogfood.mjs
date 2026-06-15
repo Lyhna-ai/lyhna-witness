@@ -210,6 +210,9 @@ const loops = [
 ];
 
 function writeArtifacts(dir, witnessInput, rendered) {
+  // Clear ONLY this loop's own subdirectory (a path we created, named by the loop id) so a re-run is
+  // fresh — never the whole OUT. The runner does not wholesale-delete the user-supplied OUT.
+  rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "witness-input.json"), JSON.stringify(witnessInput, null, 2) + "\n");
   writeFileSync(join(dir, "handoff.json"), JSON.stringify(rendered.handoff, null, 2) + "\n");
@@ -237,7 +240,8 @@ function summarize(rendered) {
 
 async function main() {
   const { runScenario } = await import(pathToFileURL(DRIVER).href);
-  rmSync(OUT, { recursive: true, force: true });
+  // Create OUT if needed, but never recursively delete it — each loop clears only its own subdir (see
+  // writeArtifacts). This removes any wholesale delete of the user-supplied path.
   mkdirSync(OUT, { recursive: true });
   const log = [];
 
