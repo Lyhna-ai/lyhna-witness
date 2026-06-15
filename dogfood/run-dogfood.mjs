@@ -24,7 +24,10 @@ import { renderAll } from "../reliability/gauntlet-lib.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, "..");
-const PROXY_DIR = process.env.LYHNA_PROXY_DIR ?? resolve(HERE, "..", "..", "lyhna-mcp-proxy");
+// resolve() the env value too — a relative LYHNA_PROXY_DIR must be normalized to an absolute path or
+// the within() destructive-output guard below (which compares against the always-resolved OUT) would
+// not recognize the proxy checkout and could let `rmSync(OUT)` delete it.
+const PROXY_DIR = resolve(process.env.LYHNA_PROXY_DIR ?? resolve(HERE, "..", "..", "lyhna-mcp-proxy"));
 const DRIVER = join(PROXY_DIR, "scripts", "gauntlet", "driver.mjs");
 const OUT = resolve(process.argv[2] ?? "/tmp/lyhna-dogfood");
 
