@@ -87,16 +87,19 @@ test("CLI --okf --pam also emit the OKF and PAM bundles, carrying the receipt's 
   assert.ok(mems.every((m) => typeof m.evidence_status === "string" && m.evidence_status.length > 0), "every PAM item has an evidence_status");
 });
 
-test("a later no-flag render clears stale okf/ and pam/ (no-flag output is exactly the trio)", () => {
+test("--okf re-render clears stale bundle files, but a no-flag render leaves a pre-existing okf/ untouched", () => {
   const dir = mkdtempSync(join(tmpdir(), "witness-cli-"));
   writeFileSync(join(dir, "input.json"), JSON.stringify(input));
-  // First render WITH exports, then re-render the same dir WITHOUT flags.
-  assert.equal(run([join(dir, "input.json"), dir, "--okf", "--pam"]).code, 0);
-  assert.ok(existsSync(join(dir, "okf")) && existsSync(join(dir, "pam")));
+  assert.equal(run([join(dir, "input.json"), dir, "--okf"]).code, 0);
+  // A stale file from a hypothetical earlier/larger receipt must not survive an --okf re-render.
+  const stale = join(dir, "okf", "steps", "step-999.md");
+  writeFileSync(stale, "stale evidence from another handoff");
+  assert.equal(run([join(dir, "input.json"), dir, "--okf"]).code, 0);
+  assert.ok(!existsSync(stale), "an --okf re-render clears stale bundle files it did not produce");
+  // A no-flag render must NOT delete a pre-existing okf/ — the CLI only touches a bundle it was asked
+  // to write, never an okf/ the user may keep for unrelated reasons.
   assert.equal(run([join(dir, "input.json"), dir]).code, 0);
-  assert.ok(!existsSync(join(dir, "okf")), "stale okf/ must be cleared by a no-flag render");
-  assert.ok(!existsSync(join(dir, "pam")), "stale pam/ must be cleared by a no-flag render");
-  assert.ok(existsSync(join(dir, "HANDOFF.md")), "the trio remains");
+  assert.ok(existsSync(join(dir, "okf")), "no-flag render leaves a pre-existing okf/ in place");
 });
 
 test("CLI reads from stdin with '-'", () => {

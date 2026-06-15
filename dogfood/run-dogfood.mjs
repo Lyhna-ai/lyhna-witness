@@ -37,7 +37,11 @@ const cwd = process.cwd();
 // and any ancestor, while allowing a dedicated scratch path like /tmp/lyhna-dogfood.
 const within = (p, base) => p === base || p.startsWith(base + sep) || base.startsWith(p + sep);
 const isDangerousOut = (p) =>
-  p === resolve("/") || p === resolve(homedir()) || within(p, cwd) || within(p, REPO_ROOT);
+  p === resolve("/") ||
+  p === resolve(homedir()) ||
+  within(p, cwd) ||
+  within(p, REPO_ROOT) ||
+  within(p, PROXY_DIR); // the sibling proxy is a required checkout — a typo must not delete it
 if (isDangerousOut(OUT)) {
   console.error(`refusing to use '${OUT}' as the dogfood outDir — it would recursively delete an important directory. Pass a dedicated scratch path (default: /tmp/lyhna-dogfood).`);
   process.exit(2);
