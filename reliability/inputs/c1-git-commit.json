@@ -1,0 +1,23 @@
+{
+  "objective": "Commit the fix",
+  "steps": [
+    {
+      "claim": {
+        "system": "git",
+        "action": "commit"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__git__commit"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:8c2db2e34714094867b9e10d5a3941251ea4f343c0e64658d41b82ee5730aeb6"
+        }
+      }
+    }
+  ]
+}

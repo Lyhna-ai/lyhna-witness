@@ -1,0 +1,25 @@
+{
+  "objective": "Claimed it sent the email — witness saw a draft",
+  "steps": [
+    {
+      "claim": {
+        "system": "gmail",
+        "action": "send",
+        "result": "sent the client the email",
+        "user_facing": true
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__gmail__create_draft"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:518555ef2fa72f0c27d75bf434e77143bf306c00794ab3675fb50235427cd089"
+        }
+      }
+    }
+  ]
+}

@@ -35,6 +35,9 @@ Fix the checkout total rounding bug and confirm the fix with the client
 ## Mismatches
 _(none)_
 
+## Do Not Send
+- Step 3: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+
 ## Settled Decisions
 - checkout total rounding bug patched
 
@@ -45,7 +48,7 @@ _(none)_
 _(none)_
 
 ## Human Approval Needed
-- Step 3: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
+_(none)_
 
 ## Next Actions
 - Confirm step 3 actually happened — the agent claimed "send" in gmail but the witness saw no tool call — before telling anyone it is done.

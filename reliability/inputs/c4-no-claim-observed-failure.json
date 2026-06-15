@@ -1,0 +1,20 @@
+{
+  "objective": "An observed tool failure with no agent claim",
+  "steps": [
+    {
+      "claim": null,
+      "event": {
+        "call": {
+          "toolName": "mcp__filesystem__write_file"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": false,
+          "error_hash": "sha256:0e75bfcc2f8a11b298d3221dd1fa5c3030dac6ab3ada0af91d7388848ab33187"
+        }
+      }
+    }
+  ]
+}

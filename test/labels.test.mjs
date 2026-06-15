@@ -179,3 +179,33 @@ test("no-claim observation: SUPPORTED only when it succeeded, UNSUPPORTED when i
   assert.ok(refused.labels.includes(L.UNSUPPORTED));
   assert.ok(!refused.labels.includes(L.SUPPORTED));
 });
+
+test("a blocked call (refused/escalated) is NOT narrated as having run — it never executed", () => {
+  // REFUSED and ESCALATED are blocked BEFORE execution; the tool never runs. The note must not claim
+  // it "ran", which would assert an execution the witness did not observe (an honesty-ceiling breach).
+  const refused = computeStepLabels({
+    claimed: { system: "gmail", action: "send", result: "sent the invoice", user_facing: true },
+    witnessed: { system: "gmail", action: "send", returned: false, result: "refused" }
+  });
+  assert.ok(refused.labels.includes(L.UNSUPPORTED));
+  assert.ok(refused.labels.includes(L.DO_NOT_SEND));
+  assert.match(refused.human_note, /blocked before it ran|did not execute/);
+  assert.doesNotMatch(refused.human_note, /the tool call ran/i);
+
+  const escalated = computeStepLabels({
+    claimed: { system: "payments", action: "refund", user_facing: true },
+    witnessed: { system: "payments", action: "refund", returned: false, result: "escalated" },
+    needs_human_approval: true
+  });
+  assert.ok(escalated.labels.includes(L.NEEDS_HUMAN_APPROVAL));
+  assert.ok(escalated.labels.includes(L.UNSUPPORTED));
+  assert.match(escalated.human_note, /escalated for human approval|did not execute/);
+  assert.doesNotMatch(escalated.human_note, /the tool call ran/i);
+
+  // A genuine runtime error (APPROVED + upstream failure) DID run — that wording stays accurate.
+  const errored = computeStepLabels({
+    claimed: null,
+    witnessed: { system: "filesystem", action: "write_file", returned: false, result: "error" }
+  });
+  assert.match(errored.human_note, /did not succeed/);
+});

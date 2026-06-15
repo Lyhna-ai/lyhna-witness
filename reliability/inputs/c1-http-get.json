@@ -1,0 +1,23 @@
+{
+  "objective": "Fetch the status page",
+  "steps": [
+    {
+      "claim": {
+        "system": "http",
+        "action": "get"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__http__get"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:3ce982a619182dd20105b2807a2885b96505bf793c8c7d8434e788d08567b257"
+        }
+      }
+    }
+  ]
+}

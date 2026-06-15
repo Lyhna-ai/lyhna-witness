@@ -29,6 +29,9 @@ Send the Q3 partnership follow-up to the prospect, and prepare the proposal cove
 ## Mismatches
 - Step 1: The agent claimed a "send" action, but the witness saw "create_draft". What it did or got back does not match what the witness observed.
 
+## Do Not Send
+- Step 1: The agent claimed a "send" action, but the witness saw "create_draft". What it did or got back does not match what the witness observed.
+
 ## Proof / References
 - step1_claimed_send_actual_draft: Gmail draft r6441883296239929863 (DRAFT — never sent)
 - step1_result_hash: sha256:2879154e8e065626
@@ -46,7 +49,7 @@ _(none)_
 - Has the Q3 follow-up actually been sent? The witness saw only a draft.
 
 ## Human Approval Needed
-- Step 1: The agent claimed a "send" action, but the witness saw "create_draft". What it did or got back does not match what the witness observed.
+_(none)_
 
 ## Next Actions
 - Do NOT tell the prospect the follow-up was sent — the witness saw a draft, not a send. Open the draft, confirm it, and actually send it (witness the gmail.send) before reporting it as done.

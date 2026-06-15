@@ -30,12 +30,18 @@ export function buildWitnessedHandoff(run) {
   const unsupported = steps.filter((s) => has(s, L.UNSUPPORTED)).map((s) => s.index);
   const do_not_send = steps.filter((s) => has(s, L.DO_NOT_SEND)).map((s) => s.index);
 
-  // SAFE_TO_CONTINUE is honest and conservative: not safe if anything is flagged DO_NOT_SEND, if
-  // any step is UNSUPPORTED, or if any step still NEEDS_HUMAN_APPROVAL — the next AI must not proceed
-  // past a step a human has to sign off on. Mismatches alone surface a review note but do not by
-  // themselves block continuation (the route differed; the work may still be fine).
+  // SAFE_TO_CONTINUE is honest and conservative: not safe if anything is flagged DO_NOT_SEND, if any
+  // step is UNSUPPORTED, if any step still NEEDS_HUMAN_APPROVAL, or if any step is a
+  // CLAIMED_ACTUAL_MISMATCH. A mismatch means the agent's account of what it did does not match what
+  // the witness observed — so the continuation state is NOT clean and the next human/AI must review and
+  // reconcile before proceeding (THESIS §9: "review before sending"). A mismatch does not by itself mean
+  // the work failed or must not be sent (those are separate UNSUPPORTED/DO_NOT_SEND labels); it means
+  // the handoff is not safe to continue as-is until the claimed-vs-actual gap is reconciled.
   const safe_to_continue =
-    do_not_send.length === 0 && unsupported.length === 0 && needs_human_approval.length === 0;
+    do_not_send.length === 0 &&
+    unsupported.length === 0 &&
+    needs_human_approval.length === 0 &&
+    mismatches.length === 0;
 
   // A NOT-safe receipt must never leave the reader with "(none)" under Next Actions: a flag with no
   // accompanying instruction is a dead end. When the caller supplied no next actions, derive concrete,
@@ -181,6 +187,9 @@ export function renderHandoffMarkdown(h) {
     `## Mismatches`,
     bullet(by(L.CLAIMED_ACTUAL_MISMATCH).map((s) => `Step ${s.index + 1}: ${s.human_note}`)),
     ``,
+    `## Do Not Send`,
+    bullet(by(L.DO_NOT_SEND).map((s) => `Step ${s.index + 1}: ${s.human_note}`)),
+    ``,
     ...proofRefsSection(`## Proof / References`, h.proof_refs),
     `## Settled Decisions`,
     bullet(h.settled),
@@ -191,12 +200,11 @@ export function renderHandoffMarkdown(h) {
     `## Open Questions`,
     bullet(h.open_questions),
     ``,
+    // Only steps the witness actually routed for human approval (NEEDS_HUMAN_APPROVAL) belong here.
+    // DO_NOT_SEND steps are NOT formally approval-gated — they have their own "Do Not Send" section
+    // above — so listing them here would assert an approval gate the witness never observed.
     `## Human Approval Needed`,
-    bullet(
-      by(L.DO_NOT_SEND)
-        .map((s) => `Step ${s.index + 1}: ${s.human_note}`)
-        .concat(h.needs_human_approval.map((i) => `Step ${i + 1}: routed for human approval`))
-    ),
+    bullet(h.needs_human_approval.map((i) => `Step ${i + 1}: routed for human approval`)),
     ``,
     `## Next Actions`,
     bullet(h.next_actions),

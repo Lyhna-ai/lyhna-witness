@@ -1,0 +1,14 @@
+{
+  "objective": "Share the doc with the client",
+  "steps": [
+    {
+      "claim": {
+        "system": "google_drive",
+        "action": "share",
+        "result": "shared with the client",
+        "user_facing": true
+      },
+      "event": null
+    }
+  ]
+}

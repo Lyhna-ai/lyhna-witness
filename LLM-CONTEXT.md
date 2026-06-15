@@ -1,6 +1,6 @@
 # Lyhna — LLM Context Sheet
 
-> **Last updated: 2026-06-14.** Read this first at the start of any session in this project. It is the
+> **Last updated: 2026-06-15.** Read this first at the start of any session in this project. It is the
 > single source of truth for *what Lyhna is now*, how the pieces fit, what's live, and the rules for
 > changing things safely. If you change something material, update this file's date and the relevant
 > section in the same PR.
@@ -117,7 +117,18 @@ what this receipt refuses to fake" section, and a **Copy receipt** button whose 
 - The demo is **live, public, and honesty-audited** (Codex review on every PR + an independent
   adversarial audit + a live-URL pass; no overclaims).
 
-**Health:** witness `main` green (~80 tests); proxy `master` green (~503 tests). Check GitHub for open
+**Reliability gauntlet (2026-06-15):** `reliability/` drives the **real** loop across a 30-scenario
+matrix (clean / claimed-not-witnessed / mismatch / failure-approval-pairing), renders every surface, and
+asserts the honesty invariants (`npm run gauntlet`; needs the sibling proxy's
+`scripts/gauntlet/driver.mjs`). Report: `RELIABILITY-GAUNTLET.md`. It found + fixed two truth bugs:
+(1) a **route-only `CLAIMED_ACTUAL_MISMATCH` now blocks `safe_to_continue`** (review/reconcile — not
+DO_NOT_SEND unless also unsupported/user-facing), aligning the verdict with THESIS §9; previously a
+pure-mismatch run read as safe. (2) refused/escalated calls are no longer narrated as having "run" (they
+are blocked before execution). Also: HANDOFF.md now has a dedicated "Do Not Send" section and reserves
+"Human Approval Needed" for true `NEEDS_HUMAN_APPROVAL` steps. Known residual: ordinal claim↔turn pairing
+fails safe but can mis-attribute an out-of-order unwitnessed claim (deferred: claim↔turn correlation).
+
+**Health:** witness `main` green (85 tests); proxy `master` green (509 tests). Check GitHub for open
 PRs before starting a new lane.
 
 **Carriers vs. the witness (the export bet):** OKF and PAM are *carriers* (transport integrity — a

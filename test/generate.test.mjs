@@ -50,6 +50,22 @@ test("builds witnessed-handoff/v1 with the expected per-step labels", () => {
   assert.deepEqual(h.steps[2].labels, ["SUPPORTED"]);
 });
 
+test("a route-only CLAIMED_ACTUAL_MISMATCH blocks safe_to_continue (review/reconcile, not DO_NOT_SEND)", () => {
+  // The agent claimed system "google"; the witness saw "gmail". The call still returned, so the step is
+  // NOT unsupported and NOT do-not-send — but the claimed-vs-actual gap means the handoff is not clean,
+  // so it must NOT read as safe to continue (THESIS §9: review before continuing).
+  const h = buildWitnessedHandoff({
+    objective: "Send via google",
+    steps: [{ claimed: { system: "google", action: "send" }, witnessed: { system: "gmail", action: "send", returned: true } }]
+  });
+  assert.ok(h.steps[0].labels.includes("CLAIMED_ACTUAL_MISMATCH"));
+  assert.ok(!h.steps[0].labels.includes("UNSUPPORTED"));
+  assert.ok(!h.steps[0].labels.includes("DO_NOT_SEND"));
+  assert.equal(h.safe_to_continue, false, "an unresolved mismatch must block continuation");
+  assert.equal(h.summary.mismatches, 1);
+  assert.ok(h.next_actions.some((a) => /reconcile/i.test(a)));
+});
+
 test("safe_to_continue is false when any step is DO_NOT_SEND / UNSUPPORTED", () => {
   const h = buildWitnessedHandoff(hermesRun());
   assert.equal(h.safe_to_continue, false);

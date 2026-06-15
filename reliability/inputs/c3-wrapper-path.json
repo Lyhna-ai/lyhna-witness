@@ -1,0 +1,24 @@
+{
+  "objective": "Claimed Google Docs directly — witness saw a Zapier wrapper",
+  "steps": [
+    {
+      "claim": {
+        "system": "google_docs",
+        "action": "create_document",
+        "result": "made the doc"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__zapier__execute_zapier_google_docs_action"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:3a9131e349148689712a80ccbe4d26552c010e653fa27feabe95d06dfa51f743"
+        }
+      }
+    }
+  ]
+}

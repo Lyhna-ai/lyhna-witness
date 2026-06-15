@@ -1,0 +1,23 @@
+{
+  "objective": "Update the product",
+  "steps": [
+    {
+      "claim": {
+        "system": "shopify",
+        "action": "update_product"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__shopify__update_product"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:fa656662726ec18824d88c9338f27ef5803ae25d71077f32db3844bccad342ca"
+        }
+      }
+    }
+  ]
+}

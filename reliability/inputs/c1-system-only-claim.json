@@ -1,0 +1,22 @@
+{
+  "objective": "Create a page (claim omits the action)",
+  "steps": [
+    {
+      "claim": {
+        "system": "notion"
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__notion__create_page"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:c33aeda93f9a76f31d90c76fc88fb317caea5c57395aa936ea930662e968ad1c"
+        }
+      }
+    }
+  ]
+}

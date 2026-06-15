@@ -1,0 +1,21 @@
+{
+  "objective": "Refund the client — the call was escalated for human approval",
+  "steps": [
+    {
+      "claim": {
+        "system": "payments",
+        "action": "refund",
+        "result": "refunded the client",
+        "user_facing": true
+      },
+      "event": {
+        "call": {
+          "toolName": "mcp__payments__refund"
+        },
+        "verdict": {
+          "kind": "ESCALATED"
+        }
+      }
+    }
+  ]
+}

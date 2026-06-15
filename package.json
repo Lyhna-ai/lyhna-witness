@@ -12,7 +12,8 @@
     "demo:live": "node demo/zapier-google-witness.mjs",
     "demo:real": "node demo/live-google-witness.mjs",
     "demo:gmail": "node demo/live-gmail-witness.mjs",
-    "demo:live-loop": "node demo/live-loop-witness.mjs"
+    "demo:live-loop": "node demo/live-loop-witness.mjs",
+    "gauntlet": "node reliability/run-gauntlet.mjs"
   },
   "license": "UNLICENSED"
 }
