@@ -88,10 +88,13 @@ Now that the required set is known precisely, the gaps split cleanly:
   the 5 cognitive types onto the spec's vocabulary, or use `type: "custom"` + `custom_type`). None of
   these touch the honesty ceiling or determinism.
 - **`temporal.created_at` is REQUIRED and *does* touch determinism.** Lyhna's generator is deterministic
-  by contract (no clock), so it will not mint a wall-clock timestamp. Conformance is still achievable, but
-  only by feeding a **caller-supplied / source-derived** timestamp (the CLI already accepts an optional
-  `timestamp`), never a live clock. So this is a real required field with a real constraint — not a free
-  win, but not a hard blocker either.
+  by contract (no clock), so it will not mint a wall-clock timestamp. There is also **no current knob for
+  a per-record `created_at`**: the CLI exposes only `--gate/--okf/--pam` and never forwards a timestamp,
+  and the renderer API's optional `timestamp` (`renderPamBundle`/`renderOkfBundle`) is a single
+  **manifest-level** field, not a per-memory `temporal.created_at`. Conformance is still achievable, but
+  only by adding per-record **caller-supplied / source-derived** timestamps (e.g. from the witnessed
+  turn), never a live clock — new work, not an existing option. A real required field with a real
+  constraint: not a free win, but not a hard blocker either.
 - **`confidence` is OPTIONAL — the one place principle and conformance fully align.** The honesty ceiling
   forbids treating agent confidence as evidence (`honesty_ceiling.never_asserts`), and the schema does not
   require it, so Lyhna omits it at **zero conformance cost**, carrying `evidence_status` (provenance) in
@@ -123,9 +126,11 @@ projection," but that is an optional precision tweak, not a correction.)
 3. **(Optional, future, owner call — not done here) Additive Portable-AI-Memory export adapter.** Scope,
    now precise: set `schema: "portable-ai-memory"` + `schema_version: "1.0"`; supply `owner.id`; inline
    `memories[]` in one file; and per record add `type` (mapped or `custom`), `content_hash` (deterministic
-   SHA-256), `provenance.platform`, and `temporal.created_at` (from a supplied/source timestamp, never a
-   clock). It would map `evidence_status` into `provenance`/metadata and **never** add a fabricated
-   `confidence`. Warranted only when a buyer actually requires this carrier.
+   SHA-256), `provenance.platform`, and a per-record `temporal.created_at` (from a supplied/source
+   timestamp, never a clock — note this is new work: there is no current per-record timestamp input, only
+   an optional manifest-level `timestamp` on the renderer API, not exposed by the CLI). It would map
+   `evidence_status` into `provenance`/metadata and **never** add a fabricated `confidence`. Warranted only
+   when a buyer actually requires this carrier.
 4. **Conceptual cousin to track:** the arXiv *Portable Agent Memory* provenance protocol (Merkle-DAG,
    content-addressable, tamper-evident) is the most thesis-aligned effort; if it matures into a
    validatable schema, re-run this comparison — Lyhna's witness/provenance angle may map more naturally
