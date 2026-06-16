@@ -69,9 +69,9 @@ npm run build
 # 2. Install the real upstream MCP server (not a proxy dependency; installed for the run only)
 npm install --no-save @modelcontextprotocol/server-filesystem@2026.1.14
 
-# 3. Drive the real loop (driver source in Appendix A). It:
-#    spawns the filesystem server (scoped to a temp dir) -> opens a scoped loop ->
-#    agent routes real tool calls + records claims -> close (seal) -> export-pack
+# 3. Save the COMPLETE driver from Appendix A as scripts/live-mcp-run.mjs in the proxy repo, then run
+#    it. It spawns the filesystem server (scoped to a temp dir) -> opens a scoped loop ->
+#    agent routes real tool calls + records claims -> close (seal) -> export-pack.
 node scripts/live-mcp-run.mjs /tmp/live-mcp-out
 
 # 4. Render each captured witness-input.json into a full receipt (witness repo)
@@ -169,10 +169,19 @@ No P1/P2 issues. No truth breaks. No surface overclaimed.
 ## 7. Reproducibility
 
 The two captured `witness-input.json` files and their rendered `HANDOFF.md` are committed under
-`reliability/live-mcp/` as the evidence that these receipts came from real traffic, not hand-authoring.
-Re-running the driver (Appendix A) against the same inputs reproduces byte-identical `witness-input.json`
-(the events carry only tool name + verdict + runtime-report hashes; the hashes are of deterministic
-content). The render is deterministic by the witness's core contract.
+`reliability/live-mcp/` as the authoritative evidence that these receipts came from real traffic, not
+hand-authoring. Re-running the driver (Appendix A) reproduces the **same structure, labels, verdict, and
+step pairing** every time, and identical `result_hash` for any tool result whose content is itself
+identical (e.g. the `read_text_file` of the fixed file content hashes the same across runs).
+
+One honest caveat on hash stability: the **`write_file` `result_hash` varies between runs**, because the
+real filesystem server echoes the run-specific *absolute path* (a randomized temp directory) in its write
+confirmation, and Lyhna hashes exactly what crossed the wire. This is real upstream behavior, not
+non-determinism in Lyhna: the witness records a hash of the actual returned bytes; it does not interpret
+or normalize them. The witness's own render is deterministic by its core contract — given the same
+`witness-input.json` it emits byte-identical receipts (the drift gates enforce this). So the committed
+files are the canonical artifact; a re-run yields the same receipt logic with environment-specific
+content hashes for path-bearing upstream responses.
 
 ---
 
@@ -180,43 +189,263 @@ content). The render is deterministic by the witness's core contract.
 
 This driver is a thin variant of the proxy's existing `scripts/gauntlet/driver.mjs`, with the **only**
 change being that the upstream is a real `connectStdioUpstream(@modelcontextprotocol/server-filesystem)`
-instead of the synthetic in-process stub. It is reproduced here rather than committed as a runnable
-script because it requires installing the filesystem server (not a proxy dependency) and is evidence
-scaffolding, not product code. It changes nothing about the proof spine, receipt shape, or export-pack.
+instead of the synthetic in-process stub. The **complete, runnable** source is reproduced below: save it
+as `scripts/live-mcp-run.mjs` in the `lyhna-mcp-proxy` repo and run it per §3 to regenerate the evidence.
+It is kept in this report (rather than committed as a separate script) because it requires installing the
+filesystem server, which is not a proxy dependency, and it is evidence scaffolding, not product code. It
+changes nothing about the proof spine, receipt shape, or export-pack.
 
 ```js
-// node scripts/live-mcp-run.mjs <outDir>   (run from the lyhna-mcp-proxy repo root, after npm run build
-// and: npm install --no-save @modelcontextprotocol/server-filesystem@2026.1.14)
+// Lyhna — LANE 1 Live-MCP real-traffic driver (Phase 4 beta hardening).
 //
-// For each scenario it: spawns the real filesystem MCP server scoped to a temp dir via
-// connectStdioUpstream -> serves the standing HTTP proxy with that REAL upstream + claim capture ->
-// opens a scoped loop over the supervisor control channel -> the agent (connectStreamableHttpUpstream)
-// routes real tool calls + records claims -> close (seal) -> runExportPack emits witness-input.json.
+// Run from the lyhna-mcp-proxy repo root, after `npm install && npm run build` and
+//   npm install --no-save @modelcontextprotocol/server-filesystem@2026.1.14
 //
-// The scope capsule mirrors the gauntlet's: allowed_tools + targetless_action_classes, so calls pass
-// the gate on action class alone. The bind authority is createSyntheticDemoBindClient (unsigned demo
-// posture). See LIVE-MCP-RUN-REPORT.md §2 for exactly what is real vs. demo.
+// This drives the REAL standing-service loop end to end against a REAL third-party MCP server
+// (@modelcontextprotocol/server-filesystem) instead of a synthetic in-process upstream. The file
+// operations are genuine: the upstream actually reads and writes files on disk, over the real MCP
+// stdio JSON-RPC protocol, behind the proxy. The bind authority is the unsigned synthetic demo bind
+// (createSyntheticDemoBindClient) — see LIVE-MCP-RUN-REPORT.md §2 for exactly what is real vs. demo.
 //
-// Scenario A: write_file + read_text_file (real I/O, matching claims -> SUPPORTED) plus a user-facing
-//             "emailed the client" claim with no routed call -> UNSUPPORTED / DO_NOT_SEND.
-// Scenario B: a real write_file claimed as a postgres insert -> CLAIMED_ACTUAL_MISMATCH.
-//
-// Full source lives alongside the proxy's gauntlet driver; the loop body is identical to
-// scripts/gauntlet/driver.mjs::runScenario except for the connectStdioUpstream upstream wiring shown
-// below:
-//
-//   const upstream = await connectStdioUpstream({
-//     command: process.execPath,
-//     args: [
-//       join(ROOT, "node_modules", "@modelcontextprotocol", "server-filesystem", "dist", "index.js"),
-//       fsRoot   // a real, writable temp directory the server is scoped to
-//     ]
-//   });
-//   const advertised = await upstream.client.listTools();   // real tool surface
-//   const standing = await serveStandingHttpProxy({ upstream: upstream.client, bindClient, registry,
-//     claims: claimRec, host: "127.0.0.1", port: 0, path: "/mcp" });
-//   // ... open loop, agent routes calls + claims, close, runExportPack -> witness-input.json ...
-//   await upstream.close();
+// Usage: node scripts/live-mcp-run.mjs <outDir>
+// Emits <outDir>/<scenario-id>/witness-input.json for each scenario plus advertised-tools.json.
+
+import { mkdtempSync, mkdirSync, existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { connect as netConnect } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const DIST_INDEX = join(ROOT, "dist", "src", "index.js");
+
+function sendControl(socketPath, command) {
+  return new Promise((resolve, reject) => {
+    const socket = netConnect(socketPath);
+    let buffer = "";
+    socket.setEncoding("utf8");
+    socket.on("connect", () => socket.write(JSON.stringify(command) + "\n"));
+    socket.on("data", (chunk) => {
+      buffer += chunk;
+      const nl = buffer.indexOf("\n");
+      if (nl !== -1) {
+        socket.end();
+        resolve(JSON.parse(buffer.slice(0, nl)));
+      }
+    });
+    socket.on("error", reject);
+  });
+}
+
+export async function runRealScenario(scenario, fsRoot, log = () => {}) {
+  const {
+    LoopSessionRegistry,
+    serveStandingHttpProxy,
+    serveControlChannel,
+    connectStreamableHttpUpstream,
+    connectStdioUpstream,
+    createSyntheticDemoBindClient,
+    createReceiptRecorder,
+    createScopeEventRecorder,
+    createJudgmentRecorder,
+    createClaimRecorder,
+    runExportPack
+  } = await import(DIST_INDEX);
+
+  const calls = scenario.calls ?? [];
+  const claims = scenario.claims ?? [];
+  const classMap = scenario.classMap ?? {};
+  const allowedTools = Object.keys(classMap);
+  const allowedClasses = [...new Set(Object.values(classMap))];
+
+  // REAL upstream: spawn the official filesystem MCP server, scoped to fsRoot. Real disk I/O.
+  const upstream = await connectStdioUpstream({
+    command: process.execPath,
+    args: [
+      join(ROOT, "node_modules", "@modelcontextprotocol", "server-filesystem", "dist", "index.js"),
+      fsRoot
+    ]
+  });
+
+  const advertised = await upstream.client.listTools();
+  const advertisedTools = advertised.map((t) => t.name);
+
+  const recorder = createReceiptRecorder();
+  const scopeEvents = createScopeEventRecorder();
+  const judgment = createJudgmentRecorder();
+  const claimRec = createClaimRecorder();
+  const bindClient = recorder.wrap(createSyntheticDemoBindClient());
+  const registry = new LoopSessionRegistry(
+    (r) => bindClient.bind(r),
+    { graceMs: 2000, retryDelayMs: 50 },
+    scopeEvents,
+    judgment
+  );
+
+  const standing = await serveStandingHttpProxy({
+    upstream: upstream.client,
+    bindClient,
+    registry,
+    claims: claimRec,
+    host: "127.0.0.1",
+    port: 0,
+    path: "/mcp"
+  });
+  const socketPath = join(tmpdir(), `lyhna-livemcp-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.sock`);
+  const control = await serveControlChannel({
+    transport: "unix",
+    socketPath,
+    registry,
+    receiptSource: recorder,
+    scopeEventSource: scopeEvents,
+    judgmentRecorder: judgment,
+    claimSource: claimRec
+  });
+
+  const SESSION = `livemcp-${scenario.id}`;
+  const LOOP = `loop-${scenario.id}`;
+  const scopeCapsule = {
+    structural: {
+      capsule_type: "scope_capsule",
+      capsule_version: "scope-capsule/v1",
+      loop_id: LOOP,
+      goal_hash: "",
+      privacy_mode: "verified_context",
+      allowed_action_classes: allowedClasses,
+      allowed_tools: allowedTools,
+      allowed_targets: [],
+      forbidden_targets: [],
+      target_descriptor_hashes: [],
+      targetless_action_classes: allowedClasses
+    },
+    sidecar: { goal_summary: scenario.objective ?? scenario.id }
+  };
+
+  const packDir = mkdtempSync(join(tmpdir(), `lyhna-livemcp-pack-${scenario.id}-`));
+  try {
+    const opened = await sendControl(socketPath, {
+      cmd: "open",
+      session_id: SESSION,
+      loop_id: LOOP,
+      goal: scenario.objective ?? scenario.id,
+      scope_capsule: scopeCapsule,
+      scope_class_map: classMap
+    });
+    if (!opened.ok) throw new Error(`open failed: ${JSON.stringify(opened)}`);
+
+    const agent = await connectStreamableHttpUpstream(standing.sessionUrl(SESSION));
+    const callResults = [];
+    try {
+      for (const call of calls) {
+        try {
+          const res = await agent.client.callTool(call);
+          callResults.push({ toolName: call.toolName, isError: Boolean(res?.isError) });
+        } catch (e) {
+          callResults.push({ toolName: call.toolName, error: String(e?.message ?? e) });
+        }
+      }
+      for (const claim of claims) {
+        await agent.client.callTool({ toolName: "record_claim", arguments: claim });
+      }
+    } finally {
+      await agent.close().catch(() => undefined);
+    }
+
+    const delta = {};
+    if (scenario.settled) delta.settled = scenario.settled;
+    if (scenario.open_questions) delta.open_questions = scenario.open_questions;
+    if (scenario.next_actions) delta.next_actions = scenario.next_actions;
+    if (Object.keys(delta).length > 0) {
+      const preJudgment = await sendControl(socketPath, { cmd: "dump_judgment", loop_id: LOOP, mode: "verified-context" });
+      const turn = [...(preJudgment.turns ?? [])].reverse().find((t) => typeof t?.turn_ref === "string");
+      if (turn) {
+        await sendControl(socketPath, { cmd: "record_delta", loop_id: LOOP, turn_ref: turn.turn_ref, delta });
+      }
+    }
+
+    const closed = await sendControl(socketPath, { cmd: "close", session_id: SESSION, outcome: "COMPLETED", reason: "live-mcp" });
+
+    const out = [];
+    const exportRc = await runExportPack(
+      ["--loop", LOOP, "--out", packDir, "--socket", socketPath],
+      { stdout: (t) => out.push(t), stderr: (t) => out.push(t) },
+      {}
+    );
+    const witnessInputPath = join(packDir, "witness-input.json");
+    if (!existsSync(witnessInputPath)) throw new Error(`export-pack emitted no witness-input.json (rc=${exportRc}):\n${out.join("")}`);
+    const witnessInput = JSON.parse(readFileSync(witnessInputPath, "utf8"));
+    log(`  [${scenario.id}] sealed=${closed.sealed} exportRc=${exportRc} steps=${witnessInput.steps.length} callResults=${JSON.stringify(callResults)}`);
+    return { witnessInput, sealed: closed.sealed === true, exportRc, advertisedTools, callResults };
+  } finally {
+    await control.close().catch(() => undefined);
+    await standing.close().catch(() => undefined);
+    await upstream.close().catch(() => undefined);
+    rmSync(packDir, { recursive: true, force: true });
+  }
+}
+
+async function main() {
+  const outDir = process.argv[2] ?? join(tmpdir(), "lyhna-live-mcp-out");
+  const log = (s) => process.stdout.write(s + "\n");
+  mkdirSync(outDir, { recursive: true });
+
+  const fsRoot = mkdtempSync(join(tmpdir(), "lyhna-fs-root-"));
+  log(`=== Lyhna LANE 1 — Live-MCP real-traffic run ===`);
+  log(`fs upstream root: ${fsRoot}`);
+  log(`out: ${outDir}\n`);
+
+  const probe = await runRealScenario(
+    { id: "probe", objective: "probe the real filesystem MCP tool surface", calls: [], claims: [] },
+    fsRoot,
+    log
+  );
+  log(`Real upstream advertised tools: ${JSON.stringify(probe.advertisedTools)}\n`);
+  writeFileSync(join(outDir, "advertised-tools.json"), JSON.stringify(probe.advertisedTools, null, 2) + "\n");
+
+  const scenarios = [
+    {
+      id: "live-fs-supported-and-do-not-send",
+      objective: "Fix the export bug, verify the file on disk, and tell the client",
+      calls: [
+        { toolName: "write_file", arguments: { path: join(fsRoot, "export-fix.txt"), content: "// rounding fix applied\n" } },
+        { toolName: "read_text_file", arguments: { path: join(fsRoot, "export-fix.txt") } }
+      ],
+      claims: [
+        { system: "write_file", action: "write_file", result: "wrote the export rounding fix to disk" },
+        { system: "read_text_file", action: "read_text_file", result: "read the file back to confirm the change is on disk" },
+        { system: "gmail", action: "send", result: "emailed the client to say the export bug is fixed", user_facing: true }
+      ],
+      classMap: { write_file: "write", read_text_file: "read" },
+      settled: ["export rounding fix written to disk"],
+      next_actions: ["A human must actually send the client email before claiming it was sent"]
+    },
+    {
+      id: "live-fs-mismatch-probe",
+      objective: "confirm the mismatch label survives real MCP traffic",
+      calls: [{ toolName: "write_file", arguments: { path: join(fsRoot, "record.txt"), content: "row written\n" } }],
+      claims: [{ system: "postgres", action: "insert", result: "inserted the record into the production database", user_facing: true }],
+      classMap: { write_file: "write" }
+    }
+  ];
+
+  for (const sc of scenarios) {
+    const res = await runRealScenario(sc, fsRoot, log);
+    const scDir = join(outDir, sc.id);
+    mkdirSync(scDir, { recursive: true });
+    writeFileSync(join(scDir, "witness-input.json"), JSON.stringify(res.witnessInput, null, 2) + "\n");
+  }
+
+  log(`\nDone. witness-input.json written under ${outDir}/<scenario-id>/`);
+  log(`fs root left for inspection: ${fsRoot}`);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((e) => {
+    process.stderr.write(`\nLIVE-MCP FATAL: ${e instanceof Error ? e.stack ?? e.message : String(e)}\n`);
+    process.exit(1);
+  });
+}
 ```
 
-The captured outputs in `reliability/live-mcp/` are the authoritative artifacts of this run.
+The captured outputs in `reliability/live-mcp/` are the authoritative artifacts of this run; the source
+above regenerates the same receipt structure, labels, and verdict (see §7 on `result_hash` stability).
