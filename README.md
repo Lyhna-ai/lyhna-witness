@@ -31,8 +31,17 @@ npm run demo # the Hermes/Zapier "claimed Google, used Zapier" demo
 
 ### Render a receipt from a capture (CLI)
 
-Given a `witness-input.json` (the proxy emits one at loop close; see `lyhna-mcp-proxy`), render the
-receipt with the zero-dependency CLI:
+You need a `witness-input.json` — the proxy emits one at loop close. To produce a fresh one, run
+`npm run demo:live-loop` in the sibling [`lyhna-mcp-proxy`](https://github.com/Lyhna-ai/lyhna-mcp-proxy)
+checkout (it prints the exact render command). Or render the **committed sample** that ships in this repo,
+no proxy required:
+
+```bash
+# Render the bundled sample capture (works offline, from a clean clone):
+node src/cli.mjs demo/live-loop-witness-input.json ./receipt --okf --pam
+```
+
+General usage with the zero-dependency CLI:
 
 ```bash
 node src/cli.mjs <witness-input.json> <outDir>            # writes HANDOFF.md, handoff.json, next-ai-prompt.md
@@ -40,6 +49,9 @@ node src/cli.mjs <witness-input.json> <outDir> --okf --pam  # ALSO write the OKF
 node src/cli.mjs <witness-input.json> <outDir> --gate       # exit 3 when NOT safe_to_continue (fail-closed)
 node src/cli.mjs - <outDir>                                 # read the capture from stdin
 ```
+
+> The witness renderer is not published to npm yet, so run it as `node src/cli.mjs …` from a clone (there
+> is no `npx lyhna-witness`). See [`INSTALL-FRICTION-REPORT.md`](./INSTALL-FRICTION-REPORT.md).
 
 `--okf` / `--pam` are additive — without them you get exactly the handoff trio. Each export is a
 deterministic projection of the same handoff (every OKF step / PAM item carries the receipt's evidence
@@ -100,6 +112,10 @@ examples/hermes-zapier/
     labels/CLAIMED_ACTUAL_MISMATCH.md …   # type: Lyhna Trust Label
     prompts/next-ai-prompt.md      # type: Lyhna Safe Continuation Prompt
 ```
+
+> The handoff filename under `okf/handoffs/` is the bundle `name`. The committed demos pass the example
+> name (so `handoffs/hermes-zapier.md`); the `node src/cli.mjs …` CLI uses the default name `handoff`, so a
+> CLI render writes `okf/handoffs/handoff.md`.
 
 `renderOkfBundle(handoff, options)` returns the bundle as a `{ path: contents }` map. Emit it from the
 CLI with `--okf` (writes `<outDir>/okf/`), or call the function directly. It is deterministic — no clock,

@@ -36,9 +36,15 @@ leaving their environment. Lyhna's witness boundary is compatible with that by c
 
 - **The model stays private.** Lyhna never sees the model, the prompt, or the completion. It sees the
   tool calls the agent makes.
-- **Content-blind at the boundary.** The witnessed ledger records the tool **name** and a hash of what
-  the runtime returned — not the arguments. You get provenance ("a `write_file` call crossed the
-  boundary and returned") without exporting the payload.
+- **Content-blind receipt.** The witnessed ledger and the receipt record the tool **name** and a hash of
+  what the runtime returned — **not the arguments**. You get provenance ("a `write_file` call crossed the
+  boundary and returned") without the payload landing in your receipt.
+- **But know where arguments go on the wire.** In **signed/hosted** mode (`LYHNA_API_KEY`), each tool
+  call's arguments **are sent to the hosted gate (`api.lyhna.com/v1/bind`)** so it can return
+  allow/escalate/deny — they are used for that decision, not stored in your receipt. In **offline `demo`
+  mode** (`LYHNA_PROXY_BIND_MODE=demo`) nothing leaves the machine. So: content-blind *receipt* either
+  way; if your arguments are sensitive and you can't send them to the gate, use offline `demo` mode (and
+  accept unsigned receipts).
 - **Offline-capable.** With `LYHNA_PROXY_BIND_MODE=demo` the whole loop runs with no network and no Lyhna
   account (receipts are unsigned — see §5). Signed receipts use a hosted bind, but verification of any
   pack is fully offline with the `lyhna-verify` tool.
@@ -75,6 +81,12 @@ and the receipt-render CLI runs from a source checkout (the `lyhna-witness` repo
 
 Whether the agent loop is driven by Ollama on the same box or a hosted model over an API changes nothing
 about steps 1–3. Lyhna only ever sees the tool path.
+
+> **One honest gotcha for local models:** a runner like **Ollama does not speak MCP by itself** — it's a
+> model server, not an MCP client. You need an **MCP-capable agent/harness** (e.g. Claude Code, Cline, or
+> your own agent loop) that is *driven by* your local model and makes its tool calls through the proxy.
+> Lyhna witnesses that harness's tool calls; it does not bind to the model runner directly. If your stack
+> has no MCP/tool path, there is nothing for Lyhna to witness (see §1).
 
 ## 5. What this does NOT claim (the honesty ceiling, restated for this context)
 
