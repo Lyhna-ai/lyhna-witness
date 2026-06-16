@@ -61,7 +61,7 @@ Lyhna is indifferent to the model behind the agent. It works with:
 
 - **Hosted models:** OpenAI, Claude, and Codex-style agents.
 - **Local models:** Ollama, Qwen, local Llama — anything you run on your own hardware.
-- **Private/company-hosted models:** internal or VPC-hosted models behind your own gateway.
+- **Private/company-hosted models:** internal or VPC-hosted models behind your own infrastructure.
 
 The only requirement is the same for all of them: **the agent's tool calls route through the witnessed
 MCP/tool path.** No model is privileged; none is excluded.
@@ -71,8 +71,8 @@ MCP/tool path.** No model is privileged; none is excluded.
 The wiring follows the proxy's `docs/QUICKSTART.md` and does not change with the model. **Setup today is
 guided / not yet one-command, but the proxy itself is publicly installable:** `@lyhna/mcp` is published on
 npm (so `npx -y @lyhna/mcp` works) and the offline `demo` bind mode needs no key. The parts that are
-genuinely gated are narrower — **signed** receipts need an invite-gated API key during the private beta,
-and the receipt-render CLI runs from a source checkout (the `lyhna-witness` repo, not yet on npm). See
+genuinely restricted are narrower — **signed** receipts need an invite-only API key during the private
+beta, and the receipt-render CLI runs from a source checkout (the `lyhna-witness` repo, not yet on npm). See
 `INSTALL-FRICTION-REPORT.md` for the verified what-works-today breakdown. The shape:
 
 1. Point your agent's MCP client at the Lyhna proxy instead of directly at the upstream MCP server — a
