@@ -149,7 +149,9 @@ test("OKF prompt carries continuation context (settled, do-not-re-litigate, open
     proof_refs: { doc: "https://example.com/doc" }
   });
   const prompt = renderOkfBundle(h, { name: "ctx" })["prompts/next-ai-prompt.md"];
-  assert.match(prompt, /Treat these as SETTLED/);
+  // Settled/do-not-re-litigate are carried but framed as operator-declared (not witnessed by Lyhna).
+  assert.match(prompt, /operator declared these settled/i);
+  assert.match(prompt, /did NOT witness or verify them/i);
   assert.match(prompt, /Format v2 agreed\./);
   assert.match(prompt, /The onboarding format\./);
   assert.match(prompt, /Edit or view access\?/);

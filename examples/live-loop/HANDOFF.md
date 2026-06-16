@@ -39,9 +39,11 @@ _(none)_
 - Step 3: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Settled Decisions
-- checkout total rounding bug patched
+_Operator-declared continuation context — carried into the handoff, not witnessed or verified by Lyhna._
+- checkout total rounding fix written to disk and tests run (both witnessed)
 
 ## Do Not Re-Litigate
+_Operator-declared — not witnessed or verified by Lyhna._
 _(none)_
 
 ## Open Questions

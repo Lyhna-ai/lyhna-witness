@@ -2,7 +2,7 @@ You are continuing work from a Lyhna Witnessed Handoff.
 
 Objective: Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log them in the CRM.
 
-Treat these as SETTLED — do not re-litigate unless new evidence appears:
+The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:
 - The prospect tracker document exists — it is the one action the witness can vouch for.
 
 These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not

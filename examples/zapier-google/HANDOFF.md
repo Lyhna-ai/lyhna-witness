@@ -39,9 +39,11 @@ Create the client onboarding doc in Google, share it with the client, and confir
 - Step 2: The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.
 
 ## Settled Decisions
+_Operator-declared continuation context — carried into the handoff, not witnessed or verified by Lyhna._
 - Client onboarding template v2 is the agreed format.
 
 ## Do Not Re-Litigate
+_Operator-declared — not witnessed or verified by Lyhna._
 - The onboarding format — already agreed with the client.
 
 ## Open Questions

@@ -174,8 +174,11 @@ export function renderPamBundle(handoff, options = {}) {
       base({
         id: "working:settled",
         memory_type: PAM_MEMORY_TYPES.WORKING,
-        evidence_status: "SETTLED",
-        content: "Decisions treated as settled for this run.",
+        // Operator-declared continuation context, NOT a witnessed verdict — so it must not carry a
+        // witness-strength evidence_status (e.g. SETTLED/SUPPORTED). DECLARED marks "the operator said
+        // so; Lyhna did not witness it" so a memory consumer never reads it as proven fact.
+        evidence_status: "DECLARED",
+        content: "Operator-declared settled decisions for this run — carried into the handoff, not witnessed or verified by Lyhna.",
         settled: [...handoff.settled]
       })
     );
@@ -303,8 +306,11 @@ export function renderPamBundle(handoff, options = {}) {
       base({
         id: `procedural:do-not-re-litigate-${i + 1}`,
         memory_type: PAM_MEMORY_TYPES.PROCEDURAL,
-        evidence_status: "DO_NOT_RE_LITIGATE",
-        content: `Settled — do not reopen without new evidence: ${item}`
+        // Operator-supplied continuation context, not a witnessed trust label — use the same
+        // non-witness status as working:settled so a consumer keying off evidence_status never reads
+        // it as a Lyhna verdict.
+        evidence_status: "DECLARED",
+        content: `Operator-declared (not witnessed by Lyhna) — do not reopen without new evidence: ${item}`
       })
     );
   });

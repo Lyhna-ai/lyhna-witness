@@ -2,7 +2,7 @@ You are continuing work from a Lyhna Witnessed Handoff.
 
 Objective: Send the Q3 partnership follow-up to the prospect, and prepare the proposal cover note for review.
 
-Treat these as SETTLED — do not re-litigate unless new evidence appears:
+The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:
 - The proposal cover note draft is prepared and awaiting review.
 
 These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not

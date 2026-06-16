@@ -182,7 +182,11 @@ test("HANDOFF.md is human-readable: surfaces verdict, mismatch, and the unwitnes
 
 test("next-ai-prompt carries settled state and the unverified steps", () => {
   const p = renderNextAiPrompt(buildWitnessedHandoff(hermesRun()));
-  assert.match(p, /SETTLED/);
+  // Settled items are carried, but framed as operator-declared (not witnessed by Lyhna) so the next
+  // agent never reads caller-supplied continuation context as a witnessed fact.
+  assert.match(p, /operator declared these settled/i);
+  assert.match(p, /did NOT witness or verify them/i);
+  assert.match(p, /do not re-litigate/i);
   assert.match(p, /onboarding/i);
   assert.match(p, /UNVERIFIED/);
   assert.match(p, /NOT safe to send/i);

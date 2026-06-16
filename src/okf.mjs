@@ -265,7 +265,7 @@ export function renderOkfBundle(handoff, options = {}) {
       ``,
       `**Objective:** ${handoff.objective || "(none stated)"}`,
       ``,
-      `Treat these as SETTLED — do not re-litigate unless new evidence appears:`,
+      `The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:`,
       ...listOr(settledAll.map((x) => `- ${x}`)),
       ``,
       `**Status:** ${handoff.safe_to_continue ? "Safe to continue." : "NOT safe to send/continue until the unverified steps and any required approvals are resolved."}`,
