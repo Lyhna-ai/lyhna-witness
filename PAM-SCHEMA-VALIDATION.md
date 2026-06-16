@@ -1,13 +1,14 @@
 # PAM Schema Validation
 
 > **Verdict: KEEP "PAM-shaped." Lyhna's export does NOT validate against any formal published PAM
-> schema, and — by design — cannot fully conform without violating its own determinism and honesty
-> invariants.** There is no single canonical "PAM" standard to be compatible with: the acronym maps to
-> at least three unrelated specifications. Against the closest one (Portable AI Memory v1.0), Lyhna's
-> projection shares the *concept* but differs in envelope identity, required fields, file layout, type
-> vocabulary, and deliberately omits confidence scores and timestamps. The existing marketing wording
-> ("PAM-shaped" / `lyhna-pam/v0`) and the in-artifact `conformance` string are accurate and should not
-> change to "PAM-compatible."
+> schema.** There is no single canonical "PAM" standard to be compatible with: the acronym maps to at
+> least three unrelated specifications. Against the closest one (Portable AI Memory v1.0), Lyhna fails the
+> *required* envelope/structure — the `schema` value, `schema_version`, `owner.id`, and a single-file
+> inline `memories[]` — so it is non-conformant on those grounds. (It also omits `confidence` scores and
+> timestamps on principle, but those are *optional* in the comparator, so they are not what blocks
+> validation; Lyhna's invariants and conformance do not actually conflict there.) The existing marketing
+> wording ("PAM-shaped" / `lyhna-pam/v0`) and the in-artifact `conformance` string are accurate and should
+> not change to "PAM-compatible."
 >
 > _Reviewed 2026-06-16 against the current PAM landscape. Lyhna PAM: `lyhna-pam/v0`
 > (`src/pam.mjs`, `examples/live-loop/pam/`)._
@@ -50,41 +51,59 @@ Reference envelope and record (from the published spec):
 
 ## 4. Field-by-field gap analysis (Lyhna `lyhna-pam/v0` vs Portable AI Memory v1.0)
 
-| Aspect | Portable AI Memory v1.0 | Lyhna `lyhna-pam/v0` | Validates? |
+Portable AI Memory v1.0 mandates only four things: `schema`, `schema_version`, `owner.id`, and
+`memories[]` (everything else on a record is optional). So the table below separates **hard validation
+blockers** (the required envelope/structure) from **optional divergences** (record fields Lyhna shapes
+differently or omits — these would *not* fail a validator on their own).
+
+**Hard blockers (these alone make Lyhna fail validation):**
+
+| Aspect | Portable AI Memory v1.0 | Lyhna `lyhna-pam/v0` | Blocks validation? |
 | --- | --- | --- | --- |
 | Envelope `schema` value | `"portable-ai-memory"` (required) | `"lyhna-pam/v0"` | ❌ wrong required value |
 | `schema_version` | `"1.0"` (required) | *absent* (uses `pam_projection: "v0"`) | ❌ missing required field |
 | `owner` / `owner.id` | **required** | *absent* (no owner concept) | ❌ missing required field |
-| `memories` | inline array, **single file** | `memories_file: "memories.jsonl"` indirection (manifest + JSONL) | ❌ structural mismatch |
-| Record `type` field | `type`, 11 user-memory types | `memory_type`, 5 cognitive types (episodic/semantic/procedural/working/identity) | ❌ field name + vocabulary mismatch (only `identity` overlaps) |
-| `content_hash` | SHA-256 per record | *absent* on memory items | ❌ missing |
-| `temporal.created_at` | required-ish timestamp | *absent* | ❌ missing (deliberate — see §5) |
-| `confidence.initial` | 0.0–1.0 score | *absent* | ❌ missing (deliberate — see §5) |
-| `provenance` | `{platform, extraction_method}` | `{source, lyhna_schema, evidence_status, handoff_resource}` | ❌ different shape |
+| `memories` | **inline array, single file** | `memories_file: "memories.jsonl"` indirection (manifest + separate JSONL) | ❌ structural mismatch (no inline `memories[]`) |
 
-**Result: Lyhna does not validate as Portable AI Memory v1.0.** It fails multiple *required* fields
-(`schema` value, `schema_version`, `owner.id`) and the single-file structure, and uses a different memory
-type vocabulary and record shape. It is a *projection inspired by* the same idea, not a conformant
-instance — i.e., genuinely **PAM-shaped**.
+**Optional divergences (NOT validation failures — Lyhna shapes/omits these by choice):**
 
-## 5. Two gaps are principled, not fixable (and that is the point)
+| Aspect | Portable AI Memory v1.0 (optional) | Lyhna `lyhna-pam/v0` | Note |
+| --- | --- | --- | --- |
+| Record `type` field | `type`, 11 user-memory types | `memory_type`, 5 cognitive types (only `identity` overlaps) | field name + vocabulary differ |
+| `content_hash` | SHA-256 per record (optional) | *absent* on memory items | omitted |
+| `temporal.created_at` | timestamp (optional) | *absent* | omitted by design — determinism (§5) |
+| `confidence.initial` | 0.0–1.0 score (optional) | *absent* | omitted by design — honesty ceiling (§5) |
+| `provenance` | `{platform, extraction_method}` (optional) | `{source, lyhna_schema, evidence_status, handoff_resource}` | different shape |
 
-Two of the differences above are not oversights Lyhna could "fix" to gain conformance — closing them
-would break Lyhna's own non-negotiable invariants:
+**Result: Lyhna does not validate as Portable AI Memory v1.0** — but specifically because of the four
+**required** envelope/structure items above, *not* the optional record fields. (Even if every optional
+field were dropped from the comparison, the missing `schema`/`schema_version`/`owner.id` and the absence
+of an inline `memories[]` array still fail it.) It is a *projection inspired by* the same idea, not a
+conformant instance — i.e., genuinely **PAM-shaped**.
+
+## 5. Two omissions are principled — and, helpfully, optional in the comparator
+
+Two fields Lyhna omits are things it would refuse to emit on principle. The good news for any future
+conformance work is that **both are optional in Portable AI Memory v1.0**, so omitting them costs nothing
+for validation — Lyhna's invariants and PAM-conformance do **not** conflict on these axes:
 
 - **No `confidence` score.** The honesty ceiling explicitly forbids treating *agent confidence as
   evidence* (it is in the artifact's own `honesty_ceiling.never_asserts`). A `confidence.initial: 0.92`
   on a witnessed memory would invite exactly the misread Lyhna exists to prevent. Lyhna carries
-  `evidence_status` instead — provenance, not self-assessed confidence.
+  `evidence_status` instead — provenance, not self-assessed confidence. The comparator marks `confidence`
+  optional, so leaving it out is fully conformant.
 - **No timestamps (`export_date` / `temporal.created_at`).** The labeler/generator is deterministic by
   contract — **no clock** — so the same input is byte-identical output (the drift gates enforce this).
-  Emitting wall-clock timestamps would break determinism. (A caller *may* pass a `timestamp` option, but
-  the committed canonical artifact omits it on purpose.)
+  Emitting wall-clock timestamps would break determinism. These fields are also optional in the
+  comparator. (A caller *may* pass a `timestamp` option, but the committed canonical artifact omits it.)
 
-So even adopting Portable AI Memory v1.0 wholesale would force Lyhna to violate its determinism and
-honesty invariants. The right posture is not conformance; it is an honest, clearly-labeled *projection*
-that a PAM consumer can ingest **without stripping the evidence verdict** — which is what `lyhna-pam/v0`
-is, with `evidence_status` on every item and the `honesty_ceiling` block in the manifest.
+So conformance would **not** force Lyhna to violate its determinism or honesty invariants — the only
+things in the way are the *required* envelope fields and the single-file structure (§4). That is what
+makes the future "additive export adapter" in §7 viable: it could satisfy the required structure
+(supply `owner.id`, inline `memories[]`, set the `schema` id) **without** ever adding a confidence score.
+Today, the right posture is still an honest, clearly-labeled *projection* a PAM consumer can ingest
+**without stripping the evidence verdict** — which is what `lyhna-pam/v0` is, with `evidence_status` on
+every item and the `honesty_ceiling` block in the manifest.
 
 ## 6. What Lyhna already says about itself (and it's accurate)
 
@@ -114,9 +133,11 @@ This validation confirms that statement is **true and well-calibrated**. No chan
 
 ## 8. Honest limits of this validation
 
-- Compared against the **published descriptions** of the candidate specs as of 2026-06-16, not against a
-  pinned machine-readable JSON Schema file run through a validator (none of the candidates ships a single
-  authoritative, stable `$schema` that Lyhna targets). The conclusion — *not conformant, keep
-  "PAM-shaped"* — is robust to that: Lyhna fails required fields and the file structure of the closest
-  comparator regardless of minor version drift.
+- This is a **field-level comparison against the published specs** as of 2026-06-16; we did **not**
+  execute the published Portable AI Memory schema validator. That comparator *does* ship a machine-readable
+  JSON Schema (`portable-ai-memory.schema.json`), so running Lyhna's `pam/` output through it with a JSON
+  Schema validator is concrete, available future work. It is not needed to reach this verdict: Lyhna's
+  output is a manifest + separate `memories.jsonl` rather than a single file with an inline `memories[]`,
+  and lacks the required `schema`/`schema_version`/`owner.id`, so it fails that schema's required
+  envelope/structure on inspection regardless of minor version drift.
 - This lane validated the *shape/claim*, not a code change. No `src/pam.mjs` change is warranted.
