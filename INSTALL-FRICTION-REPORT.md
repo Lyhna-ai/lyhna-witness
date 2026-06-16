@@ -30,7 +30,7 @@ known-public control package `left-pad@1.3.0` resolved):
 | --- | --- | --- |
 | `@lyhna/mcp` (the proxy) | **Published, v0.2.5 — publicly resolvable** | `npx -y @lyhna/mcp …` works today (proxy, ctl, export-pack, push-pack). |
 | `lyhna-verify` (offline verifier) | **Published, v1.0.0** | `npx -y lyhna-verify --chain receipts.json` verifies a pack offline. |
-| `lyhna-witness` (the receipt renderer) | **Not published — genuine 404** | The AI Work Receipt (`HANDOFF.md`/OKF/PAM) can only be rendered from a **source clone** (`node src/cli.mjs …`). |
+| the receipt renderer (`package.json` `name: @lyhna/witness`, bin `lyhna-witness`, `private: true`) | **Not published** — both `@lyhna/witness` and the unscoped `lyhna-witness` return 404, and `private: true` would make npm refuse to publish as-is | The AI Work Receipt (`HANDOFF.md`/OKF/PAM) can only be rendered from a **source clone** (`node src/cli.mjs …`). |
 
 So two of the three CLIs a stranger needs are already on npm and publicly installable; the **receipt
 renderer is the real gap.**
@@ -103,10 +103,15 @@ CLI isn't published). The invite gate is only for *signed* receipts (the API key
 In priority order, each item is a discrete, shippable step. **None of these should be claimed on any
 buyer surface until actually implemented.**
 
-1. **Publish `lyhna-witness` to npm** (the single highest-leverage fix — it is the only CLI in the path
-   not yet published). Then the receipt step becomes
-   `npx -y lyhna-witness <witness-input.json> <outDir> --okf --pam` — no clone. Zero-dep, Node ≥20, so
-   packaging is low-risk. *Requires npm credentials + an owner publish decision — not done here.*
+1. **Publish the witness renderer to npm** (the single highest-leverage fix — it is the only CLI in the
+   path not yet published). Two prerequisite decisions, because the package is **not publish-ready as-is**:
+   its `package.json` is `name: "@lyhna/witness"`, `version: 0.0.1`, and **`private: true`** (which makes
+   npm refuse to publish). Publishing requires (a) removing `private: true`, and (b) choosing the public
+   name. The render command then depends on that name: if published under the scoped name it is
+   `npx -y @lyhna/witness <witness-input.json> <outDir> --okf --pam` (the `lyhna-witness` bin runs); to get
+   the unscoped `npx -y lyhna-witness`, publish under the unscoped name instead. Either way, no clone.
+   Zero-dep, Node ≥20, so packaging itself is low-risk. *Requires npm credentials + an owner name/publish
+   decision — not done here.*
 2. **A one-shot "render from a closed loop" path.** Either `@lyhna/mcp export-pack --render-receipt`
    (proxy shells the published witness CLI after export) or a thin `npx @lyhna/mcp receipt <packDir>`
    wrapper. Turns steps 8–10 into one command.
@@ -119,9 +124,10 @@ buyer surface until actually implemented.**
 
 ## 7. What this report changed
 
-- **No code shipped.** The one safe, high-value packaging change (publishing `lyhna-witness`) is a
-  publish action gated on npm credentials and an owner decision; it is written up in §6.1 rather than done
-  unilaterally. No fake npm/install claims were introduced anywhere.
+- **No code shipped.** The one safe, high-value packaging change (publishing the witness renderer) is a
+  publish action gated on npm credentials, a name decision, and removing `private: true` — an owner call;
+  it is written up in §6.1 rather than done unilaterally. No fake npm/install claims were introduced
+  anywhere.
 - **One recommended copy change, flagged for the owner (not made):** `web/install.html` could honestly
   mention the published `npx -y @lyhna/mcp` proxy path and the offline `demo` mode that work today,
   **without** adding any one-command-for-the-whole-thing or lyhna.com claim (still owner-held). Because
