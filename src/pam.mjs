@@ -13,9 +13,10 @@
 // claim stays unsupported memory; it is never upgraded into a fact. The source of truth remains the
 // witnessed event sequence, the deterministic labels, handoff.json, and the proof spine.
 //
-// Conformance: this is Lyhna's PAM-shaped projection (`lyhna-pam/v0`), not yet validated against a
-// formal published PAM schema. Wording stays "PAM-shaped / PAM memory projection" until that match is
-// earned.
+// Conformance: this is Lyhna's PAM-shaped projection (`lyhna-pam/v0`). It was validated against the
+// Portable AI Memory v1.0 schema (see PAM-SCHEMA-VALIDATION.md) and found NON-conformant — it is a
+// projection, not a conformant PAM document. Wording stays "PAM-shaped / PAM memory projection" until a
+// conformant match is actually earned.
 //
 // Deterministic by contract: no clock, no randomness, no model calls. A `timestamp` appears (in the
 // manifest only) solely when the caller passes one in `options` — it is never generated from the clock.
@@ -406,7 +407,8 @@ function readme(name, handoff, counts) {
     ``,
     `The source of truth remains the witnessed event sequence, the deterministic labels, \`handoff.json\`,`,
     `and the proof spine. This is an additive, read-only export beside them. Conformance: \`lyhna-pam/v0\``,
-    `— a PAM-shaped projection, not yet validated against a formal published PAM schema.`,
+    `— a PAM-shaped projection, validated against the Portable AI Memory v1.0 schema and found`,
+    `non-conformant (it is a projection, not a conformant PAM document).`,
     ``
   ].join("\n");
 }
