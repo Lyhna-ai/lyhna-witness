@@ -58,10 +58,12 @@ MCP/tool path.** No model is privileged; none is excluded.
 
 ## 4. How it wires up (any MCP-capable local harness)
 
-The wiring follows the proxy's `docs/QUICKSTART.md` and does not change with the model. **Setup is a
-guided private-beta process today, not a public self-serve install** — the proxy package and any hosted
-key are invite-gated during the beta, and the receipt-render CLI runs from a source checkout (the
-`lyhna-witness` repo). The shape:
+The wiring follows the proxy's `docs/QUICKSTART.md` and does not change with the model. **Setup today is
+guided / not yet one-command, but the proxy itself is publicly installable:** `@lyhna/mcp` is published on
+npm (so `npx -y @lyhna/mcp` works) and the offline `demo` bind mode needs no key. The parts that are
+genuinely gated are narrower — **signed** receipts need an invite-gated API key during the private beta,
+and the receipt-render CLI runs from a source checkout (the `lyhna-witness` repo, not yet on npm). See
+`INSTALL-FRICTION-REPORT.md` for the verified what-works-today breakdown. The shape:
 
 1. Point your agent's MCP client at the Lyhna proxy instead of directly at the upstream MCP server — a
    single MCP-client config block that runs the proxy in front of the real upstream you already use (e.g.
