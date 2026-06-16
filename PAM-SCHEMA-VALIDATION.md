@@ -4,9 +4,10 @@
 > v1.0 JSON Schema — confirmed by running the actual schema through a validator (ajv, JSON Schema draft
 > 2020-12): INVALID, 239 errors.** The failures are required-field and value failures, at both the
 > envelope and the per-record level. There is also no single canonical "PAM" standard to be compatible
-> with — the acronym maps to at least three unrelated specs. The existing marketing wording
-> ("PAM-shaped" / `lyhna-pam/v0`) and the in-artifact `conformance` string are accurate and should **not**
-> change to "PAM-compatible."
+> with — the acronym maps to at least three unrelated specs. Keep the marketing wording "PAM-shaped" /
+> `lyhna-pam/v0`; do **not** change it to "PAM-compatible." The in-artifact `conformance` string is updated
+> in this PR to state the verified result (validated, non-conformant) instead of the now-stale "not yet
+> validated" (§6).
 >
 > _Validated 2026-06-16. Schema: `https://schemas.portable-ai-memory.org/v1.0/memory-store.schema.json`
 > (retrieved from `portable-ai-memory.org/schemas/portable-ai-memory.schema.json`). Lyhna PAM:
@@ -122,24 +123,26 @@ clocked). It would **not** require fabricating a confidence score. Today the hon
 clearly-labeled *projection* a PAM consumer can ingest **without stripping the evidence verdict** — which
 is what `lyhna-pam/v0` is.
 
-## 6. What Lyhna already says about itself (and it's accurate)
+## 6. The in-artifact `conformance` string — updated to match this result
 
-The committed `pam/manifest.json` carries:
+Before this lane, every PAM manifest carried *"…Not yet validated against a formal published PAM
+schema."* That sentence is no longer true once this validation lands, so the generator
+(`src/pam.mjs`) and the committed artifacts (`examples/*/pam/manifest.json`) are **updated in this PR** to:
 
 ```json
-"conformance": "PAM-shaped projection of a Lyhna witnessed-handoff/v1 receipt. Not yet validated against a formal published PAM schema."
+"conformance": "PAM-shaped projection of a Lyhna witnessed-handoff/v1 receipt. Validated against the Portable AI Memory v1.0 schema and found non-conformant: this is a projection, not a conformant PAM document."
 ```
 
-This validation makes that statement concrete: it is now *validated against* the published schema, and
-the result is non-conformant — so "PAM-shaped … not [conformant]" remains exactly right. (If anything, the
-string could be updated to "validated against Portable AI Memory v1.0: non-conformant; PAM-shaped
-projection," but that is an optional precision tweak, not a correction.)
+This is the one code change in this lane (a constant string in the deterministic generator); the examples
+were regenerated via the `demo*` scripts and committed so the drift gate stays green. The string carries
+no clock/date (determinism) and states the verified result rather than a now-stale "not yet validated."
 
 ## 7. Recommendation
 
 1. **Keep "PAM-shaped" / `lyhna-pam/v0` on every surface.** Do not promote to "PAM-compatible." The
    published v1.0 schema rejects the current output (239 errors), and there is no single canonical PAM.
-2. **Keep the `conformance` string** (optionally tighten it per §6).
+2. **Update the in-artifact `conformance` string** to state the verified result (done in this PR — see §6);
+   the old "not yet validated" wording is now stale.
 3. **(Optional, future, owner call — not done here) A Portable-AI-Memory export adapter — a *remapping*,
    not an add-on.** Because the schema is closed (`additionalProperties: false`), the adapter must emit a
    **new canonical PAM document**, not augment the existing one. Scope, now precise: set
@@ -167,4 +170,5 @@ projection," but that is an optional precision tweak, not a correction.)
 - **Limit:** validated against Portable AI Memory **v1.0** as published on 2026-06-16; a future spec
   version could change the required set. The verdict (non-conformant; keep "PAM-shaped") is robust — the
   envelope `const`/required failures alone are decisive regardless of record-level drift.
-- This lane validated the *shape/claim*, not a code change. No `src/pam.mjs` change is warranted.
+- The only code change in this lane is the `conformance` string in `src/pam.mjs` (§6), regenerated into
+  the committed examples; the labeler, the receipt shape, and the proof spine are untouched.

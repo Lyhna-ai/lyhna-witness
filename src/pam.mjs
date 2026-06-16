@@ -345,7 +345,7 @@ export function renderPamBundle(handoff, options = {}) {
     schema: PAM_PROJECTION_SCHEMA,
     pam_projection: "v0",
     conformance:
-      "PAM-shaped projection of a Lyhna witnessed-handoff/v1 receipt. Not yet validated against a formal published PAM schema.",
+      "PAM-shaped projection of a Lyhna witnessed-handoff/v1 receipt. Validated against the Portable AI Memory v1.0 schema and found non-conformant: this is a projection, not a conformant PAM document.",
     source: SOURCE,
     lyhna_schema: schema,
     name,
