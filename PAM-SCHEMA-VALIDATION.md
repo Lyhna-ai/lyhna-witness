@@ -71,22 +71,37 @@ The validator returned `VALID: false` with 239 errors. The distinct, representat
   `provenance` block with `platform`).
 - (`custom_type` also flagged, a downstream consequence of the missing `type`.)
 
+**`additionalProperties: false` (root, `MemoryObject`, and the sub-blocks) rejects Lyhna's own fields.**
+The schema is closed: the root, each `MemoryObject`, and `ProvenanceBlock`/`TemporalBlock`/`Owner` set
+`additionalProperties: false` (only `MetadataBlock` allows extras, and `MemoryObject` has a `metadata`
+slot). So Lyhna-specific fields are actively rejected — at root: `pam_projection`, `conformance`,
+`source`, `lyhna_schema`, `name`, `objective`, `safe_to_continue`, `summary`, `honesty_ceiling`,
+`memory_counts`, … ; per record: `memory_type`, `evidence_status`, `claimed`, `witnessed`, `source`, … .
+
+**Error taxonomy of the 239:** `required` 119 · `additionalProperties` 105 · `if`/conditional 13 ·
+`const` 1 (`/schema`) · `type` 1.
+
 **Not flagged:** `confidence` — confirming it is genuinely optional. Lyhna omitting it is **not** why it
 fails.
 
-**Result: Lyhna does not validate as Portable AI Memory v1.0** — it fails required fields and a `const`
-value at both the envelope and record levels. It is a *projection inspired by* the same idea, not a
-conformant instance — i.e., genuinely **PAM-shaped**.
+**Result: Lyhna does not validate as Portable AI Memory v1.0** — it fails required fields, a `const`
+value, **and** the closed-object `additionalProperties` constraint at both the envelope and record levels.
+It is a *projection inspired by* the same idea, not a conformant instance — i.e., genuinely **PAM-shaped**.
 
 ## 5. Which gaps conflict with Lyhna's invariants, and which don't
 
-Now that the required set is known precisely, the gaps split cleanly:
+Now that the required set is known precisely, the gaps split cleanly. **Note this is a *remapping*, not an
+augmentation:** because the schema is closed (`additionalProperties: false`), an adapter cannot just add
+fields to the existing Lyhna document — it must emit a **new canonical PAM document** that drops or relocates
+every Lyhna-specific field into the one allowed container (`metadata`, the only block with
+`additionalProperties: true`) and carries only schema-defined fields elsewhere.
 
-- **No conflict — purely additive (an adapter could compute these deterministically):** `schema` value,
-  `schema_version`, `owner.id`, an inline single-file `memories[]`, `content_hash` (a deterministic
+- **No conflict — mechanically derivable (an adapter could compute these deterministically):** `schema`
+  value, `schema_version`, `owner.id`, an inline single-file `memories[]`, `content_hash` (a deterministic
   SHA-256 of normalized content), `provenance.platform` (map Lyhna's witnessed origin), and `type` (map
-  the 5 cognitive types onto the spec's vocabulary, or use `type: "custom"` + `custom_type`). None of
-  these touch the honesty ceiling or determinism.
+  the 5 cognitive types onto the spec's vocabulary, or use `type: "custom"` + `custom_type`). Lyhna's
+  own signal — `evidence_status`, `claimed`/`witnessed`, `memory_type`, the `honesty_ceiling` block —
+  would move into `metadata` (or be dropped). None of this touches the honesty ceiling or determinism.
 - **`temporal.created_at` is REQUIRED and *does* touch determinism.** Lyhna's generator is deterministic
   by contract (no clock), so it will not mint a wall-clock timestamp. There is also **no current knob for
   a per-record `created_at`**: the CLI exposes only `--gate/--okf/--pam` and never forwards a timestamp,
@@ -100,10 +115,12 @@ Now that the required set is known precisely, the gaps split cleanly:
   require it, so Lyhna omits it at **zero conformance cost**, carrying `evidence_status` (provenance) in
   its place.
 
-Net: full conformance is a real, non-trivial build (every required envelope + record field), with one
-genuine determinism constraint (`created_at` must be supplied, not clocked). It would **not** require
-fabricating a confidence score. Today the honest posture is a clearly-labeled *projection* a PAM consumer
-can ingest **without stripping the evidence verdict** — which is what `lyhna-pam/v0` is.
+Net: full conformance is a real, non-trivial build — a **remapping** that emits a new closed-schema
+document (every required envelope + record field present, every Lyhna-specific field relocated to
+`metadata` or dropped), with one genuine determinism constraint (`created_at` must be supplied, not
+clocked). It would **not** require fabricating a confidence score. Today the honest posture is a
+clearly-labeled *projection* a PAM consumer can ingest **without stripping the evidence verdict** — which
+is what `lyhna-pam/v0` is.
 
 ## 6. What Lyhna already says about itself (and it's accurate)
 
@@ -123,14 +140,18 @@ projection," but that is an optional precision tweak, not a correction.)
 1. **Keep "PAM-shaped" / `lyhna-pam/v0` on every surface.** Do not promote to "PAM-compatible." The
    published v1.0 schema rejects the current output (239 errors), and there is no single canonical PAM.
 2. **Keep the `conformance` string** (optionally tighten it per §6).
-3. **(Optional, future, owner call — not done here) Additive Portable-AI-Memory export adapter.** Scope,
-   now precise: set `schema: "portable-ai-memory"` + `schema_version: "1.0"`; supply `owner.id`; inline
-   `memories[]` in one file; and per record add `type` (mapped or `custom`), `content_hash` (deterministic
-   SHA-256), `provenance.platform`, and a per-record `temporal.created_at` (from a supplied/source
-   timestamp, never a clock — note this is new work: there is no current per-record timestamp input, only
-   an optional manifest-level `timestamp` on the renderer API, not exposed by the CLI). It would map
-   `evidence_status` into `provenance`/metadata and **never** add a fabricated `confidence`. Warranted only
-   when a buyer actually requires this carrier.
+3. **(Optional, future, owner call — not done here) A Portable-AI-Memory export adapter — a *remapping*,
+   not an add-on.** Because the schema is closed (`additionalProperties: false`), the adapter must emit a
+   **new canonical PAM document**, not augment the existing one. Scope, now precise: set
+   `schema: "portable-ai-memory"` + `schema_version: "1.0"`; supply `owner.id`; inline `memories[]` in one
+   file; per record provide `type` (mapped or `custom`), `content_hash` (deterministic SHA-256),
+   `provenance.platform`, and a per-record `temporal.created_at` (from a supplied/source timestamp, never a
+   clock — new work: there is no current per-record timestamp input, only an optional manifest-level
+   `timestamp` on the renderer API, not exposed by the CLI); and **relocate every Lyhna-specific field**
+   (`evidence_status`, `claimed`/`witnessed`, `memory_type`, `honesty_ceiling`, …) into the schema's one
+   open container, `metadata` (or drop it) — since closed objects reject any field not in the schema. It
+   would **never** add a fabricated `confidence`. Warranted only when a buyer actually requires this
+   carrier.
 4. **Conceptual cousin to track:** the arXiv *Portable Agent Memory* provenance protocol (Merkle-DAG,
    content-addressable, tamper-evident) is the most thesis-aligned effort; if it matures into a
    validatable schema, re-run this comparison — Lyhna's witness/provenance angle may map more naturally
