@@ -30,11 +30,17 @@ Lyhna asserts **action-level witnessed truth only**. It does **not**:
 - confirm an email/message was actually **delivered** or received;
 - judge **legal/business** sufficiency;
 - predict or observe **client behavior**;
-- read the model's **thoughts**, prompt, or output;
+- read the model's **hidden reasoning, prompts, or arbitrary chat output** — it sees only what crosses the
+  tool boundary;
 - claim anything **outside the observed tool path**.
 
 If a step has no witnessed tool call, Lyhna says so ("no such call was seen") — it never fills the gap
 with a guess. That restraint is the product.
+
+> **Privacy note on claims:** when claim capture is on, the text your agent records via `record_claim`
+> **is** ingested and shown verbatim in the receipt (that's the "claimed" half of claimed-vs-actual).
+> Don't put anything in a claim you wouldn't want to appear in the receipt. Tool **arguments**, by
+> contrast, are not stored — the witnessed ledger records the tool **name** only.
 
 ## 3. Run one witnessed task
 
@@ -106,8 +112,9 @@ Reply to your beta invite with:
   means *the call crossed the boundary*, not "the result is good."
 - **Claims are paired in call order.** In this beta, the agent's claims are matched to witnessed tool
   calls **in the order they were recorded**. If your agent records claims out of order relative to its
-  calls, a step can be mis-attributed (it fails safe — flags rather than green-lights — but the step
-  label may point at the wrong call). Record claims in the order you do the work.
+  calls, a step can be mis-attributed — and a mispaired step can even read **SUPPORTED** when it isn't
+  (e.g. a claim that names only a `system`, with no action/result to compare). It does not reliably "fail
+  safe." So **record claims in the order you do the work**, and tell us if you hit a case where this bites.
 - **PAM is "PAM-shaped," not conformant.** The `pam/` export is a projection in the spirit of Portable
   Agent Memory. It was validated against the published Portable AI Memory v1.0 schema and found
   **non-conformant** (see `PAM-SCHEMA-VALIDATION.md`) — treat it as Lyhna's memory projection, not a
