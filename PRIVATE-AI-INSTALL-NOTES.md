@@ -9,7 +9,7 @@
 > content-blind at the witnessed boundary: the judgment ledger records the tool **name**, not its
 > arguments.
 >
-> _Written 2026-06-16. Companion to `INSTALL-FRICTION-REPORT.md` and the proxy `docs/QUICKSTART.md`._
+> _Written 2026-06-16. Companion to the proxy's `docs/QUICKSTART.md` (the guided setup source)._
 
 ---
 
@@ -60,8 +60,8 @@ MCP/tool path.** No model is privileged; none is excluded.
 
 The wiring follows the proxy's `docs/QUICKSTART.md` and does not change with the model. **Setup is a
 guided private-beta process today, not a public self-serve install** — the proxy package and any hosted
-key are invite-gated during the beta (see `INSTALL-FRICTION-REPORT.md` for the exact what-works-today
-breakdown). The shape:
+key are invite-gated during the beta, and the receipt-render CLI runs from a source checkout (the
+`lyhna-witness` repo). The shape:
 
 1. Point your agent's MCP client at the Lyhna proxy instead of directly at the upstream MCP server — a
    single MCP-client config block that runs the proxy in front of the real upstream you already use (e.g.
