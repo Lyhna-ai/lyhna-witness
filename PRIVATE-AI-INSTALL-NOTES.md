@@ -41,7 +41,7 @@ leaving their environment. Lyhna's witness boundary is compatible with that by c
   boundary and returned") without exporting the payload.
 - **Offline-capable.** With `LYHNA_PROXY_BIND_MODE=demo` the whole loop runs with no network and no Lyhna
   account (receipts are unsigned — see §5). Signed receipts use a hosted bind, but verification of any
-  pack is fully offline (`npx -y lyhna-verify`).
+  pack is fully offline with the `lyhna-verify` tool.
 
 **The pitch, in one line: keep your model private — prove what its tools did.**
 
@@ -58,12 +58,15 @@ MCP/tool path.** No model is privileged; none is excluded.
 
 ## 4. How it wires up (any MCP-capable local harness)
 
-The wiring is identical to the proxy's `docs/QUICKSTART.md` and does not change with the model:
+The wiring follows the proxy's `docs/QUICKSTART.md` and does not change with the model. **Setup is a
+guided private-beta process today, not a public self-serve install** — the proxy package and any hosted
+key are invite-gated during the beta (see `INSTALL-FRICTION-REPORT.md` for the exact what-works-today
+breakdown). The shape:
 
-1. Point your agent's MCP client at the Lyhna proxy instead of directly at the upstream MCP server. In a
-   `.mcp.json`-style config that is one block (`command: npx`, `args: ["-y","@lyhna/mcp","stdio"]`), with
-   `LYHNA_PROXY_UPSTREAM_COMMAND` / `LYHNA_PROXY_UPSTREAM_ARGS_JSON` naming the real upstream you already
-   use (e.g. `@modelcontextprotocol/server-filesystem`).
+1. Point your agent's MCP client at the Lyhna proxy instead of directly at the upstream MCP server — a
+   single MCP-client config block that runs the proxy in front of the real upstream you already use (e.g.
+   `@modelcontextprotocol/server-filesystem`), per the proxy's guided QUICKSTART. (For an offline trial
+   from a source checkout, run with `LYHNA_PROXY_BIND_MODE=demo` — no key, unsigned receipts.)
 2. The proxy wraps that upstream, witnesses each `tools/call`, and captures the agent's `record_claim`
    claims. Your **local model drives the agent exactly as before** — it just talks to the proxy URL.
 3. Close the loop, `export-pack` → `witness-input.json`, render the receipt with the witness CLI.
