@@ -41,8 +41,9 @@ with a guess. That restraint is the product.
 > **is** ingested and shown verbatim in the receipt (that's the "claimed" half of claimed-vs-actual).
 > Don't put anything in a claim you wouldn't want to appear in the receipt. Tool **arguments** are **not
 > stored in the receipt** (the witnessed ledger records the tool **name** only) — but note that in
-> **signed** mode the proxy sends arguments to the hosted gate (`api.lyhna.com`) for the allow/deny
-> decision; in offline `demo` mode nothing leaves your machine.
+> **signed** mode the proxy sends arguments to Lyhna's hosted bind service (`api.lyhna.com`) for the
+> allow/deny decision; in offline `demo` mode no arguments are sent to Lyhna. (Your **upstream** tools
+> still behave normally — a remote connector may send arguments to its own service regardless of mode.)
 
 ## 3. Run one witnessed task
 

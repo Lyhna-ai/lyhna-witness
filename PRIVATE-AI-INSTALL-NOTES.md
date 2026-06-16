@@ -39,12 +39,15 @@ leaving their environment. Lyhna's witness boundary is compatible with that by c
 - **Content-blind receipt.** The witnessed ledger and the receipt record the tool **name** and a hash of
   what the runtime returned — **not the arguments**. You get provenance ("a `write_file` call crossed the
   boundary and returned") without the payload landing in your receipt.
-- **But know where arguments go on the wire.** In **signed/hosted** mode (`LYHNA_API_KEY`), each tool
-  call's arguments **are sent to the hosted gate (`api.lyhna.com/v1/bind`)** so it can return
-  allow/escalate/deny — they are used for that decision, not stored in your receipt. In **offline `demo`
-  mode** (`LYHNA_PROXY_BIND_MODE=demo`) nothing leaves the machine. So: content-blind *receipt* either
-  way; if your arguments are sensitive and you can't send them to the gate, use offline `demo` mode (and
-  accept unsigned receipts).
+- **But know where arguments go on the wire — to Lyhna specifically.** In **signed/hosted** mode
+  (`LYHNA_API_KEY`), each tool call's arguments **are sent to Lyhna's hosted bind service
+  (`api.lyhna.com`)** so it can return allow/escalate/deny — used for that decision, not stored in your
+  receipt. In **offline `demo` mode** (`LYHNA_PROXY_BIND_MODE=demo`) **no arguments are sent to Lyhna at
+  all** (the decision is made locally). So: content-blind *receipt* either way; if your arguments are
+  sensitive and you can't share them with Lyhna's hosted service, use offline `demo` mode (and accept
+  unsigned receipts). (Separately, your **upstream** MCP tools still do whatever they normally do — a real
+  remote connector may send the arguments to its own service and make network calls; that is outside
+  Lyhna, in `demo` mode too.)
 - **Offline-capable.** With `LYHNA_PROXY_BIND_MODE=demo` the whole loop runs with no network and no Lyhna
   account (receipts are unsigned — see §5). Signed receipts use a hosted bind, but verification of any
   pack is fully offline with the `lyhna-verify` tool.

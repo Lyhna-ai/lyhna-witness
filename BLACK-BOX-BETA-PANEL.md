@@ -48,7 +48,8 @@
   call's `arguments` to `api.lyhna.com/v1/bind` for the allow/deny decision — a privacy buyer could be
   misled. **Fixed (witness docs PR):** `PRIVATE-AI-INSTALL-NOTES.md` + `PRIVATE-BETA-TESTER-GUIDE.md` now
   state plainly that the receipt/ledger is content-blind (name only), signed/hosted bind sends arguments
-  to the gate for the decision (then not stored in the receipt), and offline `demo` mode sends nothing.
+  to Lyhna's hosted service for the decision (then not stored in the receipt), and offline `demo` mode
+  sends no arguments to Lyhna (upstream tools still behave normally — outside Lyhna).
 
 ### P2 — fixed or dispositioned
 - **[ROLE 1] README OKF layout mismatch.** README showed `okf/handoffs/<name>.md`; the CLI emits
@@ -104,7 +105,7 @@ _(Merge SHAs recorded in the final session report.)_
 1. **Publish the witness renderer to npm** (`@lyhna/witness` is `private:true`, unpublished) — the one CLI
    that needs a source clone today.
 2. **One-shot render-from-pack path** to collapse the manual loop→render steps.
-3. **Self-serve key issuance** (Lyhna Core, out of scope) to drop the invite gate.
+3. **Self-serve key issuance** (Lyhna Core, out of scope) to remove the invite requirement.
 4. **Claim↔turn correlation** — claims pair in call order; out-of-order/system-only claims can
    mis-attribute and do **not** reliably fail safe (disclosed to testers; real fix deferred).
 5. **Owner web-copy decisions** — complete the install page (mention the working `npx` proxy path +
