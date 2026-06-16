@@ -69,7 +69,7 @@ window.LYHNA_HANDOFF = {
     "do_not_send": 1
   },
   "settled": [
-    "checkout total rounding bug patched"
+    "checkout total rounding fix written to disk and tests run (both witnessed)"
   ],
   "open_questions": [],
   "next_actions": [

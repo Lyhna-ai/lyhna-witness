@@ -2,8 +2,8 @@ You are continuing work from a Lyhna Witnessed Handoff.
 
 Objective: Fix the checkout total rounding bug and confirm the fix with the client
 
-Treat these as SETTLED — do not re-litigate unless new evidence appears:
-- checkout total rounding bug patched
+The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:
+- checkout total rounding fix written to disk and tests run (both witnessed)
 
 These steps are UNVERIFIED by the tool-call witness — do not assume they happened, and do not
 tell anyone they are done until confirmed:

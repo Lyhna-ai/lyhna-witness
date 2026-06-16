@@ -44,9 +44,11 @@ _(none)_
 - captured_at: 2026-06-13T16:40:25.868Z
 
 ## Settled Decisions
+_Operator-declared continuation context — carried into the handoff, not witnessed or verified by Lyhna._
 - The prospect tracker document exists — it is the one action the witness can vouch for.
 
 ## Do Not Re-Litigate
+_Operator-declared — not witnessed or verified by Lyhna._
 _(none)_
 
 ## Open Questions

@@ -40,9 +40,11 @@ Send the Q3 partnership follow-up to the prospect, and prepare the proposal cove
 - captured_at: 2026-06-13T17:29:40Z
 
 ## Settled Decisions
+_Operator-declared continuation context — carried into the handoff, not witnessed or verified by Lyhna._
 - The proposal cover note draft is prepared and awaiting review.
 
 ## Do Not Re-Litigate
+_Operator-declared — not witnessed or verified by Lyhna._
 _(none)_
 
 ## Open Questions

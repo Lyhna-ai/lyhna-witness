@@ -2,7 +2,7 @@ You are continuing work from a Lyhna Witnessed Handoff.
 
 Objective: Create the client onboarding doc in Google, share it with the client, and confirm by email.
 
-Treat these as SETTLED — do not re-litigate unless new evidence appears:
+The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:
 - Client onboarding template v2 is the agreed format.
 - The onboarding format — already agreed with the client.
 
