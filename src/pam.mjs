@@ -306,7 +306,10 @@ export function renderPamBundle(handoff, options = {}) {
       base({
         id: `procedural:do-not-re-litigate-${i + 1}`,
         memory_type: PAM_MEMORY_TYPES.PROCEDURAL,
-        evidence_status: "DO_NOT_RE_LITIGATE",
+        // Operator-supplied continuation context, not a witnessed trust label — use the same
+        // non-witness status as working:settled so a consumer keying off evidence_status never reads
+        // it as a Lyhna verdict.
+        evidence_status: "DECLARED",
         content: `Operator-declared (not witnessed by Lyhna) — do not reopen without new evidence: ${item}`
       })
     );

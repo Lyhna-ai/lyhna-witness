@@ -18,7 +18,7 @@ Continuation handoff for [Witnessed Handoff: Fix the checkout total rounding bug
 
 **Objective:** Fix the checkout total rounding bug and confirm the fix with the client
 
-Treat these as SETTLED — do not re-litigate unless new evidence appears:
+The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:
 - checkout total rounding fix written to disk and tests run (both witnessed)
 
 **Status:** NOT safe to send/continue until the unverified steps and any required approvals are resolved.
