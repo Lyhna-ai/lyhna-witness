@@ -23,17 +23,24 @@ install**. Implement a small packaging improvement only if it is safe; otherwise
 
 ## 2. Ground truth — what is actually published
 
-Checked against the npm registry on 2026-06-16:
+Verified on 2026-06-16 from an npm client with confirmed public-registry access (`npm ping` → PONG; a
+known-public control package `left-pad@1.3.0` resolved):
 
-| Package | Status | Consequence |
+| Package | Status (verified) | Consequence |
 | --- | --- | --- |
-| `@lyhna/mcp` (the proxy) | **Published (v0.2.5) but access-gated** — a clean/unauthenticated `npm view` returns **403**, not the public 200; it resolves only from an environment with beta/registry access | `npx -y @lyhna/mcp …` works **only where the package is reachable** (beta access). It is **not** a public self-serve install yet. |
-| `lyhna-verify` (offline verifier) | Published (v1.0.0), unscoped | `lyhna-verify --chain receipts.json` verifies a pack offline (subject to the same registry-reachability caveat). |
-| `lyhna-witness` (the receipt renderer) | **Not published — 404** | The AI Work Receipt (`HANDOFF.md`/OKF/PAM) can only be rendered from a **source clone** (`node src/cli.mjs …`). |
+| `@lyhna/mcp` (the proxy) | **Published, v0.2.5 — publicly resolvable** | `npx -y @lyhna/mcp …` works today (proxy, ctl, export-pack, push-pack). |
+| `lyhna-verify` (offline verifier) | **Published, v1.0.0** | `npx -y lyhna-verify --chain receipts.json` verifies a pack offline. |
+| `lyhna-witness` (the receipt renderer) | **Not published — genuine 404** | The AI Work Receipt (`HANDOFF.md`/OKF/PAM) can only be rendered from a **source clone** (`node src/cli.mjs …`). |
 
-So the npm packages exist but the proxy package is **access-gated during the private beta** (consistent
-with the "no public one-command install" posture), and the **receipt renderer is not published at all**.
-The only path that needs no registry access and no invite is a **source clone of both repos**.
+So two of the three CLIs a stranger needs are already on npm and publicly installable; the **receipt
+renderer is the real gap.**
+
+> **Verification note.** These statuses are from a working npm client, confirmed against the `left-pad`
+> control. A *blocked* environment (no registry tunnel) returns 403 even for public packages — that is an
+> environment artifact, **not** evidence that a package is private or beta-gated, so a 403 from a sandboxed
+> CI/review environment is not a publication-status signal. The invite gate that *does* exist applies to
+> **signed receipts** (the hosted API key from the lyhna.com dashboard), not to the npm packages above; the
+> offline `demo` bind mode needs no key (receipts are unsigned).
 
 ## 3. Every manual step a stranger must do today (signed path)
 
@@ -42,10 +49,9 @@ The only path that needs no registry access and no invite is a **source clone of
    (Offline alternative: skip the key and set `LYHNA_PROXY_BIND_MODE=demo` — works fully unattended, but
    receipts are deliberately **unsigned** and `lyhna-verify` reports `all_receipts_verified:false`.)
 3. **Wrap your upstream MCP server** through the proxy — one config block (Claude Code / any MCP client)
-   per `docs/QUICKSTART.md` Path A, pointing `LYHNA_PROXY_UPSTREAM_COMMAND` /
-   `LYHNA_PROXY_UPSTREAM_ARGS_JSON` at the real upstream. The block can run the proxy via
-   `npx -y @lyhna/mcp` **where the package is reachable (beta access)**, or from a local checkout
-   otherwise.
+   per the proxy's `docs/QUICKSTART.md` Path A, e.g. `command: npx`, `args: ["-y","@lyhna/mcp","stdio"]`,
+   pointing `LYHNA_PROXY_UPSTREAM_COMMAND` / `LYHNA_PROXY_UPSTREAM_ARGS_JSON` at the real upstream.
+   (`@lyhna/mcp` is publicly installable, so this `npx` block works today.)
 4. For the full capsule trio (scope capsule, attested refusals, judgment ledger) use **Path B**: start
    the standing proxy with a supervisor control channel (`LYHNA_PROXY_CONTROL_SOCKET` / `_CONTROL_PORT`).
 5. **Open a loop** over the supervisor control channel (newline-delimited JSON: `{"cmd":"open",…}`).
@@ -70,19 +76,18 @@ The only path that needs no registry access and no invite is a **source clone of
 
 ## 4. A — works today (no fix needed)
 
-A capable stranger can, **today, with no invite and no registry access**, get a full unsigned receipt end
-to end **from source clones**:
+A capable stranger can, **today, with no invite**, get a full unsigned receipt end to end:
 
-- Clone `lyhna-mcp-proxy`, `npm install && npm run build`; run the gate with
-  `LYHNA_PROXY_BIND_MODE=demo`, wrapping `@modelcontextprotocol/server-filesystem` (or any MCP server)
-  via a config block or the terminal Path B.
+- `npx -y @lyhna/mcp` (publicly installable) as the gate, `LYHNA_PROXY_BIND_MODE=demo` (no key),
+  wrapping `@modelcontextprotocol/server-filesystem` (or any MCP server) via a config block or the
+  terminal Path B.
 - Drive a loop, `export-pack` → `witness-input.json`.
-- Clone `lyhna-witness`, `node src/cli.mjs … --okf --pam` → the AI Work Receipt + OKF + PAM.
-- Verify the pack offline with `lyhna-verify`.
+- **Clone `lyhna-witness`** (not on npm), `node src/cli.mjs … --okf --pam` → the AI Work Receipt + OKF + PAM.
+- `npx -y lyhna-verify` to verify the pack offline.
 
 This is exactly the LANE 1 topology, which ran end to end (see `LIVE-MCP-RUN-REPORT.md`). It works — it is
-just not one command, it needs two source clones, and (for the npx shortcut) the proxy package is
-beta-access-gated rather than public.
+just not one command, and the **one step that needs a source clone is the receipt render** (the witness
+CLI isn't published). The invite gate is only for *signed* receipts (the API key), not for any step above.
 
 ## 5. B — guided private beta (the honest current offer)
 
@@ -98,12 +103,10 @@ beta-access-gated rather than public.
 In priority order, each item is a discrete, shippable step. **None of these should be claimed on any
 buyer surface until actually implemented.**
 
-1. **Publish `lyhna-witness` to npm** (the single highest-leverage fix). Then the receipt step becomes
+1. **Publish `lyhna-witness` to npm** (the single highest-leverage fix — it is the only CLI in the path
+   not yet published). Then the receipt step becomes
    `npx -y lyhna-witness <witness-input.json> <outDir> --okf --pam` — no clone. Zero-dep, Node ≥20, so
    packaging is low-risk. *Requires npm credentials + an owner publish decision — not done here.*
-1b. **Un-gate `@lyhna/mcp` (and `lyhna-verify`) for public install** — they are published but currently
-   resolve only with beta/registry access (a clean `npm view` 403s). A public beta needs the proxy
-   package reachable via plain `npx`. *Owner/registry decision.*
 2. **A one-shot "render from a closed loop" path.** Either `@lyhna/mcp export-pack --render-receipt`
    (proxy shells the published witness CLI after export) or a thin `npx @lyhna/mcp receipt <packDir>`
    wrapper. Turns steps 8–10 into one command.
