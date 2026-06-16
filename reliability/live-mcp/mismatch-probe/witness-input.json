@@ -1,0 +1,25 @@
+{
+  "objective": "confirm the mismatch label survives real MCP traffic",
+  "steps": [
+    {
+      "claim": {
+        "system": "postgres",
+        "action": "insert",
+        "result": "inserted the record into the production database",
+        "user_facing": true
+      },
+      "event": {
+        "call": {
+          "toolName": "write_file"
+        },
+        "verdict": {
+          "kind": "APPROVED"
+        },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:b0b9542637c2c3e4b2669f28226ff4f33e4a5a5b23eebfd49bc974c33fb2766d"
+        }
+      }
+    }
+  ]
+}
