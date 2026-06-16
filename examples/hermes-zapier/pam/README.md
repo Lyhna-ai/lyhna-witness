@@ -16,4 +16,5 @@ is never upgraded into a fact.
 
 The source of truth remains the witnessed event sequence, the deterministic labels, `handoff.json`,
 and the proof spine. This is an additive, read-only export beside them. Conformance: `lyhna-pam/v0`
-— a PAM-shaped projection, not yet validated against a formal published PAM schema.
+— a PAM-shaped projection, validated against the Portable AI Memory v1.0 schema and found
+non-conformant (it is a projection, not a conformant PAM document).

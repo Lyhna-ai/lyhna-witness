@@ -140,8 +140,9 @@ origin integrity: a memory format proves a bundle was not altered; it cannot pro
 work that happened. So **every memory item carries its `evidence_status`** (`SUPPORTED`, `UNSUPPORTED`,
 `DO_NOT_SEND`, `CLAIMED_ACTUAL_MISMATCH`, …). A downstream agent therefore *inherits* the honesty
 ceiling instead of stripping it: an unsupported claim stays unsupported memory and is never upgraded
-into a fact. (Conformance: `lyhna-pam/v0` — a PAM-shaped projection, not yet validated against a formal
-published PAM schema.)
+into a fact. (Conformance: `lyhna-pam/v0` — a PAM-shaped projection, validated against the Portable AI
+Memory v1.0 schema and found non-conformant; it is a projection, not a conformant PAM document. See
+[`PAM-SCHEMA-VALIDATION.md`](./PAM-SCHEMA-VALIDATION.md).)
 
 ## V1 promise (the honesty ceiling)
 
