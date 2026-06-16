@@ -48,9 +48,10 @@ leaving their environment. Lyhna's witness boundary is compatible with that by c
   unsigned receipts). (Separately, your **upstream** MCP tools still do whatever they normally do — a real
   remote connector may send the arguments to its own service and make network calls; that is outside
   Lyhna, in `demo` mode too.)
-- **Offline-capable.** With `LYHNA_PROXY_BIND_MODE=demo` the whole loop runs with no network and no Lyhna
-  account (receipts are unsigned — see §5). Signed receipts use a hosted bind, but verification of any
-  pack is fully offline with the `lyhna-verify` tool.
+- **No Lyhna network call in demo mode.** With `LYHNA_PROXY_BIND_MODE=demo` the loop runs with **no call
+  to Lyhna and no Lyhna account** (receipts are unsigned — see §5); the bind decision is local. (Your
+  upstream tools still make whatever network calls they normally make — that's outside Lyhna.) Signed
+  receipts use a hosted bind, but verification of any pack is fully offline with the `lyhna-verify` tool.
 
 **The pitch, in one line: keep your model private — prove what its tools did.**
 

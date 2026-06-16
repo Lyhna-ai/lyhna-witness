@@ -81,8 +81,9 @@
 - Demo is an honest replay; the 🔴 DO-NOT-SEND "claimed it emailed the client, Lyhna saw no such call"
   moment is visceral; pricing is model-only with no fake numbers; every footer carries the action-level
   ceiling. (ROLE 4)
-- Model-agnostic + MCP-routing requirement is clear; offline `demo` mode genuinely runs with no network;
-  content-blindness is enforced in the data structure, not just claimed. (ROLE 3)
+- Model-agnostic + MCP-routing requirement is clear; offline `demo` mode makes no call to Lyhna (local
+  bind decision, no account); content-blindness is enforced in the data structure, not just claimed.
+  (ROLE 3)
 - `@lyhna/mcp` (v0.2.5) and `lyhna-verify` (v1.0.0) are publicly installable; the witness renderer is
   honestly source-clone-only. Shortest honest path works end to end. (ROLE 5)
 - Zero-dep, deterministic, byte-identical regeneration; the cross-repo loop produces all five artifacts.
