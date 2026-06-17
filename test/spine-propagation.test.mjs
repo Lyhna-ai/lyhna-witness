@@ -74,6 +74,9 @@ test("OKF carries the contract (step frontmatter + reader_explanation + Agents s
   assert.match(step2, /\*\*Contract:\*\*/);
   assert.match(okf["handoffs/x.md"], /## Agents/);
   assert.match(okf["handoffs/x.md"], /parent_loop_id: "loop-42"/);
+  // The OKF's OWN continuation prompt must also carry the attribution (OKF-only consumers).
+  assert.match(okf["prompts/next-ai-prompt.md"], /Agent attribution/);
+  assert.match(okf["prompts/next-ai-prompt.md"], /writer agent.*not all supported.*do not trust/is);
   // The unsupported step's label is preserved — not upgraded.
   assert.match(step2, /UNSUPPORTED/);
   // A plain run's OKF has no contract fields.

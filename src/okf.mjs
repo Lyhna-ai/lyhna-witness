@@ -291,6 +291,17 @@ export function renderOkfBundle(handoff, options = {}) {
     );
     const gated = (handoff.steps ?? []).filter((s) => (s.labels ?? []).includes("NEEDS_HUMAN_APPROVAL"));
     const proofEntries = proofRefPairs(handoff.proof_refs);
+    // Carry the agent attribution into the OKF's OWN continuation prompt so an OKF-only consumer gets
+    // the same subagent context the canonical next-ai-prompt does (captured evidence only; warns off
+    // any non-supported branch). Empty on a plain run, so a non-spine bundle is byte-identical.
+    const agentLines = (handoff.agents ?? []).map((a) => {
+      const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
+      return `- ${label} (${a.agent_id}): step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
+        a.all_supported
+          ? "attributed steps are supported"
+          : `not all supported (${(a.nonsupported_statuses ?? []).join(", ")}); do not trust those claims without confirmation`
+      }`;
+    });
     const body = [
       `# Safe Continuation Prompt`,
       ``,
@@ -298,6 +309,13 @@ export function renderOkfBundle(handoff, options = {}) {
       ``,
       `**Objective:** ${handoff.objective || "(none stated)"}`,
       ``,
+      ...(agentLines.length
+        ? [
+            `Agent attribution (captured evidence only — an agent not routed through Lyhna does not appear):`,
+            ...agentLines,
+            ``
+          ]
+        : []),
       `The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:`,
       ...listOr(settledAll.map((x) => `- ${x}`)),
       ``,
