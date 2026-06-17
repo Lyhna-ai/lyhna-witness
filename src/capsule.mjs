@@ -191,6 +191,27 @@ function capsuleAgentsSection(handoff) {
   ];
 }
 
+// One plain-language line a non-technical buyer can act on, derived ONLY from the verdict + counts that
+// are already on the page (it restates them, asserts nothing new). For a not-safe run it names how many
+// claimed steps the witness could not back and what NOT to do; for a safe run it states the support and
+// the ceiling (tool-level actions, not business outcomes).
+function plainMeaning(handoff) {
+  const s = handoff.summary ?? {};
+  const total = s.total_steps ?? 0;
+  if (handoff.safe_to_continue) {
+    return (
+      `**What this means:** every claimed step is backed by what the witness saw at the tool boundary. ` +
+      `(Lyhna confirms tool-level actions, not business outcomes — use your own judgment before acting.)`
+    );
+  }
+  const unconfirmed = Math.max(total - (s.supported ?? 0), 0);
+  return (
+    `**What this means:** ${unconfirmed} of ${total} claimed step${total === 1 ? "" : "s"} ` +
+    `${unconfirmed === 1 ? "is" : "are"} not backed by witnessed evidence (unconfirmed or mismatched). ` +
+    `Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in \`HANDOFF.md\`.`
+  );
+}
+
 function renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts }) {
   const summary = handoff.summary ?? {};
   const safe = Boolean(handoff.safe_to_continue);
@@ -209,13 +230,18 @@ function renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts
     ``,
     `**Verdict:** ${verdict}`,
     ``,
+    plainMeaning(handoff),
+    ``,
     `**Objective:** ${handoff.objective || "_(none stated)_"}`,
     ``,
     `**Summary:** ${summary.total_steps ?? 0} steps · ${summary.supported ?? 0} supported · ` +
       `${summary.mismatches ?? 0} mismatch · ${summary.unsupported ?? 0} unsupported · ${summary.do_not_send ?? 0} do-not-send`,
+    `_Counts can overlap — a step may carry more than one flag — so they need not add up to the step total._`,
     ``,
     ...capsuleAgentsSection(handoff),
     `## What's in this capsule`,
+    ``,
+    `**You only need \`HANDOFF.md\`** (and this index). The rest are machine-readable copies of the same receipt.`,
     ``,
     `| File | What it is | For | Trust boundary | Description |`,
     `| --- | --- | --- | --- | --- |`,

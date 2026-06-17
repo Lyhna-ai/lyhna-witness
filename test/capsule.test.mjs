@@ -98,3 +98,29 @@ test("deterministic: no timestamp unless provided; identical input ⇒ identical
   const withTs = JSON.parse(renderCapsule(handoff, { name: "demo", timestamp: "2026-06-17T00:00:00Z" })["capsule.json"]);
   assert.equal(withTs.timestamp, "2026-06-17T00:00:00Z");
 });
+
+test("CAPSULE.md cover gives a plain-language, honesty-bounded 'What this means' a buyer can act on", () => {
+  const md = renderCapsule(handoff, { name: "demo" })["CAPSULE.md"];
+  const meaningLine = md.split("\n").find((l) => l.includes("What this means")) ?? "";
+  assert.ok(meaningLine, "the cover has a 'What this means' line");
+  // Not-safe run: names the unconfirmed count and warns against sending — the line itself never says it
+  // was done/sent (scoped to the line; the honesty-ceiling section legitimately names those as examples
+  // of what Lyhna never asserts).
+  assert.match(meaningLine, /1 of 2 claimed steps is not backed by witnessed evidence/);
+  assert.match(meaningLine, /Don't treat the work as done/i);
+  assert.doesNotMatch(meaningLine, /\b(was sent|is done and verified|delivered)\b/i);
+  // Counts-overlap note and the "you only need HANDOFF.md" reader hint are present.
+  assert.match(md, /need not add up to the step total/);
+  assert.match(md, /You only need `HANDOFF\.md`/);
+
+  // A safe run states support + the tool-level ceiling, not a business-outcome guarantee.
+  const safeHandoff = buildWitnessedHandoff(
+    runFromWitnessedEvents({
+      objective: "Just write a file.",
+      steps: [{ claim: { system: "filesystem", action: "write_file" }, event: { call: { toolName: "mcp__filesystem__write_file" }, verdict: { kind: "APPROVED" }, runtime_report: { returned: true } } }]
+    })
+  );
+  const safeMd = renderCapsule(safeHandoff, { name: "ok" })["CAPSULE.md"];
+  assert.match(safeMd, /every claimed step is backed by what the witness saw/);
+  assert.match(safeMd, /not business outcomes/);
+});
