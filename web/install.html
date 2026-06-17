@@ -63,6 +63,7 @@ wraps an MCP server I already use and witnesses every tool call routed through i
          "args": ["-y", "@lyhna/mcp", "stdio"],
          "env": {
            "LYHNA_PROXY_BIND_MODE": "demo",
+           "LYHNA_PROXY_CLAIM_CAPTURE": "1",
            "LYHNA_PROXY_LOOP_ID": "lyhna-setup-test",
            "LYHNA_PROXY_GOAL": "first witnessed run",
            "LYHNA_PROXY_UPSTREAM_COMMAND": "npx",
@@ -74,11 +75,14 @@ wraps an MCP server I already use and witnesses every tool call routed through i
 
    demo mode runs offline with no key (receipts are unsigned). For signed receipts,
    replace LYHNA_PROXY_BIND_MODE=demo with LYHNA_API_KEY=&lt;my beta key&gt;.
+   LYHNA_PROXY_CLAIM_CAPTURE=1 turns on claim capture so the receipt can compare what
+   I claimed to what was witnessed — without it, the receipt only shows observed calls.
 
 2. Tell me to reload/restart my MCP client so the "filesystem-witnessed" server connects.
 
-3. Once it's connected, make ONE real tool call through "filesystem-witnessed" — a small
-   test call — so Lyhna witnesses it.
+3. Once it's connected, record a claim with the record_claim tool describing what you're
+   about to do, then make ONE real tool call through "filesystem-witnessed" — a small test
+   call — so Lyhna witnesses it. The claim + the witnessed call are what the receipt compares.
 
 4. Export the closed loop with the proxy's export-pack verb to get a witness-input.json,
    then render the AI Work Receipt Capsule with the witness CLI (from a lyhna-witness
