@@ -124,3 +124,24 @@ test("CAPSULE.md cover gives a plain-language, honesty-bounded 'What this means'
   assert.match(safeMd, /every claimed step is backed by what the witness saw/);
   assert.match(safeMd, /not business outcomes/);
 });
+
+// REGRESSION (Codex P2 on #40): an approval-only blocker (every step SUPPORTED, but a step needs human
+// approval → safe_to_continue=false with summary.supported === total_steps) must NOT read as
+// "0 of N not backed by witnessed evidence" — it must name the approval hold.
+test("approval-only not-safe run names the approval hold, not a false missing-evidence count", () => {
+  const h = buildWitnessedHandoff({
+    objective: "Refund the customer (supported, but gated on approval).",
+    steps: [
+      {
+        claimed: { system: "stripe", action: "refund", result: "refunded" },
+        witnessed: { system: "stripe", action: "refund", returned: true },
+        needs_human_approval: true
+      }
+    ]
+  });
+  assert.equal(h.safe_to_continue, false);
+  assert.equal(h.summary.supported, h.summary.total_steps, "all steps supported");
+  const meaning = renderCapsule(h, { name: "appr" })["CAPSULE.md"].split("\n").find((l) => l.includes("What this means")) ?? "";
+  assert.doesNotMatch(meaning, /not backed by witnessed evidence/);
+  assert.match(meaning, /held for human approval/i);
+});

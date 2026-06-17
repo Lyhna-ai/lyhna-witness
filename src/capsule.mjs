@@ -205,6 +205,19 @@ function plainMeaning(handoff) {
     );
   }
   const unconfirmed = Math.max(total - (s.supported ?? 0), 0);
+  // Not safe, but every claimed step IS backed by the witness ⇒ the blocker is not missing evidence.
+  // Name the actual reason: a human-approval hold (the only way an all-supported run is still gated),
+  // or, defensively, a generic hold — never a false "not backed by evidence" count.
+  if (unconfirmed === 0) {
+    const approvals = handoff.needs_human_approval?.length ?? 0;
+    const why = approvals
+      ? `${approvals} step${approvals === 1 ? "" : "s"} ${approvals === 1 ? "is" : "are"} held for human approval`
+      : `${total === 1 ? "the step is" : "one or more steps are"} held before they can proceed`;
+    return (
+      `**What this means:** every claimed step is backed by witnessed evidence, but the run is not safe to ` +
+      `continue yet — ${why}. Don't proceed until the holds in \`HANDOFF.md\` are cleared.`
+    );
+  }
   return (
     `**What this means:** ${unconfirmed} of ${total} claimed step${total === 1 ? "" : "s"} ` +
     `${unconfirmed === 1 ? "is" : "are"} not backed by witnessed evidence (unconfirmed or mismatched). ` +
