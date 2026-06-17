@@ -21,6 +21,11 @@ export const TRUST_LABELS = Object.freeze({
 
 const norm = (s) => (typeof s === "string" ? s.trim().toLowerCase() : "");
 
+// Generic actor/app-invocation verbs. When an app-only wrapper (resolved app, no sub-action — e.g. Apify
+// `call-actor`) is observed, the boundary corroborates only that the actor/app was INVOKED, so only a
+// claim naming that generic invocation rides as supported; any specific claimed action stays fail-closed.
+const APP_INVOCATION_ACTIONS = new Set(["call_actor", "call-actor", "run_actor", "invoke_actor", "call_app", "invoke"]);
+
 /** A result string that denotes failure. Witnessed `returned === false` is also failure. */
 function isErrorResult(result) {
   const r = norm(result);
@@ -232,13 +237,19 @@ export function computeStepLabels(step) {
   //     RESULT axis is deliberately NOT used here — a successful call carries no witnessed result by design,
   //     so comparing a claimed result against an always-absent witnessed result would flag every legitimate
   //     supported step.) Only fires when nothing above already flagged the step.
+  // An app-only wrapper (resolved app, no sub-action — e.g. Apify `call-actor`) corroborates the generic
+  // actor/app INVOCATION at the boundary, but NOT any specific sub-action. So a claim that names that
+  // generic invocation is supported, while a claim of a SPECIFIC action the witness never saw (e.g.
+  // "send" on an opaque actor call) must still fail closed.
+  const appOnlyWrapper = Boolean(norm(witnessed.app)) && !norm(witnessed.action);
+  const claimIsGenericInvocation = appOnlyWrapper && APP_INVOCATION_ACTIONS.has(norm(claimed.action));
   const actionUnverified =
     !failed &&
     !mismatch &&
     !operationUnverified &&
     Boolean(norm(claimed.action)) &&
     !norm(witnessed.action) &&
-    !norm(witnessed.app);
+    !claimIsGenericInvocation;
   if (actionUnverified) {
     labels.push(L.NEEDS_EVIDENCE, L.UNSUPPORTED);
     if (userFacing) labels.push(L.DO_NOT_SEND);

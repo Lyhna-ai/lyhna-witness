@@ -258,3 +258,16 @@ test("wrapper with resolved app but no sub-action (Apify call-actor) stays SUPPO
   assert.ok(r.labels.includes(L.SUPPORTED), "an app-corroborated wrapper call must stay supported");
   assert.ok(!r.labels.includes(L.UNSUPPORTED));
 });
+
+// REGRESSION (Codex P1 on #37): an app-only wrapper corroborates only the generic invocation. A SPECIFIC
+// claimed action the witness never saw (e.g. "send" on an Apify actor call) must still fail closed.
+test("specific claimed action on an app-only wrapper (not the invocation) fails closed", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "apify_web-scraper", via: "apify", action: "send", user_facing: true },
+    witnessed: { system: "apify", app: "apify_web-scraper", action: null, returned: true, wrapper_family: "apify" }
+  });
+  assert.ok(!r.labels.includes(L.SUPPORTED), "an uncorroborated specific action on a wrapper must not be SUPPORTED");
+  assert.ok(r.labels.includes(L.UNSUPPORTED));
+  assert.ok(r.labels.includes(L.DO_NOT_SEND));
+});
