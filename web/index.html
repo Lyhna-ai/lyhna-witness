@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lyhna — Prove what your agents did.</title>
+  <title>Lyhna — AI Work Receipts your clients can trust.</title>
   <meta
     name="description"
-    content="Lyhna sits in your agent's tool path and prints an AI Work Receipt: what the agent claimed, what crossed the tool boundary, and when the work deserves a clear DO-NOT-SEND. Proof, not hope."
+    content="Your agent said it did the work. Lyhna shows what was witnessed, what was missing, and what needs review — packaged into an AI Work Receipt Capsule: a readable receipt plus machine, agent, knowledge, and memory copies that tell the same honest story."
   />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="site-header">
-    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">proof for AI work</span></a>
+    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">AI Work Receipts</span></a>
     <nav class="nav">
-      <a href="#how">How it works</a>
+      <a href="#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
       <a href="pricing.html">Pricing</a>
@@ -24,23 +24,71 @@
   <main class="page page-wide">
     <!-- HERO -->
     <section class="home-hero">
-      <h1>Prove what your agents did.</h1>
+      <p class="eyebrow">The AI Work Receipt Capsule</p>
+      <h1>AI Work Receipts your clients can trust.</h1>
       <p class="subhead">
-        Lyhna sits in your agent's tool path and shows what crossed the tool boundary: what the agent
-        <em>claimed</em>, what was <em>witnessed</em>, and when the work deserves a clear DO-NOT-SEND —
-        so client-facing AI work leaves with proof, not hope.
+        Your agent said it did the work. Lyhna shows what was <em>witnessed</em>, what was
+        <em>missing</em>, and what needs <em>review</em>.
+      </p>
+      <p class="hero-explainer">
+        One witnessed run produces a <strong>Work Receipt Capsule</strong> — a readable receipt plus
+        machine, agent, knowledge, and memory copies that all tell the same honest story.
       </p>
       <div class="cta-row">
         <a class="btn btn-primary" href="demo.html">Run the demo</a>
-        <a class="btn btn-secondary" href="#how">How it works</a>
+        <a class="btn btn-secondary" href="#capsule">See what's in a capsule</a>
       </div>
-      <p class="surface-line">An MCP proof layer for MCP-capable agents — Claude Code, Codex, Cursor, and more.</p>
+      <p class="surface-line">Rides in the tool path of MCP-capable agents — Claude Code, Codex, Cursor, and more.</p>
+    </section>
+
+    <!-- WHAT ONE RUN PRODUCES (the bundle) -->
+    <section id="capsule" class="block">
+      <h2>What one run produces.</h2>
+      <p class="lede">A single witnessed run packages into one capsule. Open the receipt first — the rest are copies for your software, the next agent, and your knowledge and memory systems.</p>
+      <div class="bundle-grid">
+        <div class="bundle-item">
+          <span class="bundle-tag tag-receipt">Readable receipt</span>
+          <p class="bundle-file mono">HANDOFF.md</p>
+          <p class="bundle-desc">For you. What the agent claimed, what crossed the tool boundary, what's unsupported, and what's safe to continue.</p>
+        </div>
+        <div class="bundle-item">
+          <span class="bundle-tag tag-receipt">Machine receipt</span>
+          <p class="bundle-file mono">handoff.json</p>
+          <p class="bundle-desc">The same receipt as structured data — per-step claimed-vs-witnessed pairs and verdicts your software can read.</p>
+        </div>
+        <div class="bundle-item">
+          <span class="bundle-tag tag-index">Capsule index</span>
+          <p class="bundle-file mono">CAPSULE.md · capsule.json</p>
+          <p class="bundle-desc">The bundle's table of contents — names every file and the trust boundary it carries. It explains the capsule; it asserts nothing new.</p>
+        </div>
+        <div class="bundle-item">
+          <span class="bundle-tag tag-cont">Continuation prompt</span>
+          <p class="bundle-file mono">next-ai-prompt.md</p>
+          <p class="bundle-desc">A safe hand-off for the next AI: what's confirmed, what to re-check, and what not to trust yet.</p>
+        </div>
+        <div class="bundle-item">
+          <span class="bundle-tag tag-carrier">Knowledge bundle</span>
+          <p class="bundle-file mono">okf/</p>
+          <p class="bundle-desc">An Open Knowledge Format projection — portable, agent-readable, every step carrying its evidence label.</p>
+        </div>
+        <div class="bundle-item">
+          <span class="bundle-tag tag-carrier">Memory bundle</span>
+          <p class="bundle-file mono">pam/</p>
+          <p class="bundle-desc">A PAM-shaped memory copy the next agent can carry — each item keeps its evidence status, so an unsupported claim never becomes a fact.</p>
+        </div>
+        <div class="bundle-item">
+          <span class="bundle-tag tag-proof">Proof refs</span>
+          <p class="bundle-file mono">where available</p>
+          <p class="bundle-desc">When a signing key is attached, receipts carry verifiable references anyone can check offline. Trust under the hood — you don't have to read it.</p>
+        </div>
+      </div>
+      <p class="bundle-note">Every copy carries the same verdicts. None of them upgrades an unsupported claim into a fact.</p>
     </section>
 
     <!-- THE RECEIPT, SHOWN -->
     <section class="block">
       <h2>Your agent's word, checked against its work.</h2>
-      <p class="lede">Every Lyhna receipt separates the story from the evidence.</p>
+      <p class="lede">Every receipt separates the story from the evidence.</p>
       <div class="verdict-cards">
         <div class="verdict-card vc-ok">
           <span class="chip chip-ok">🟢 SUPPORTED</span>
@@ -48,13 +96,27 @@
         </div>
         <div class="verdict-card vc-warn">
           <span class="chip chip-warn">🟡 MISMATCH</span>
-          <p>The agent claimed one thing. The witness saw another.</p>
+          <p>The agent claimed one thing. The witness saw another — review before relying on it.</p>
         </div>
         <div class="verdict-card vc-bad">
           <span class="chip chip-bad">🔴 DO-NOT-SEND</span>
           <p>The agent claimed it. No tool call backs it up. Don't put this in front of a client.</p>
         </div>
       </div>
+    </section>
+
+    <!-- WITNESS, NOT ORCHESTRATOR -->
+    <section class="block">
+      <h2>Lyhna witnesses. It doesn't run your agents.</h2>
+      <p>
+        Lyhna sits in your agent's tool path and witnesses the calls routed through it. It doesn't drive
+        your agents, and it can't see what isn't routed through it — anything outside that path is marked
+        unwitnessed, never assumed.
+      </p>
+      <p>
+        And when evidence is missing, Lyhna doesn't block your agent — it blocks the claim from becoming
+        trusted. The receipt marks it <strong>unsupported</strong> instead of giving it a pass.
+      </p>
     </section>
 
     <!-- THE CEILING AS THE SELL -->
@@ -66,28 +128,9 @@
       </p>
       <p>
         It tells you exactly one thing, and tells it true: what your agent did at the tool boundary —
-        what it claimed, and what was witnessed. Every Lyhna label is tied to what was witnessed, what was
-        not witnessed, or what stayed outside the observed workflow.
+        what it claimed, and what was witnessed. Every label is tied to what was witnessed, what was not,
+        or what stayed outside the observed workflow.
       </p>
-    </section>
-
-    <!-- AGENT-NATIVE TRIO -->
-    <section id="how" class="block">
-      <h2>Witness once. Export everywhere.</h2>
-      <div class="trio">
-        <div class="trio-item">
-          <span class="trio-tag mono">MCP</span>
-          <p>Lyhna installs in your agent's tool path. No new platform, no rewrite. It sits where the work happens.</p>
-        </div>
-        <div class="trio-item">
-          <span class="trio-tag mono">OKF</span>
-          <p>Every receipt can export to <strong>Open Knowledge Format</strong> — an open spec for portable, agent-readable knowledge.</p>
-        </div>
-        <div class="trio-item">
-          <span class="trio-tag mono">Portable memory bundle</span>
-          <p>Lyhna can also produce a <strong>PAM-shaped</strong> memory bundle the next agent can carry: not just a summary, but what was witnessed, what changed, and what should not be trusted yet.</p>
-        </div>
-      </div>
     </section>
 
     <!-- CARRIER VS WITNESS -->
@@ -111,7 +154,6 @@
         Run the demo. Watch the loop replay, and the receipt print. Then copy it, paste it into your own
         AI, and ask: <em>does this overclaim?</em> It should come back with the same boundary the receipt
         draws — what was witnessed, what was unsupported, and what stayed outside the observed workflow.
-        That's the whole product.
       </p>
       <a class="btn btn-primary" href="demo.html">Run the demo</a>
     </section>
@@ -125,7 +167,7 @@
       tool-call path.
     </p>
     <nav class="foot-nav">
-      <a href="#how">How it works</a>
+      <a href="#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
       <a href="pricing.html">Pricing</a>
