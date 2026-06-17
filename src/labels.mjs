@@ -226,11 +226,12 @@ export function computeStepLabels(step) {
     }
   }
 
-  // 3b) The agent named a specific ACTION the witness could NOT corroborate. The call returned, but the
-  //     witness saw no matching action — so it cannot confirm the call did the claimed action. A bare
-  //     returned call is evidence the call RAN, not that the agent's stated action happened, so it must
-  //     not read as SUPPORTED. This is the non-wrapper twin of `operationUnverified` (2b): same fail-closed
-  //     stance on the action axis. Two carve-outs keep it from over-firing:
+  // 3b) The agent asserted something SPECIFIC — a named ACTION and/or a stated RESULT — that the witness
+  //     could NOT corroborate. The call returned, but the witness saw no matching action — so it cannot
+  //     confirm the call did the claimed action or produced the claimed result. A bare returned call is
+  //     evidence the call RAN, not that the agent's stated action/result happened — so it must not read as
+  //     SUPPORTED. This is the non-wrapper twin of `operationUnverified` (2b): same fail-closed stance.
+  //     Carve-outs keep it from over-firing:
   //       • An app-only wrapper (resolved app, no sub-action — e.g. Apify `call-actor`) corroborates the
   //         generic actor/app INVOCATION at the boundary. So a claim that names that generic invocation
   //         (APP_INVOCATION_ACTIONS) is supported, but a SPECIFIC claimed action the witness never saw
@@ -239,24 +240,32 @@ export function computeStepLabels(step) {
   //         path mismatch — a path mismatch alone adds only CLAIMED_ACTUAL_MISMATCH (the work may be fine
   //         via another route), so a route-mismatched step with an uncorroborated action must still fail
   //         closed here rather than read as a mere route note.
-  //     (The RESULT axis is deliberately NOT used — a successful call carries no witnessed result by
-  //     design, so comparing a claimed result against an always-absent witnessed result would flag every
-  //     legitimate supported step.)
+  //     RESULT axis: a stated `result` is consulted ONLY as a trigger here, and ONLY when the witness
+  //     could not corroborate the operation (no witnessed action; not a generic app-invocation). A
+  //     genuinely supported step always has a witnessed action (derived from the tool name), so
+  //     `!witnessed.action` already excludes it — a claimed result on a CORROBORATED action stays
+  //     SUPPORTED (the result is the agent's account of an outcome Lyhna does not verify — THESIS §6).
+  //     This closes the inversion where omitting the action would otherwise launder a result-only claim
+  //     on an opaque call into SUPPORTED.
   const appOnlyWrapper = Boolean(norm(witnessed.app)) && !norm(witnessed.action);
   const claimIsGenericInvocation = appOnlyWrapper && APP_INVOCATION_ACTIONS.has(norm(claimed.action));
+  const claimAssertsSpecific = Boolean(norm(claimed.action)) || Boolean(norm(claimed.result));
   const actionUnverified =
     !failed &&
     !actionResult.mismatch &&
     !operationUnverified &&
-    Boolean(norm(claimed.action)) &&
+    claimAssertsSpecific &&
     !norm(witnessed.action) &&
     !claimIsGenericInvocation;
   if (actionUnverified) {
     labels.push(L.NEEDS_EVIDENCE, L.UNSUPPORTED);
     if (userFacing) labels.push(L.DO_NOT_SEND);
+    const claimedWhat = norm(claimed.action)
+      ? claimedPhrase(claimed)
+      : `the outcome "${claimed.result}"${claimed.system ? ` in ${claimed.system}` : ""}`;
     notes.push(
-      `The agent claimed ${claimedPhrase(claimed)}, but the witness saw the call return without being ` +
-        `able to confirm it performed that action — there is no evidence the claimed step actually happened.`
+      `The agent claimed ${claimedWhat}, but the witness saw the call return without being able to ` +
+        `confirm what it did — there is no evidence the claimed step actually happened.`
     );
   }
 
