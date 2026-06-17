@@ -6,7 +6,7 @@
 // same output (golden-testable). See BUILD-PLAN.md §2.
 
 import { TRUST_LABELS, computeStepLabels } from "./labels.mjs";
-import { buildStepContract, summarizeAgents } from "./contract.mjs";
+import { buildStepContract, summarizeAgents, agentBranchFlag } from "./contract.mjs";
 
 export const WITNESSED_HANDOFF_SCHEMA = "witnessed-handoff/v1";
 
@@ -199,8 +199,7 @@ function agentAttributionSection(h) {
     .join(" · ");
   const rows = h.agents.map((a) => {
     const label = agentLabelOf(a) ?? a.agent_id;
-    const flag = a.has_unsupported ? " — ⚠ has an unsupported branch (no witnessed evidence)" : " — all attributed steps supported";
-    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")}${flag}`;
+    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${agentBranchFlag(a)}`;
   });
   return [
     `## Agent Attribution`,
@@ -326,7 +325,9 @@ function nextPromptAgentLines(h) {
   const lines = h.agents.map((a) => {
     const label = agentLabelOf(a) ?? a.agent_id;
     return `- ${label} (${a.agent_id}): step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
-      a.has_unsupported ? "has an UNSUPPORTED branch; do not trust those claims without confirmation" : "attributed steps are supported"
+      a.all_supported
+        ? "attributed steps are supported"
+        : `not all supported (${(a.nonsupported_statuses ?? []).join(", ")}); do not trust those claims without confirmation`
     }`;
   });
   return [

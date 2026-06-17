@@ -240,5 +240,21 @@ export function summarizeAgents(contractedSteps) {
       entry.has_unsupported = true;
     }
   }
+  // Finalize each agent's roll-up. `all_supported` is the ONLY honest basis for an "all good" message:
+  // a branch that is a route/action mismatch or is awaiting approval is NOT supported, even though it is
+  // not flagged UNSUPPORTED. `nonsupported_statuses` names exactly what is wrong, so the attribution
+  // text in every export can be specific instead of collapsing to a misleading "all supported".
+  for (const entry of byAgent.values()) {
+    const nonsupported = [...new Set(entry.statuses.filter((s) => s !== CONTRACT_STATUS.SUPPORTED))].sort();
+    entry.all_supported = entry.statuses.length > 0 && nonsupported.length === 0;
+    entry.nonsupported_statuses = nonsupported;
+  }
   return [...byAgent.values()];
+}
+
+// A short, honest one-liner describing an agent's worst-case branch status, shared by every export's
+// attribution text. Never says "supported" unless EVERY attributed step is supported.
+export function agentBranchFlag(a) {
+  if (a.all_supported) return "all attributed steps supported";
+  return `⚠ not all supported — branch status: ${(a.nonsupported_statuses ?? []).join(", ") || "unknown"}`;
 }

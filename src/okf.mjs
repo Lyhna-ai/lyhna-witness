@@ -84,7 +84,9 @@ function okfAgentsSection(handoff) {
   if (!handoff.agents?.length) return [];
   const rows = handoff.agents.map((a) => {
     const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
-    const flag = a.has_unsupported ? "has an unsupported branch (no witnessed evidence)" : "attributed steps supported";
+    const flag = a.all_supported
+      ? "attributed steps supported"
+      : `not all supported — branch status: ${(a.nonsupported_statuses ?? []).join(", ") || "unknown"}`;
     return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${flag}`;
   });
   return [

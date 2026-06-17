@@ -44,7 +44,7 @@ test("HANDOFF.md surfaces agent attribution + per-step contract on a spine run, 
   const md = renderHandoffMarkdown(spine);
   assert.match(md, /## Agent Attribution/);
   assert.match(md, /Research agent/);
-  assert.match(md, /Writer agent.*unsupported branch/s);
+  assert.match(md, /Writer agent.*not all supported.*unsupported/s);
   assert.match(md, /Contract: by Research agent · status: supported/);
   // Plain run is unchanged — no attribution surface leaks in.
   const plainMd = renderHandoffMarkdown(plain);
@@ -55,14 +55,14 @@ test("HANDOFF.md never claims the unsupported send happened", () => {
   const md = renderHandoffMarkdown(spine);
   // The writer's send is unsupported — must not read as sent/delivered.
   const writerLine = md.split("\n").find((l) => l.includes("Writer agent") && l.includes("step"));
-  assert.ok(writerLine && /unsupported branch/.test(writerLine));
+  assert.ok(writerLine && /not all supported/.test(writerLine));
   assert.doesNotMatch(md, /\bemail (was )?delivered\b/i);
 });
 
 test("next-ai-prompt warns the continuing agent off the unsupported subagent branch", () => {
   const p = renderNextAiPrompt(spine);
   assert.match(p, /Agent attribution/);
-  assert.match(p, /Writer agent.*UNSUPPORTED branch; do not trust/s);
+  assert.match(p, /Writer agent.*not all supported.*do not trust/s);
   assert.doesNotMatch(renderNextAiPrompt(plain), /Agent attribution/);
 });
 

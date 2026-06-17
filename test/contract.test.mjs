@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildWitnessedHandoff } from "../src/generate.mjs";
+import { buildWitnessedHandoff, renderHandoffMarkdown } from "../src/generate.mjs";
 import { runFromWitnessedEvents } from "../src/witnessed-event.mjs";
 import {
   statusFromLabels,
@@ -147,6 +147,42 @@ test("agents summary attributes unsupported branches to the right agent (capture
   assert.deepEqual(research.steps, [1, 2]);
   assert.equal(research.has_unsupported, true, "research has one unsupported branch");
   assert.equal(writer.has_unsupported, true);
+});
+
+test("REGRESSION: a mismatch-only or approval-only agent is NOT reported as 'all supported'", () => {
+  // Route-only mismatch (claimed google directly; witness saw zapier→google_docs) — the step is a
+  // CLAIMED_ACTUAL_MISMATCH but NOT unsupported. An escalated step needs approval but is not "supported".
+  const h = buildWitnessedHandoff(
+    runFromWitnessedEvents({
+      objective: "Mismatch + approval branches",
+      steps: [
+        {
+          agent_id: "router-1",
+          subagent_role: "router",
+          claim: { system: "google_docs", action: "create_document", via: "google_docs" },
+          event: approved("execute_zapier_google_docs_action", {
+            call: { toolName: "execute_zapier_google_docs_action", arguments: JSON.stringify({ app: "google_docs", action: "create_document" }) }
+          })
+        },
+        {
+          agent_id: "approver-1",
+          subagent_role: "approver",
+          claim: { system: "stripe", action: "refund" },
+          event: { call: { toolName: "stripe.refund" }, verdict: { kind: "ESCALATED" } }
+        }
+      ]
+    })
+  );
+  const router = h.agents.find((a) => a.agent_id === "router-1");
+  const approver = h.agents.find((a) => a.agent_id === "approver-1");
+  assert.equal(router.all_supported, false, "a mismatch branch is not 'all supported'");
+  assert.deepEqual(router.nonsupported_statuses, ["mismatch"]);
+  assert.equal(approver.all_supported, false, "an approval-pending branch is not 'all supported'");
+  assert.deepEqual(approver.nonsupported_statuses, ["needs_approval"]);
+  // The human handoff must not tell the reader these are supported.
+  const md = renderHandoffMarkdown(h);
+  assert.doesNotMatch(md, /router agent.*all attributed steps supported/is);
+  assert.doesNotMatch(md, /approver agent.*all attributed steps supported/is);
 });
 
 test("optional artifact_id is absent unless supplied — never fabricated", () => {
