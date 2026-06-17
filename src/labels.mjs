@@ -221,8 +221,31 @@ export function computeStepLabels(step) {
     }
   }
 
+  // 3b) The agent named a specific ACTION the witness could NOT corroborate. The call returned, but the
+  //     witnessed tool name yielded no action (a flat / opaque tool name, e.g. `gmail`), so the witness
+  //     cannot confirm the call performed the claimed action. A bare returned call is evidence the call
+  //     RAN — not that the agent's stated action happened — so it must not read as SUPPORTED. This is the
+  //     non-wrapper twin of `operationUnverified` (2b): same fail-closed stance, action axis. (The RESULT
+  //     axis is deliberately NOT used here — a successful call carries no witnessed result by design, so
+  //     comparing a claimed result against an always-absent witnessed result would flag every legitimate
+  //     supported step.) Only fires when nothing above already flagged the step.
+  const actionUnverified =
+    !failed &&
+    !mismatch &&
+    !operationUnverified &&
+    Boolean(norm(claimed.action)) &&
+    !norm(witnessed.action);
+  if (actionUnverified) {
+    labels.push(L.NEEDS_EVIDENCE, L.UNSUPPORTED);
+    if (userFacing) labels.push(L.DO_NOT_SEND);
+    notes.push(
+      `The agent claimed ${claimedPhrase(claimed)}, but the witness saw the call return without being ` +
+        `able to confirm it performed that action — there is no evidence the claimed step actually happened.`
+    );
+  }
+
   // 4) Agreement.
-  if (!failed && !mismatch && !operationUnverified) {
+  if (!failed && !mismatch && !operationUnverified && !actionUnverified) {
     labels.push(L.SUPPORTED);
     notes.push(`The agent's account matches what the witness observed.`);
   }
