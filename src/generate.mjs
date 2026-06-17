@@ -161,6 +161,55 @@ const bullet = (items) => (items.length ? items.map((x) => `- ${x}`).join("\n") 
 // read fine as adjective counts ("2 supported", "0 do-not-send").
 const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
+// --- Claim-to-action spine surfacing (human handoff). Every helper here is gated on the contract
+// actually being present, so a plain run (no contract / no agents) renders byte-identically to before. ---
+
+// A human label for the agent on a step's contract: a role ("Research agent") over a raw id, else the id.
+function agentLabelOf(c) {
+  if (c.subagent_role) {
+    const role = String(c.subagent_role).trim();
+    const r = /agent$/i.test(role) ? role : `${role} agent`;
+    return r.charAt(0).toUpperCase() + r.slice(1);
+  }
+  return c.agent_id ? String(c.agent_id) : null;
+}
+
+// The one-line contract footnote under a step (attribution + rolled-up status + a flag when the
+// claim could not be tied to the observed call). Returns "" when the step has no contract.
+function contractStepLine(s) {
+  const c = s.contract;
+  if (!c) return "";
+  const who = agentLabelOf(c);
+  const parts = [];
+  if (who) parts.push(`by ${who}`);
+  parts.push(`status: ${c.status}`);
+  if (c.link_basis === "conflict") parts.push("link conflict — claim could not be tied to the observed call");
+  return `\n  - Contract: ${parts.join(" · ")}`;
+}
+
+// The "Agent Attribution" section: who claimed what, from CAPTURED EVIDENCE ONLY. Emitted only when the
+// run carries an agents summary (a spine-enabled, agent-attributed run).
+function agentAttributionSection(h) {
+  if (!h.agents?.length) return [];
+  const idLine = [
+    h.parent_loop_id ? `parent loop \`${h.parent_loop_id}\`` : null,
+    h.receipt_id ? `receipt \`${h.receipt_id}\`` : null
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const rows = h.agents.map((a) => {
+    const label = agentLabelOf(a) ?? a.agent_id;
+    const flag = a.has_unsupported ? " — ⚠ has an unsupported branch (no witnessed evidence)" : " — all attributed steps supported";
+    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")}${flag}`;
+  });
+  return [
+    `## Agent Attribution`,
+    `_Attributed from captured evidence only — Lyhna witnesses tool calls routed through it; an agent whose tool path was not routed through Lyhna does not appear here.${idLine ? ` (${idLine})` : ""}_`,
+    rows.join("\n"),
+    ``
+  ];
+}
+
 // The witness's proof refs (e.g. a vouched-for file URL + result hash + capture time) are the
 // evidence a SUPPORTED step rests on. Render them as labelled bullets when present so neither the
 // human handoff nor the next-agent prompt drops the only pointer to the verifiable artifact. Returns
@@ -187,7 +236,7 @@ function stepLine(s) {
         s.witnessed.action ? `.${s.witnessed.action}` : ""
       } (${s.witnessed.result ?? (s.witnessed.returned === false ? "no result" : "ok")})`
     : "nothing observed";
-  return `- **Step ${s.index + 1}** \`${s.labels.join(" ")}\`\n  - Agent claimed: ${claimed}\n  - Witness saw: ${witnessed}\n  - ${s.human_note}`;
+  return `- **Step ${s.index + 1}** \`${s.labels.join(" ")}\`\n  - Agent claimed: ${claimed}\n  - Witness saw: ${witnessed}\n  - ${s.human_note}${contractStepLine(s)}`;
 }
 
 /** Render the human-facing HANDOFF.md (THESIS.md §8 section order). */
@@ -216,6 +265,7 @@ export function renderHandoffMarkdown(h) {
     `## Systems Touched`,
     bullet(h.systems_touched),
     ``,
+    ...agentAttributionSection(h),
     `## Supported Work`,
     bullet(by(L.SUPPORTED).map((s) => `Step ${s.index + 1}: ${s.human_note}`)),
     ``,
@@ -265,6 +315,27 @@ export function renderHandoffMarkdown(h) {
   ].join("\n");
 }
 
+// Agent-attribution lines for the next-agent prompt. Emitted only on a spine-enabled run, so a plain
+// run's prompt is byte-identical. Names which agent's branch lacks witnessed support so the continuing
+// agent does not re-trust an unsupported subagent claim.
+function nextPromptAgentLines(h) {
+  if (!h.agents?.length) return [];
+  const ids = [h.parent_loop_id ? `parent loop ${h.parent_loop_id}` : null, h.receipt_id ? `receipt ${h.receipt_id}` : null]
+    .filter(Boolean)
+    .join(", ");
+  const lines = h.agents.map((a) => {
+    const label = agentLabelOf(a) ?? a.agent_id;
+    return `- ${label} (${a.agent_id}): step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
+      a.has_unsupported ? "has an UNSUPPORTED branch; do not trust those claims without confirmation" : "attributed steps are supported"
+    }`;
+  });
+  return [
+    `Agent attribution (captured evidence only — an agent not routed through Lyhna does not appear)${ids ? ` — ${ids}` : ""}:`,
+    ...lines,
+    ``
+  ];
+}
+
 /** Render the machine-facing next-ai-prompt.md (THESIS.md §15 shape, parameterized with this run). */
 export function renderNextAiPrompt(h) {
   return [
@@ -272,6 +343,7 @@ export function renderNextAiPrompt(h) {
     ``,
     `Objective: ${h.objective || "(none stated)"}`,
     ``,
+    ...nextPromptAgentLines(h),
     `The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:`,
     bullet(h.settled.concat(h.do_not_re_litigate)),
     ``,
