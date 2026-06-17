@@ -802,7 +802,19 @@ a.btn, .btn { display: inline-block; text-decoration: none; text-align: center; 
 .dash-stat-n { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
 .dash-stat-l { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
 
-.dash-table-wrap { margin-top: 16px; overflow-x: auto; }
+.dash-stats-note {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.dash-scroll-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  display: none; /* only a useful cue on narrow screens where the table scrolls */
+}
+.dash-table-wrap { margin-top: 12px; overflow-x: auto; }
 .dash-table {
   width: 100%;
   border-collapse: collapse;
@@ -848,6 +860,7 @@ a.btn, .btn { display: inline-block; text-decoration: none; text-align: center; 
 @media (max-width: 760px) {
   .dash-account-row { grid-template-columns: repeat(2, 1fr); }
   .dash-stats { grid-template-columns: repeat(2, 1fr); }
+  .dash-scroll-hint { display: block; } /* table (min-width 760px) now scrolls — cue it */
 }
 @media (max-width: 460px) {
   .dash-account-row { grid-template-columns: 1fr; }
