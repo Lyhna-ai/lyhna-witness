@@ -1,7 +1,7 @@
 ---
 type: "Lyhna Witnessed Step"
 title: "Step 1 — filesystem.read_file"
-description: "The agent's account matches what the witness observed."
+description: "The witnessed tool action matches the agent's claim. The stated outcome — \"read the Q2 metrics spec\" — is the agent's account, not independently witnessed."
 tags:
   - "lyhna"
   - "witnessed-handoff"
@@ -32,8 +32,8 @@ handoff_resource: "../handoffs/agent-team.md"
 
 **Labels:** [SUPPORTED](../labels/SUPPORTED.md)
 
-**Contract:** Research agent's account matches what the witness observed.
+**Contract:** Research agent: The witnessed tool action matches the agent's claim. The stated outcome — "read the Q2 metrics spec" — is the agent's account, not independently witnessed.
 
-**Note:** The agent's account matches what the witness observed.
+**Note:** The witnessed tool action matches the agent's claim. The stated outcome — "read the Q2 metrics spec" — is the agent's account, not independently witnessed.
 
 Part of [Witnessed Handoff: Prepare and send the Q2 client report (parent agent dispatched a research and a writer subagent).](../handoffs/agent-team.md).

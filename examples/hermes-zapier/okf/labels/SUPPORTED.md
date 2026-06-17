@@ -19,6 +19,6 @@ handoff_resource: "../handoffs/hermes-zapier.md"
 The agent's account matches what the tool-call witness observed.
 
 ## Steps carrying this label
-- [Step 3](../steps/step-003.md): The agent's account matches what the witness observed.
+- [Step 3](../steps/step-003.md): The witnessed tool action matches the agent's claim. The stated outcome — "sent" — is the agent's account, not independently witnessed.
 
 Part of [Witnessed Handoff: Draft the client onboarding doc, save it to the client's Google Drive, and confirm by email.](../handoffs/hermes-zapier.md).

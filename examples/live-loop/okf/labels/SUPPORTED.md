@@ -19,7 +19,7 @@ handoff_resource: "../handoffs/live-loop.md"
 The agent's account matches what the tool-call witness observed.
 
 ## Steps carrying this label
-- [Step 1](../steps/step-001.md): The agent's account matches what the witness observed.
-- [Step 2](../steps/step-002.md): The agent's account matches what the witness observed.
+- [Step 1](../steps/step-001.md): The witnessed tool action matches the agent's claim. The stated outcome — "patched the checkout rounding bug" — is the agent's account, not independently witnessed.
+- [Step 2](../steps/step-002.md): The witnessed tool action matches the agent's claim. The stated outcome — "all checkout tests pass" — is the agent's account, not independently witnessed.
 
 Part of [Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client](../handoffs/live-loop.md).

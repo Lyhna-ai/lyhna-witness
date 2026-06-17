@@ -11,7 +11,7 @@ Prepare and send the Q2 client report (parent agent dispatched a research and a 
 - **Step 1** `SUPPORTED`
   - Agent claimed: read_file in filesystem
   - Witness saw: filesystem.read_file (ok)
-  - The agent's account matches what the witness observed.
+  - The witnessed tool action matches the agent's claim. The stated outcome — "read the Q2 metrics spec" — is the agent's account, not independently witnessed.
   - Contract: by Research agent · status: supported
 - **Step 2** `UNSUPPORTED NEEDS_EVIDENCE`
   - Agent claimed: read_file in filesystem
@@ -40,7 +40,7 @@ _Attributed from captured evidence only — Lyhna witnesses tool calls routed th
 - **Parent agent** (`orchestrator-1`) — step 4 — ⚠ not all supported — branch status: unsupported
 
 ## Supported Work
-- Step 1: The agent's account matches what the witness observed.
+- Step 1: The witnessed tool action matches the agent's claim. The stated outcome — "read the Q2 metrics spec" — is the agent's account, not independently witnessed.
 
 ## Unsupported or Missing Evidence
 - Step 2: The agent claimed a "read_file" action in filesystem, but the witness saw no tool call for this step — there is no evidence it actually happened.

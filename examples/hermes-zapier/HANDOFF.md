@@ -19,7 +19,7 @@ Draft the client onboarding doc, save it to the client's Google Drive, and confi
 - **Step 3** `SUPPORTED`
   - Agent claimed: send_confirmation in gmail
   - Witness saw: gmail.send_confirmation (sent)
-  - The agent's account matches what the witness observed.
+  - The witnessed tool action matches the agent's claim. The stated outcome — "sent" — is the agent's account, not independently witnessed.
 
 ## Systems Touched
 - zapier
@@ -27,7 +27,7 @@ Draft the client onboarding doc, save it to the client's Google Drive, and confi
 - gmail
 
 ## Supported Work
-- Step 3: The agent's account matches what the witness observed.
+- Step 3: The witnessed tool action matches the agent's claim. The stated outcome — "sent" — is the agent's account, not independently witnessed.
 
 ## Unsupported or Missing Evidence
 - Step 2: The agent claimed a "share_with_client" action in google_drive, but the witness saw no tool call for this step — there is no evidence it actually happened.

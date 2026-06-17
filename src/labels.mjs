@@ -269,10 +269,22 @@ export function computeStepLabels(step) {
     );
   }
 
-  // 4) Agreement.
+  // 4) Agreement. The witnessed tool action matches the claim. If the agent also stated a RESULT, the
+  //    note must NOT let that outcome read as witnessed: Lyhna corroborated the action that crossed the
+  //    boundary, not the outcome (THESIS §6 — it does not verify results). So name the result as the
+  //    agent's account, explicitly not independently witnessed, rather than implying the whole "account
+  //    matches what the witness observed."
   if (!failed && !mismatch && !operationUnverified && !actionUnverified) {
     labels.push(L.SUPPORTED);
-    notes.push(`The agent's account matches what the witness observed.`);
+    const result = claimed?.result !== undefined && claimed?.result !== null ? String(claimed.result).trim() : "";
+    if (result) {
+      notes.push(
+        `The witnessed tool action matches the agent's claim. The stated outcome — "${result}" — is the ` +
+          `agent's account, not independently witnessed.`
+      );
+    } else {
+      notes.push(`The agent's account matches what the witness observed.`);
+    }
   }
 
   return finalize(step, labels, notes, claimed, witnessed);

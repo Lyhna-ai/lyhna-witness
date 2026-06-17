@@ -1,7 +1,7 @@
 ---
 type: "Lyhna Witnessed Step"
 title: "Step 2 — test_runner.run_tests"
-description: "The agent's account matches what the witness observed."
+description: "The witnessed tool action matches the agent's claim. The stated outcome — \"all checkout tests pass\" — is the agent's account, not independently witnessed."
 tags:
   - "lyhna"
   - "witnessed-handoff"
@@ -26,6 +26,6 @@ handoff_resource: "../handoffs/live-loop.md"
 
 **Labels:** [SUPPORTED](../labels/SUPPORTED.md)
 
-**Note:** The agent's account matches what the witness observed.
+**Note:** The witnessed tool action matches the agent's claim. The stated outcome — "all checkout tests pass" — is the agent's account, not independently witnessed.
 
 Part of [Witnessed Handoff: Fix the checkout total rounding bug and confirm the fix with the client](../handoffs/live-loop.md).

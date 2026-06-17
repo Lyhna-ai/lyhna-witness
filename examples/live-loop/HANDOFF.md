@@ -11,11 +11,11 @@ Fix the checkout total rounding bug and confirm the fix with the client
 - **Step 1** `SUPPORTED`
   - Agent claimed: write_file in filesystem
   - Witness saw: filesystem.write_file (ok)
-  - The agent's account matches what the witness observed.
+  - The witnessed tool action matches the agent's claim. The stated outcome — "patched the checkout rounding bug" — is the agent's account, not independently witnessed.
 - **Step 2** `SUPPORTED`
   - Agent claimed: run_tests in test_runner
   - Witness saw: test_runner.run_tests (ok)
-  - The agent's account matches what the witness observed.
+  - The witnessed tool action matches the agent's claim. The stated outcome — "all checkout tests pass" — is the agent's account, not independently witnessed.
 - **Step 3** `UNSUPPORTED NEEDS_EVIDENCE DO_NOT_SEND`
   - Agent claimed: send in gmail
   - Witness saw: nothing observed
@@ -26,8 +26,8 @@ Fix the checkout total rounding bug and confirm the fix with the client
 - test_runner
 
 ## Supported Work
-- Step 1: The agent's account matches what the witness observed.
-- Step 2: The agent's account matches what the witness observed.
+- Step 1: The witnessed tool action matches the agent's claim. The stated outcome — "patched the checkout rounding bug" — is the agent's account, not independently witnessed.
+- Step 2: The witnessed tool action matches the agent's claim. The stated outcome — "all checkout tests pass" — is the agent's account, not independently witnessed.
 
 ## Unsupported or Missing Evidence
 - Step 3: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.

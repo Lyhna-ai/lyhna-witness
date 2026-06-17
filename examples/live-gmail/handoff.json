@@ -40,7 +40,7 @@
       "labels": [
         "SUPPORTED"
       ],
-      "human_note": "The agent's account matches what the witness observed."
+      "human_note": "The witnessed tool action matches the agent's claim. The stated outcome — \"saved a draft for your review\" — is the agent's account, not independently witnessed."
     }
   ],
   "systems_touched": [
