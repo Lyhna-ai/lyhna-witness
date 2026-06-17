@@ -226,27 +226,24 @@ export function computeStepLabels(step) {
     }
   }
 
-  // 3b) The agent named a specific ACTION the witness could NOT corroborate AT ALL. The call returned, but
-  //     the witness resolved NEITHER a sub-action NOR an app from it (a flat / opaque tool name, e.g.
-  //     `gmail`), so it cannot confirm the call performed the claimed action. A bare returned call is
-  //     evidence the call RAN — not that the agent's stated action happened — so it must not read as
-  //     SUPPORTED. This is the non-wrapper twin of `operationUnverified` (2b): same fail-closed stance,
-  //     action axis. A resolved APP without a sub-action does NOT trip this — a wrapper like Apify
-  //     `call-actor` legibly observes the actor/app at the boundary (`witnessed.app` set, `witnessed.action`
-  //     null), which corroborates the operation even though there is no finer action to compare. (The
-  //     RESULT axis is deliberately NOT used here — a successful call carries no witnessed result by design,
-  //     so comparing a claimed result against an always-absent witnessed result would flag every legitimate
-  //     supported step.) Only fires when nothing above already flagged the step.
-  // An app-only wrapper (resolved app, no sub-action — e.g. Apify `call-actor`) corroborates the generic
-  // actor/app INVOCATION at the boundary, but NOT any specific sub-action. So a claim that names that
-  // generic invocation is supported, while a claim of a SPECIFIC action the witness never saw (e.g.
-  // "send" on an opaque actor call) must still fail closed.
+  // 3b) The agent named a specific ACTION the witness could NOT corroborate. The call returned, but the
+  //     witness saw no matching action — so it cannot confirm the call did the claimed action. A bare
+  //     returned call is evidence the call RAN, not that the agent's stated action happened, so it must
+  //     not read as SUPPORTED. This is the non-wrapper twin of `operationUnverified` (2b): same fail-closed
+  //     stance on the action axis. Two carve-outs keep it from over-firing:
+  //       • An app-only wrapper (resolved app, no sub-action — e.g. Apify `call-actor`) corroborates the
+  //         generic actor/app INVOCATION at the boundary. So a claim that names that generic invocation
+  //         (APP_INVOCATION_ACTIONS) is supported, but a SPECIFIC claimed action the witness never saw
+  //         (e.g. "send" on an opaque actor call) still fails closed.
+  //       • Defer only to an ACTION/RESULT mismatch (which already stamps UNSUPPORTED), NOT to a route-only
+  //         path mismatch — a path mismatch alone adds only CLAIMED_ACTUAL_MISMATCH (the work may be fine
+  //         via another route), so a route-mismatched step with an uncorroborated action must still fail
+  //         closed here rather than read as a mere route note.
+  //     (The RESULT axis is deliberately NOT used — a successful call carries no witnessed result by
+  //     design, so comparing a claimed result against an always-absent witnessed result would flag every
+  //     legitimate supported step.)
   const appOnlyWrapper = Boolean(norm(witnessed.app)) && !norm(witnessed.action);
   const claimIsGenericInvocation = appOnlyWrapper && APP_INVOCATION_ACTIONS.has(norm(claimed.action));
-  // Defer only to an ACTION/RESULT mismatch (which already stamps UNSUPPORTED) — NOT to a route-only
-  // path mismatch. A path mismatch alone adds only CLAIMED_ACTUAL_MISMATCH (the work may be fine via
-  // another route), so when the specific action is ALSO uncorroborated the step must still fail closed
-  // on the action axis, or a route-mismatched user-facing send would read as a mere route note.
   const actionUnverified =
     !failed &&
     !actionResult.mismatch &&
