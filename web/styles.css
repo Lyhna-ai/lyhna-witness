@@ -671,6 +671,32 @@ a.btn, .btn { display: inline-block; text-decoration: none; text-align: center; 
   color: var(--ink-faint);
 }
 
+/* install-by-agent prompt block */
+.prompt-wrap { position: relative; margin-top: 8px; }
+.copy-prompt-btn { padding: 7px 14px; font-size: 13.5px; }
+.prompt-block {
+  margin-top: 12px;
+  max-height: 460px;
+  overflow: auto;
+  white-space: pre;
+  tab-size: 2;
+}
+.prompt-wrap .copy-status { margin-left: 10px; }
+
+/* success-state list (shared verdict palette; mirrors the dashboard states) */
+.state-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.state {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fcfdff;
+}
+.state p { margin: 8px 0 0; font-size: 14.5px; color: var(--ink-soft); line-height: 1.5; }
+.state-ok   { border-left-color: var(--ok-line); }
+.state-wait { border-left-color: var(--warn-line); }
+.state-bad  { border-left-color: var(--bad-line); }
+
 /* ---------- PRICING PAGE ---------- */
 .bill-rules { margin: 14px 0 14px; padding-left: 0; list-style: none; display: grid; gap: 10px; }
 .bill-rules li {
