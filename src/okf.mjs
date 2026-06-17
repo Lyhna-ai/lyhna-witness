@@ -77,6 +77,25 @@ const distinctStepLabels = (handoff) =>
   [...new Set((handoff.steps ?? []).flatMap((s) => s.labels ?? []))].sort();
 
 const claimPhrase = (c) => (c ? `${c.action ?? "step"}${c.system ? ` in ${c.system}` : ""}` : "(no claim)");
+
+// The OKF handoff concept's agent-attribution section. Emitted only when the run carries an agents
+// summary, so a plain run's bundle is byte-identical. Attribution is from captured evidence only.
+function okfAgentsSection(handoff) {
+  if (!handoff.agents?.length) return [];
+  const rows = handoff.agents.map((a) => {
+    const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
+    const flag = a.all_supported
+      ? "attributed steps supported"
+      : `not all supported — branch status: ${(a.nonsupported_statuses ?? []).join(", ") || "unknown"}`;
+    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${flag}`;
+  });
+  return [
+    `## Agents`,
+    `_Attributed from captured evidence only — an agent whose tool path was not routed through Lyhna does not appear._`,
+    ...rows,
+    ``
+  ];
+}
 const witnessPhrase = (w) =>
   w
     ? `${w.system ?? "?"}${w.app ? ` → ${w.app}` : ""}${w.action ? `.${w.action}` : ""}` +
@@ -129,6 +148,8 @@ export function renderOkfBundle(handoff, options = {}) {
       ["timestamp", ts],
       ...summaryFields,
       ["lyhna_labels", labels],
+      ["parent_loop_id", handoff.parent_loop_id],
+      ["receipt_id", handoff.receipt_id],
       ["handoff_resource", `${name}.md`],
       ["proof_refs", handoff.proof_refs ?? undefined]
     ]);
@@ -144,6 +165,7 @@ export function renderOkfBundle(handoff, options = {}) {
       `**Summary:** ${summary.total_steps ?? 0} steps · ${summary.supported ?? 0} supported · ` +
         `${summary.mismatches ?? 0} mismatch · ${summary.unsupported ?? 0} unsupported · ${summary.do_not_send ?? 0} do-not-send`,
       ``,
+      ...okfAgentsSection(handoff),
       `## Claimed vs. Actual (by step)`,
       ...(handoff.steps ?? []).map(
         (s) =>
@@ -174,6 +196,9 @@ export function renderOkfBundle(handoff, options = {}) {
     const sysAction =
       `${claimed?.system ?? witnessed?.system ?? "?"}.${claimed?.action ?? witnessed?.action ?? "step"}`;
     const stepTitle = `Step ${s.index + 1} — ${sysAction}`;
+    // Claim-to-action contract fields, emitted ONLY when the step carries a contract (frontmatter()
+    // skips null/undefined pairs, so a plain run's step concept is byte-identical to before).
+    const c = s.contract ?? null;
     const fm = frontmatter([
       ["type", OKF_LYHNA_TYPES.STEP],
       ["title", stepTitle],
@@ -187,6 +212,13 @@ export function renderOkfBundle(handoff, options = {}) {
       ["claimed_action", claimed?.action],
       ["witnessed_system", witnessed?.system],
       ["witnessed_action", witnessed?.action],
+      ["agent_id", c?.agent_id],
+      ["subagent_role", c?.subagent_role],
+      ["contract_status", c?.status],
+      ["link_basis", c?.link_basis],
+      ["claimed_action_family", c?.claimed_action_family],
+      ["observed_action_family", c?.observed_action_family],
+      ["artifact_id", c?.artifact_id],
       ["handoff_resource", `../${handoffRel}`]
     ]);
     const body = [
@@ -198,6 +230,7 @@ export function renderOkfBundle(handoff, options = {}) {
       ``,
       `**Labels:** ${(s.labels ?? []).map((l) => `[${l}](../labels/${l}.md)`).join(", ") || "_(none)_"}`,
       ``,
+      ...(c ? [`**Contract:** ${c.reader_explanation}`, ``] : []),
       `**Note:** ${s.human_note ?? ""}`,
       ``,
       `Part of [${title}](../${handoffRel}).`,
@@ -258,6 +291,17 @@ export function renderOkfBundle(handoff, options = {}) {
     );
     const gated = (handoff.steps ?? []).filter((s) => (s.labels ?? []).includes("NEEDS_HUMAN_APPROVAL"));
     const proofEntries = proofRefPairs(handoff.proof_refs);
+    // Carry the agent attribution into the OKF's OWN continuation prompt so an OKF-only consumer gets
+    // the same subagent context the canonical next-ai-prompt does (captured evidence only; warns off
+    // any non-supported branch). Empty on a plain run, so a non-spine bundle is byte-identical.
+    const agentLines = (handoff.agents ?? []).map((a) => {
+      const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
+      return `- ${label} (${a.agent_id}): step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
+        a.all_supported
+          ? "attributed steps are supported"
+          : `not all supported (${(a.nonsupported_statuses ?? []).join(", ")}); do not trust those claims without confirmation`
+      }`;
+    });
     const body = [
       `# Safe Continuation Prompt`,
       ``,
@@ -265,6 +309,13 @@ export function renderOkfBundle(handoff, options = {}) {
       ``,
       `**Objective:** ${handoff.objective || "(none stated)"}`,
       ``,
+      ...(agentLines.length
+        ? [
+            `Agent attribution (captured evidence only — an agent not routed through Lyhna does not appear):`,
+            ...agentLines,
+            ``
+          ]
+        : []),
       `The operator declared these settled (Lyhna did NOT witness or verify them) — do not re-litigate unless new evidence appears:`,
       ...listOr(settledAll.map((x) => `- ${x}`)),
       ``,

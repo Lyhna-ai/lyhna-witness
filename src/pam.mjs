@@ -94,6 +94,19 @@ function witnessView(witnessed) {
 
 const hasProofRefs = (p) => p && typeof p === "object" && !Array.isArray(p) && Object.keys(p).length > 0;
 
+// The contract attribution carried on an episodic memory item — only the fields actually present, and
+// only when the step has a contract. Returns {} for a plain step, so the item is byte-identical to
+// before. The agent's attribution never overrides evidence_status (which still governs trust).
+function contractView(c) {
+  if (!c) return {};
+  const out = { contract_status: c.status, link_basis: c.link_basis };
+  if (c.agent_id !== undefined) out.agent_id = c.agent_id;
+  if (c.subagent_role !== undefined) out.subagent_role = c.subagent_role;
+  if (c.claim_id !== undefined) out.claim_id = c.claim_id;
+  if (c.artifact_id !== undefined) out.artifact_id = c.artifact_id;
+  return out;
+}
+
 /**
  * Project a witnessed-handoff/v1 object into a PAM-shaped memory bundle.
  * @param {object} handoff  the object returned by buildWitnessedHandoff.
@@ -195,6 +208,10 @@ export function renderPamBundle(handoff, options = {}) {
         evidence_status: primaryEvidence(labels),
         labels,
         supported: isSupported(s),
+        // Claim-to-action attribution, only when the step carries a contract (plain runs unchanged).
+        // It rides ALONGSIDE evidence_status, so an importer attributes the claim without ever reading
+        // the agent's attribution as proof the work happened.
+        ...contractView(s.contract),
         content: s.human_note ?? "",
         claimed: claimView(s.claimed ?? null), // the agent's account — not fact
         witnessed: witnessView(s.witnessed ?? null) // what the witness actually saw
@@ -370,6 +387,11 @@ export function renderPamBundle(handoff, options = {}) {
     memory_total: memories.length,
     memories_file: "memories.jsonl",
     handoff_resource: handoffResource,
+    // Claim-to-action spine, run level — only when present (plain runs unchanged). `agents` is captured
+    // evidence only: an agent not routed through Lyhna never appears.
+    ...(handoff.parent_loop_id ? { parent_loop_id: handoff.parent_loop_id } : {}),
+    ...(handoff.receipt_id ? { receipt_id: handoff.receipt_id } : {}),
+    ...(handoff.agents?.length ? { agents: handoff.agents } : {}),
     ...(proofRefs ? { proof_refs: proofRefs } : {}),
     ...(ts ? { timestamp: ts } : {}),
     honesty_ceiling: {

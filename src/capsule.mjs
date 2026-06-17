@@ -155,6 +155,11 @@ export function renderCapsule(handoff, options = {}) {
         do_not_send: summary.do_not_send ?? 0
       }
     },
+    // Claim-to-action spine, run level — only when present (plain capsules unchanged). `agents` is
+    // captured evidence only: an agent not routed through Lyhna never appears.
+    ...(handoff.parent_loop_id ? { parent_loop_id: handoff.parent_loop_id } : {}),
+    ...(handoff.receipt_id ? { receipt_id: handoff.receipt_id } : {}),
+    ...(handoff.agents?.length ? { agents: handoff.agents } : {}),
     artifacts,
     trust_boundaries: Object.fromEntries(boundariesPresent.map((b) => [b, BOUNDARY_MEANING[b]])),
     honesty_ceiling: HONESTY_CEILING,
@@ -165,6 +170,24 @@ export function renderCapsule(handoff, options = {}) {
     "CAPSULE.md": renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts }),
     "capsule.json": JSON.stringify(manifest, null, 2) + "\n"
   };
+}
+
+// The capsule index's agent line, emitted only on an agent-attributed run (plain capsules unchanged).
+function capsuleAgentsSection(handoff) {
+  if (!handoff.agents?.length) return [];
+  const rows = handoff.agents.map((a) => {
+    const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
+    const flag = a.all_supported
+      ? "all attributed steps supported"
+      : `⚠ not all supported — branch status: ${(a.nonsupported_statuses ?? []).join(", ") || "unknown"}`;
+    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${flag}`;
+  });
+  return [
+    `## Agents witnessed`,
+    `_Attributed from captured evidence only — an agent whose tool path was not routed through Lyhna does not appear._`,
+    ...rows,
+    ``
+  ];
 }
 
 function renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts }) {
@@ -190,6 +213,7 @@ function renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts
     `**Summary:** ${summary.total_steps ?? 0} steps · ${summary.supported ?? 0} supported · ` +
       `${summary.mismatches ?? 0} mismatch · ${summary.unsupported ?? 0} unsupported · ${summary.do_not_send ?? 0} do-not-send`,
     ``,
+    ...capsuleAgentsSection(handoff),
     `## What's in this capsule`,
     ``,
     `| File | What it is | For | Trust boundary | Description |`,
