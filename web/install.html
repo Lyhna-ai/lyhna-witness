@@ -65,7 +65,7 @@ STEP 2 — Quick-connect so MY agent's calls are witnessed (stdio):
    Add a server to my MCP client config (.mcp.json) that wraps an MCP server I already use.
    command = "npx", args = ["-y","@lyhna/mcp","stdio"], and point it at my server with
    LYHNA_PROXY_UPSTREAM_COMMAND / LYHNA_PROXY_UPSTREAM_ARGS_JSON; LYHNA_PROXY_BIND_MODE=demo
-   runs offline with no key. Then tell me to reload my MCP client. Now my calls to that
+   needs no key and makes no Lyhna-hosted call. Then tell me to reload my MCP client. Now my calls to that
    server route through Lyhna and earn a sealed receipt chain.
    (This connects and witnesses. It does NOT by itself produce the rendered
    claimed-vs-witnessed capsule — that's Step 3.)
@@ -93,7 +93,7 @@ STEP 3 — My first claimed-vs-witnessed capsule (guided, standing service):
       <h2>What actually works today</h2>
       <ul class="bill-rules">
         <li class="bill-yes"><strong>The proxy is on npm.</strong> <span class="mono">npx -y @lyhna/mcp</span> wraps an MCP server you already use. No rewrite, no new platform.</li>
-        <li class="bill-yes"><strong>Demo mode needs no key.</strong> <span class="mono">LYHNA_PROXY_BIND_MODE=demo</span> runs fully offline — same flow, same artifacts — but receipts are deliberately <em>unsigned</em>.</li>
+        <li class="bill-yes"><strong>Demo mode needs no key.</strong> <span class="mono">LYHNA_PROXY_BIND_MODE=demo</span> decides locally and sends nothing <em>to Lyhna</em> — the proxy makes no hosted call (your upstream tools still do their own network I/O). Same flow, same artifacts; receipts are deliberately <em>unsigned</em>.</li>
         <li class="bill-no"><strong>Signed receipts need a beta key.</strong> A <span class="mono">LYHNA_API_KEY</span> connects to Lyhna's hosted witness service, which is invite-only during the private beta.</li>
         <li class="bill-no"><strong>The receipt renderer isn't on npm yet.</strong> The witness CLI (<span class="mono">node src/cli.mjs</span>) runs from a source clone for now — packaging it is part of what the beta is for.</li>
         <li class="bill-no"><strong>No plugin store, no one-command install.</strong> Setup is the guided sequence above. We won't pretend otherwise.</li>

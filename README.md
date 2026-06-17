@@ -44,8 +44,9 @@ which **is** on npm (`npx -y @lyhna/mcp`). There are two surfaces, and they do d
   (`export-pack`) require the **standing proxy + supervisor control channel** — the guided **Path B** in
   the proxy's [`docs/QUICKSTART.md`](https://github.com/Lyhna-ai/lyhna-mcp-proxy/blob/master/docs/QUICKSTART.md)
   (open a loop → run with claim capture → close/seal → `export-pack`).
-- **Demo vs. signed — and the privacy boundary.** `LYHNA_PROXY_BIND_MODE=demo` runs offline with no key,
-  decides locally, and sends nothing off your machine (receipts are deliberately *unsigned*). A beta
+- **Demo vs. signed — and the privacy boundary.** `LYHNA_PROXY_BIND_MODE=demo` needs no key, decides
+  locally, and sends nothing **to Lyhna** — the proxy makes no hosted call (your upstream tools still do
+  their own normal network I/O). Receipts in demo mode are deliberately *unsigned*. A beta
   `LYHNA_API_KEY` produces signed receipts but routes each tool call through Lyhna's **hosted** service to
   make its decision — so signed mode is not just an unsigned-vs-signed toggle; it sends your calls to the
   hosted witness service. Choose per how sensitive your tool arguments are (see the proxy's install/privacy notes).
