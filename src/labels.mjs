@@ -221,20 +221,24 @@ export function computeStepLabels(step) {
     }
   }
 
-  // 3b) The agent named a specific ACTION the witness could NOT corroborate. The call returned, but the
-  //     witnessed tool name yielded no action (a flat / opaque tool name, e.g. `gmail`), so the witness
-  //     cannot confirm the call performed the claimed action. A bare returned call is evidence the call
-  //     RAN — not that the agent's stated action happened — so it must not read as SUPPORTED. This is the
-  //     non-wrapper twin of `operationUnverified` (2b): same fail-closed stance, action axis. (The RESULT
-  //     axis is deliberately NOT used here — a successful call carries no witnessed result by design, so
-  //     comparing a claimed result against an always-absent witnessed result would flag every legitimate
+  // 3b) The agent named a specific ACTION the witness could NOT corroborate AT ALL. The call returned, but
+  //     the witness resolved NEITHER a sub-action NOR an app from it (a flat / opaque tool name, e.g.
+  //     `gmail`), so it cannot confirm the call performed the claimed action. A bare returned call is
+  //     evidence the call RAN — not that the agent's stated action happened — so it must not read as
+  //     SUPPORTED. This is the non-wrapper twin of `operationUnverified` (2b): same fail-closed stance,
+  //     action axis. A resolved APP without a sub-action does NOT trip this — a wrapper like Apify
+  //     `call-actor` legibly observes the actor/app at the boundary (`witnessed.app` set, `witnessed.action`
+  //     null), which corroborates the operation even though there is no finer action to compare. (The
+  //     RESULT axis is deliberately NOT used here — a successful call carries no witnessed result by design,
+  //     so comparing a claimed result against an always-absent witnessed result would flag every legitimate
   //     supported step.) Only fires when nothing above already flagged the step.
   const actionUnverified =
     !failed &&
     !mismatch &&
     !operationUnverified &&
     Boolean(norm(claimed.action)) &&
-    !norm(witnessed.action);
+    !norm(witnessed.action) &&
+    !norm(witnessed.app);
   if (actionUnverified) {
     labels.push(L.NEEDS_EVIDENCE, L.UNSUPPORTED);
     if (userFacing) labels.push(L.DO_NOT_SEND);

@@ -246,3 +246,15 @@ test("action-axis only: a claim with NO action on a flat tool stays SUPPORTED (r
   });
   assert.ok(r.labels.includes(L.SUPPORTED));
 });
+
+// REGRESSION (Codex P2 on #37): a wrapper that resolves an APP but no sub-action (Apify `call-actor`)
+// corroborates the operation at the boundary — the action-axis guard must NOT flag it unsafe.
+test("wrapper with resolved app but no sub-action (Apify call-actor) stays SUPPORTED", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "apify_web-scraper", via: "apify", action: "call_actor" },
+    witnessed: { system: "apify", app: "apify_web-scraper", action: null, returned: true, wrapper_family: "apify" }
+  });
+  assert.ok(r.labels.includes(L.SUPPORTED), "an app-corroborated wrapper call must stay supported");
+  assert.ok(!r.labels.includes(L.UNSUPPORTED));
+});
