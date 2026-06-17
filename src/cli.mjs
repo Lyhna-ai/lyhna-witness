@@ -18,9 +18,12 @@
 //   lyhna-witness <input.json> [outDir] --pam    ALSO write the PAM-shaped memory bundle under <outDir>/pam/.
 //   lyhna-witness -                          read the input JSON from stdin instead of a file.
 //
-// --okf / --pam are additive: without them the output is exactly the handoff trio (unchanged). The
-// exports are deterministic projections of the SAME handoff (no clock, no extra witnessing) — every OKF
-// step / PAM item carries the receipt's evidence labels, so a consumer inherits the honesty ceiling.
+// --okf / --pam are additive: without them the output is the handoff trio plus the capsule index
+// (CAPSULE.md + capsule.json). The capsule index is the bundle's own table of contents — it names
+// every artifact and the trust boundary it carries, so the deliverable explains itself; it asserts
+// nothing new about the work. The exports are deterministic projections of the SAME handoff (no clock,
+// no extra witnessing) — every OKF step / PAM item carries the receipt's evidence labels, so a consumer
+// inherits the honesty ceiling.
 
 import { mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -29,6 +32,7 @@ import { runFromWitnessedEvents } from "./witnessed-event.mjs";
 import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt } from "./generate.mjs";
 import { renderOkfBundle } from "./okf.mjs";
 import { renderPamBundle } from "./pam.mjs";
+import { renderCapsule } from "./capsule.mjs";
 
 function fail(message, code = 2) {
   process.stderr.write(`lyhna-witness: ${message}\n`);
@@ -173,6 +177,19 @@ try {
   }
 } catch (err) {
   fail(`cannot write exports to '${outDir}': ${err.message}`);
+}
+
+// The capsule index (CAPSULE.md + capsule.json): the bundle's self-describing table of contents. It
+// is written for every capsule and lists exactly the carrier bundles that were actually emitted
+// (`extraExports` reflects the --okf/--pam flags), so it never advertises a file that is not present.
+// It is a tool-generated description of the already-rendered handoff and carries no new witnessed claim.
+try {
+  const exportsPresent = extraExports.map((e) => e.replace(/\/$/, ""));
+  for (const [rel, content] of Object.entries(renderCapsule(handoff, { name: "handoff", exports: exportsPresent }))) {
+    writeFileSync(join(outDir, rel), content);
+  }
+} catch (err) {
+  fail(`cannot write capsule index to '${outDir}': ${err.message}`);
 }
 
 const s = handoff.summary;

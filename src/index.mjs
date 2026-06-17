@@ -13,3 +13,4 @@ export {
 } from "./witnessed-event.mjs";
 export { OKF_LYHNA_TYPES, renderOkfBundle } from "./okf.mjs";
 export { PAM_MEMORY_TYPES, PAM_PROJECTION_SCHEMA, renderPamBundle } from "./pam.mjs";
+export { CAPSULE_SCHEMA, renderCapsule } from "./capsule.mjs";
