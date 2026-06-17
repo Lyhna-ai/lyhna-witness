@@ -1,0 +1,79 @@
+{
+  "objective": "Prepare and send the Q2 client report (parent agent dispatched a research and a writer subagent).",
+  "parent_loop_id": "loop-q2-client-report",
+  "receipt_id": "rcpt-q2-2026-0617",
+  "steps": [
+    {
+      "agent_id": "research-1",
+      "subagent_role": "research",
+      "claim": {
+        "system": "filesystem",
+        "action": "read_file",
+        "result": "read the Q2 metrics spec",
+        "claim_id": "claim-research-spec",
+        "claim_turn_id": "turn-1"
+      },
+      "event": {
+        "call": { "toolName": "mcp__filesystem__read_file", "call_id": "call-1" },
+        "verdict": { "kind": "APPROVED" },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:1f3a9c2b7e4d6058a1c0b9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8"
+        },
+        "turn_ref": "turn-1"
+      }
+    },
+    {
+      "agent_id": "research-1",
+      "subagent_role": "research",
+      "claim": {
+        "system": "filesystem",
+        "action": "read_file",
+        "result": "also checked the latest pricing config",
+        "claim_id": "claim-research-config",
+        "claim_turn_id": "turn-2"
+      },
+      "event": null
+    },
+    {
+      "agent_id": "writer-1",
+      "subagent_role": "writer",
+      "claim": {
+        "system": "gmail",
+        "action": "send",
+        "result": "emailed the client the Q2 report",
+        "user_facing": true,
+        "claim_id": "claim-writer-send",
+        "claim_turn_id": "turn-3"
+      },
+      "event": {
+        "call": { "toolName": "mcp__Gmail__create_draft", "call_id": "call-3" },
+        "verdict": { "kind": "APPROVED" },
+        "runtime_report": {
+          "returned": true,
+          "result_hash": "sha256:2b4c6d8e0f1a3c5d7e9f0a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f"
+        },
+        "turn_ref": "turn-3"
+      }
+    },
+    {
+      "agent_id": "orchestrator-1",
+      "subagent_role": "parent",
+      "claim": {
+        "system": "slack",
+        "action": "post_message",
+        "result": "told the client the Q2 report is complete and sent",
+        "user_facing": true,
+        "claim_id": "claim-parent-complete",
+        "claim_turn_id": "turn-4"
+      },
+      "event": null
+    }
+  ],
+  "settled": [
+    "Q2 metrics spec located and read (witnessed)"
+  ],
+  "open_questions": [
+    "Did the writer subagent intend to send, or only draft? The witness saw only a draft."
+  ]
+}

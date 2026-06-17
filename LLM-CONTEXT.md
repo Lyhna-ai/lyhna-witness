@@ -210,6 +210,7 @@ npm run demo:live        # examples/zapier-google
 npm run demo:real        # examples/live-google
 npm run demo:gmail       # examples/live-gmail
 npm run demo:live-loop   # examples/live-loop  (the canonical receipt)
+npm run demo:agent-team  # examples/agent-team (parent + subagents; spine attribution)
 node web/build-data.mjs  # regenerate web/data/handoff.js from examples/live-loop/handoff.json
 ```
 CLI: `node src/cli.mjs <witness-input.json> [outDir] [--gate] [--okf] [--pam]`. By default it writes the
@@ -282,6 +283,8 @@ second engineer; don't merge around it.
   capsule.json). `src/contract.mjs` — the claim-to-action receipt contract (spine). `src/cli.mjs` —
   the `lyhna-witness` CLI.
 - `demo/*.mjs` — regenerate `examples/*`. `examples/live-loop/` — the canonical receipt.
+  `examples/agent-team/` — the parent+subagent capsule (spine attribution incl. an unwitnessed branch;
+  `npm run demo:agent-team`).
 - `web/` — the live demo (see §5). `.github/workflows/{ci.yml,pages.yml}`.
 
 **lyhna-mcp-proxy**

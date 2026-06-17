@@ -1,0 +1,216 @@
+{
+  "schema": "witnessed-handoff/v1",
+  "objective": "Prepare and send the Q2 client report (parent agent dispatched a research and a writer subagent).",
+  "steps": [
+    {
+      "index": 0,
+      "claimed": {
+        "system": "filesystem",
+        "action": "read_file",
+        "result": "read the Q2 metrics spec",
+        "claim_id": "claim-research-spec",
+        "claim_turn_id": "turn-1"
+      },
+      "witnessed": {
+        "system": "filesystem",
+        "action": "read_file",
+        "returned": true,
+        "result_hash": "sha256:1f3a9c2b7e4d6058a1c0b9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8"
+      },
+      "labels": [
+        "SUPPORTED"
+      ],
+      "human_note": "The agent's account matches what the witness observed.",
+      "contract": {
+        "agent_id": "research-1",
+        "subagent_role": "research",
+        "claim_id": "claim-research-spec",
+        "claim_turn_id": "turn-1",
+        "turn_ref": "turn-1",
+        "call_id": "call-1",
+        "claimed_action_family": "read",
+        "observed_action_family": "read",
+        "claimed_result_state": "claimed_completed",
+        "observed_result_state": "returned",
+        "status": "supported",
+        "link_basis": "explicit",
+        "reader_explanation": "Research agent's account matches what the witness observed."
+      }
+    },
+    {
+      "index": 1,
+      "claimed": {
+        "system": "filesystem",
+        "action": "read_file",
+        "result": "also checked the latest pricing config",
+        "claim_id": "claim-research-config",
+        "claim_turn_id": "turn-2"
+      },
+      "witnessed": null,
+      "labels": [
+        "UNSUPPORTED",
+        "NEEDS_EVIDENCE"
+      ],
+      "human_note": "The agent claimed a \"read_file\" action in filesystem, but the witness saw no tool call for this step — there is no evidence it actually happened.",
+      "contract": {
+        "agent_id": "research-1",
+        "subagent_role": "research",
+        "claim_id": "claim-research-config",
+        "claim_turn_id": "turn-2",
+        "claimed_action_family": "read",
+        "observed_action_family": null,
+        "claimed_result_state": "claimed_completed",
+        "observed_result_state": "no_observed_call",
+        "status": "unsupported",
+        "link_basis": "unwitnessed",
+        "reader_explanation": "Research agent claimed a \"read_file\" action in filesystem, but the witness saw no tool call for this step — there is no evidence it actually happened."
+      }
+    },
+    {
+      "index": 2,
+      "claimed": {
+        "system": "gmail",
+        "action": "send",
+        "result": "emailed the client the Q2 report",
+        "user_facing": true,
+        "claim_id": "claim-writer-send",
+        "claim_turn_id": "turn-3"
+      },
+      "witnessed": {
+        "system": "gmail",
+        "action": "create_draft",
+        "returned": true,
+        "result_hash": "sha256:2b4c6d8e0f1a3c5d7e9f0a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f"
+      },
+      "labels": [
+        "CLAIMED_ACTUAL_MISMATCH",
+        "UNSUPPORTED",
+        "DO_NOT_SEND"
+      ],
+      "human_note": "The agent claimed a \"send\" action, but the witness saw \"create_draft\". What it did or got back does not match what the witness observed.",
+      "contract": {
+        "agent_id": "writer-1",
+        "subagent_role": "writer",
+        "claim_id": "claim-writer-send",
+        "claim_turn_id": "turn-3",
+        "turn_ref": "turn-3",
+        "call_id": "call-3",
+        "claimed_action_family": "send",
+        "observed_action_family": "write",
+        "claimed_result_state": "claimed_completed",
+        "observed_result_state": "returned",
+        "status": "unsupported",
+        "link_basis": "explicit",
+        "reader_explanation": "Writer agent claimed a \"send\" action, but the witness saw \"create_draft\". What it did or got back does not match what the witness observed."
+      }
+    },
+    {
+      "index": 3,
+      "claimed": {
+        "system": "slack",
+        "action": "post_message",
+        "result": "told the client the Q2 report is complete and sent",
+        "user_facing": true,
+        "claim_id": "claim-parent-complete",
+        "claim_turn_id": "turn-4"
+      },
+      "witnessed": null,
+      "labels": [
+        "UNSUPPORTED",
+        "NEEDS_EVIDENCE",
+        "DO_NOT_SEND"
+      ],
+      "human_note": "The agent claimed a \"post_message\" action in slack, but the witness saw no tool call for this step — there is no evidence it actually happened.",
+      "contract": {
+        "agent_id": "orchestrator-1",
+        "subagent_role": "parent",
+        "claim_id": "claim-parent-complete",
+        "claim_turn_id": "turn-4",
+        "claimed_action_family": "send",
+        "observed_action_family": null,
+        "claimed_result_state": "claimed_completed",
+        "observed_result_state": "no_observed_call",
+        "status": "unsupported",
+        "link_basis": "unwitnessed",
+        "reader_explanation": "Parent agent claimed a \"post_message\" action in slack, but the witness saw no tool call for this step — there is no evidence it actually happened."
+      }
+    }
+  ],
+  "systems_touched": [
+    "filesystem",
+    "gmail"
+  ],
+  "summary": {
+    "total_steps": 4,
+    "supported": 1,
+    "mismatches": 1,
+    "unsupported": 3,
+    "do_not_send": 2
+  },
+  "settled": [
+    "Q2 metrics spec located and read (witnessed)"
+  ],
+  "open_questions": [
+    "Did the writer subagent intend to send, or only draft? The witness saw only a draft."
+  ],
+  "next_actions": [
+    "Confirm step 2 actually happened — the agent claimed \"read_file\" in filesystem but the witness saw no tool call — before telling anyone it is done.",
+    "Reconcile step 3: the agent's account of \"send\" in gmail does not match what the witness saw.",
+    "Confirm step 4 actually happened — the agent claimed \"post_message\" in slack but the witness saw no tool call — before telling anyone it is done."
+  ],
+  "needs_human_approval": [],
+  "do_not_re_litigate": [],
+  "safe_to_continue": false,
+  "proof_refs": null,
+  "parent_loop_id": "loop-q2-client-report",
+  "receipt_id": "rcpt-q2-2026-0617",
+  "agents": [
+    {
+      "agent_id": "research-1",
+      "subagent_role": "research",
+      "steps": [
+        1,
+        2
+      ],
+      "statuses": [
+        "supported",
+        "unsupported"
+      ],
+      "has_unsupported": true,
+      "all_supported": false,
+      "nonsupported_statuses": [
+        "unsupported"
+      ]
+    },
+    {
+      "agent_id": "writer-1",
+      "subagent_role": "writer",
+      "steps": [
+        3
+      ],
+      "statuses": [
+        "unsupported"
+      ],
+      "has_unsupported": true,
+      "all_supported": false,
+      "nonsupported_statuses": [
+        "unsupported"
+      ]
+    },
+    {
+      "agent_id": "orchestrator-1",
+      "subagent_role": "parent",
+      "steps": [
+        4
+      ],
+      "statuses": [
+        "unsupported"
+      ],
+      "has_unsupported": true,
+      "all_supported": false,
+      "nonsupported_statuses": [
+        "unsupported"
+      ]
+    }
+  ]
+}
