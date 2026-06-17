@@ -16,11 +16,14 @@ trust word, not the headline.) Pages (shared header/footer nav across all five):
   "Demo tools. Real witness loop. Deterministic receipt rules." It renders the **exact committed receipt**
   from `examples/live-loop/handoff.json` via the generated `data/handoff.js`, kept in sync by
   `test/web-data.test.mjs`, so the demo can never drift from the real receipt rules.
-- **`install.html`** — **install by agent**. A copy-paste prompt that wraps an MCP server with the Lyhna
-  proxy (`npx -y @lyhna/mcp stdio`, demo mode + `LYHNA_PROXY_CLAIM_CAPTURE=1`), records a claim, runs a
-  test call, and renders the capsule with the witness CLI. States plainly what works today (proxy on npm;
-  witness renderer from a source clone; signed receipts need a beta key; no plugin store / one-command)
-  and the four setup states (Connected / Waiting / Test receipt created / Outside the witness path).
+- **`install.html`** — **install by agent**. Explains the two real surfaces: quick-connect (stdio,
+  `npx -y @lyhna/mcp stdio`) wraps an MCP server so the agent's calls are witnessed and earn a sealed
+  receipt chain; the full claimed-vs-witnessed **capsule** (claim capture via `record_claim` +
+  `export-pack` → `witness-input.json`) comes from the **standing-service** flow (QUICKSTART Path B), not
+  stdio alone. To see a receipt with no setup, render the bundled sample with the witness CLI. States
+  plainly what works today (proxy on npm; witness renderer from a source clone; signed receipts need a
+  beta key; no plugin store / one-command) and the four setup states (Connected / Waiting / Test receipt
+  created / Outside the witness path).
 - **`pricing.html`** — the billing **model** only (metered by witnessed action). **No numbers** — they
   open with the private beta.
 - **`dashboard.html`** — a **static design preview** of the connected-agents dashboard (account + masked
