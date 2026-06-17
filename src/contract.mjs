@@ -92,10 +92,12 @@ function agentLabel({ agent_id, subagent_role }) {
 // One plain-language sentence, ATTRIBUTED to the agent but BOUNDED to witnessed evidence: it reuses the
 // step's human_note (already ceiling-safe) and only prepends who claimed it. It never asserts more than
 // the note does.
-function readerExplanation({ agent_id, subagent_role }, humanNote, status) {
+function readerExplanation({ agent_id, subagent_role }, humanNote, status, hasClaim = true) {
   const label = agentLabel({ agent_id, subagent_role });
   const note = humanNote && humanNote.trim() ? humanNote.trim() : statusFallbackNote(status);
-  if (!label) return note;
+  // No claim ⇒ no claimant to attribute. An observation-only step (a witnessed call the agent never
+  // claimed) must not be phrased as "<Agent> claimed …" — that would invent authorship of a claim.
+  if (!label || !hasClaim) return note;
   const Label = label.charAt(0).toUpperCase() + label.slice(1);
   // Fold the agent in as the sentence subject when the witnessed note opens with the generic
   // "The agent" (avoids the doubled "Research agent: The agent claimed…"). Otherwise prefix the
@@ -207,7 +209,7 @@ export function buildStepContract(labeledStep, spine = {}) {
   // --- rolled-up status, link basis, and reader-facing explanation (always present) ---
   contract.status = status;
   contract.link_basis = spine.link_basis ?? "ordinal";
-  contract.reader_explanation = readerExplanation(spine, labeledStep.human_note, status);
+  contract.reader_explanation = readerExplanation(spine, labeledStep.human_note, status, Boolean(claimed));
 
   return contract;
 }
@@ -222,11 +224,16 @@ export function summarizeAgents(contractedSteps) {
   const byAgent = new Map();
   for (const s of contractedSteps) {
     const c = s.contract;
-    if (!c || !present(c.agent_id)) continue;
-    const key = c.agent_id;
+    if (!c) continue;
+    // Attribute by agent_id, falling back to subagent_role so a ROLE-ONLY step (a contract that names a
+    // role but no id) still appears in the roster — otherwise a per-step "by Writer agent" footnote could
+    // advertise an agent that is silently missing from the authoritative per-agent summary, hiding a
+    // flagged branch. A step with neither id nor role carries no attribution and is skipped.
+    const key = present(c.agent_id) ? `id:${c.agent_id}` : present(c.subagent_role) ? `role:${c.subagent_role}` : null;
+    if (!key) continue;
     if (!byAgent.has(key)) {
       byAgent.set(key, {
-        agent_id: c.agent_id,
+        ...(present(c.agent_id) ? { agent_id: c.agent_id } : {}),
         ...(c.subagent_role ? { subagent_role: c.subagent_role } : {}),
         steps: [],
         statuses: [],

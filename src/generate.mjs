@@ -199,7 +199,8 @@ function agentAttributionSection(h) {
     .join(" · ");
   const rows = h.agents.map((a) => {
     const label = agentLabelOf(a) ?? a.agent_id;
-    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${agentBranchFlag(a)}`;
+    const idPart = a.agent_id ? ` (\`${a.agent_id}\`)` : "";
+    return `- **${label}**${idPart} — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${agentBranchFlag(a)}`;
   });
   return [
     `## Agent Attribution`,
@@ -324,7 +325,8 @@ function nextPromptAgentLines(h) {
     .join(", ");
   const lines = h.agents.map((a) => {
     const label = agentLabelOf(a) ?? a.agent_id;
-    return `- ${label} (${a.agent_id}): step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
+    const idPart = a.agent_id ? ` (${a.agent_id})` : "";
+    return `- ${label}${idPart}: step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
       a.all_supported
         ? "attributed steps are supported"
         : `not all supported (${(a.nonsupported_statuses ?? []).join(", ")}); do not trust those claims without confirmation`

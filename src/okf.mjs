@@ -84,10 +84,11 @@ function okfAgentsSection(handoff) {
   if (!handoff.agents?.length) return [];
   const rows = handoff.agents.map((a) => {
     const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
+    const idPart = a.agent_id ? ` (\`${a.agent_id}\`)` : "";
     const flag = a.all_supported
       ? "attributed steps supported"
       : `not all supported — branch status: ${(a.nonsupported_statuses ?? []).join(", ") || "unknown"}`;
-    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${flag}`;
+    return `- **${label}**${idPart} — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${flag}`;
   });
   return [
     `## Agents`,
@@ -296,7 +297,8 @@ export function renderOkfBundle(handoff, options = {}) {
     // any non-supported branch). Empty on a plain run, so a non-spine bundle is byte-identical.
     const agentLines = (handoff.agents ?? []).map((a) => {
       const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
-      return `- ${label} (${a.agent_id}): step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
+      const idPart = a.agent_id ? ` (${a.agent_id})` : "";
+      return `- ${label}${idPart}: step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${
         a.all_supported
           ? "attributed steps are supported"
           : `not all supported (${(a.nonsupported_statuses ?? []).join(", ")}); do not trust those claims without confirmation`
