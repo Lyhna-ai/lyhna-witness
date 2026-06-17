@@ -20,7 +20,7 @@ window.LYHNA_HANDOFF = {
       "labels": [
         "SUPPORTED"
       ],
-      "human_note": "The agent's account matches what the witness observed."
+      "human_note": "The witnessed tool action matches the agent's claim. The stated outcome — \"patched the checkout rounding bug\" — is the agent's account, not independently witnessed."
     },
     {
       "index": 1,
@@ -38,7 +38,7 @@ window.LYHNA_HANDOFF = {
       "labels": [
         "SUPPORTED"
       ],
-      "human_note": "The agent's account matches what the witness observed."
+      "human_note": "The witnessed tool action matches the agent's claim. The stated outcome — \"all checkout tests pass\" — is the agent's account, not independently witnessed."
     },
     {
       "index": 2,

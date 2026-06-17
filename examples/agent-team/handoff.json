@@ -20,7 +20,7 @@
       "labels": [
         "SUPPORTED"
       ],
-      "human_note": "The agent's account matches what the witness observed.",
+      "human_note": "The witnessed tool action matches the agent's claim. The stated outcome — \"read the Q2 metrics spec\" — is the agent's account, not independently witnessed.",
       "contract": {
         "agent_id": "research-1",
         "subagent_role": "research",
@@ -34,7 +34,7 @@
         "observed_result_state": "returned",
         "status": "supported",
         "link_basis": "explicit",
-        "reader_explanation": "Research agent's account matches what the witness observed."
+        "reader_explanation": "Research agent: The witnessed tool action matches the agent's claim. The stated outcome — \"read the Q2 metrics spec\" — is the agent's account, not independently witnessed."
       }
     },
     {

@@ -15,13 +15,13 @@ Send the Q3 partnership follow-up to the prospect, and prepare the proposal cove
 - **Step 2** `SUPPORTED`
   - Agent claimed: create_draft in gmail
   - Witness saw: gmail.create_draft (ok)
-  - The agent's account matches what the witness observed.
+  - The witnessed tool action matches the agent's claim. The stated outcome — "saved a draft for your review" — is the agent's account, not independently witnessed.
 
 ## Systems Touched
 - gmail
 
 ## Supported Work
-- Step 2: The agent's account matches what the witness observed.
+- Step 2: The witnessed tool action matches the agent's claim. The stated outcome — "saved a draft for your review" — is the agent's account, not independently witnessed.
 
 ## Unsupported or Missing Evidence
 - Step 1: The agent claimed a "send" action, but the witness saw "create_draft". What it did or got back does not match what the witness observed.

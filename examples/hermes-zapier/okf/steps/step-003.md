@@ -1,7 +1,7 @@
 ---
 type: "Lyhna Witnessed Step"
 title: "Step 3 — gmail.send_confirmation"
-description: "The agent's account matches what the witness observed."
+description: "The witnessed tool action matches the agent's claim. The stated outcome — \"sent\" — is the agent's account, not independently witnessed."
 tags:
   - "lyhna"
   - "witnessed-handoff"
@@ -26,6 +26,6 @@ handoff_resource: "../handoffs/hermes-zapier.md"
 
 **Labels:** [SUPPORTED](../labels/SUPPORTED.md)
 
-**Note:** The agent's account matches what the witness observed.
+**Note:** The witnessed tool action matches the agent's claim. The stated outcome — "sent" — is the agent's account, not independently witnessed.
 
 Part of [Witnessed Handoff: Draft the client onboarding doc, save it to the client's Google Drive, and confirm by email.](../handoffs/hermes-zapier.md).

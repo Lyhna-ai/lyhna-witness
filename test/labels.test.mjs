@@ -313,3 +313,24 @@ test("route mismatch + uncorroborated specific action fails closed (not just a r
   assert.ok(r.labels.includes(L.UNSUPPORTED), "uncorroborated action must also be unsupported");
   assert.ok(r.labels.includes(L.DO_NOT_SEND));
 });
+
+// A SUPPORTED step that carries a claimed RESULT must name the outcome as the agent's account, not as
+// witnessed — Lyhna corroborates the action that crossed the boundary, not the outcome (THESIS §6).
+test("SUPPORTED note distinguishes the witnessed action from an unverified result outcome", () => {
+  const withResult = computeStepLabels({
+    index: 0,
+    claimed: { system: "gmail", action: "send", result: "the contract was countersigned and filed" },
+    witnessed: { system: "gmail", action: "send", returned: true }
+  });
+  assert.ok(withResult.labels.includes(L.SUPPORTED));
+  assert.match(withResult.human_note, /the agent's account, not independently witnessed/i);
+  assert.doesNotMatch(withResult.human_note, /account matches what the witness observed/i);
+
+  // No result claimed → the simpler note (nothing to caveat).
+  const noResult = computeStepLabels({
+    index: 0,
+    claimed: { system: "filesystem", action: "write_file" },
+    witnessed: { system: "filesystem", action: "write_file", returned: true }
+  });
+  assert.match(noResult.human_note, /account matches what the witness observed/i);
+});

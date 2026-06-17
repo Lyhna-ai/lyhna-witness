@@ -19,7 +19,7 @@
       "labels": [
         "SUPPORTED"
       ],
-      "human_note": "The agent's account matches what the witness observed."
+      "human_note": "The witnessed tool action matches the agent's claim. The stated outcome — \"created the prospect tracker\" — is the agent's account, not independently witnessed."
     },
     {
       "index": 1,

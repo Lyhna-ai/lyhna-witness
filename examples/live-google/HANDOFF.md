@@ -11,7 +11,7 @@ Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log th
 - **Step 1** `SUPPORTED`
   - Agent claimed: create_file in google_drive
   - Witness saw: google_drive.create_file (ok)
-  - The agent's account matches what the witness observed.
+  - The witnessed tool action matches the agent's claim. The stated outcome — "created the prospect tracker" — is the agent's account, not independently witnessed.
 - **Step 2** `UNSUPPORTED NEEDS_EVIDENCE DO_NOT_SEND`
   - Agent claimed: send in gmail
   - Witness saw: nothing observed
@@ -25,7 +25,7 @@ Kick off Q3 outreach: create the prospect tracker, email 5 prospects, and log th
 - google_drive
 
 ## Supported Work
-- Step 1: The agent's account matches what the witness observed.
+- Step 1: The witnessed tool action matches the agent's claim. The stated outcome — "created the prospect tracker" — is the agent's account, not independently witnessed.
 
 ## Unsupported or Missing Evidence
 - Step 2: The agent claimed a "send" action in gmail, but the witness saw no tool call for this step — there is no evidence it actually happened.
