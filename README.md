@@ -49,9 +49,11 @@ which **is** on npm (`npx -y @lyhna/mcp`). There are two surfaces, and they do d
   make its decision — so signed mode is not just an unsigned-vs-signed toggle; it sends your calls to the
   hosted gate. Choose per how sensitive your tool arguments are (see the proxy's install/privacy notes).
 
-Either way you then render the capture with the CLI below — the witness renderer is **not** on npm yet, so
-it runs from this clone (no `npx lyhna-witness`). To see a receipt immediately with no setup, render the
-**bundled sample** (next section).
+Only the **standing-service flow** emits a `witness-input.json` (`export-pack`); render it with the CLI
+below — the witness renderer is **not** on npm yet, so it runs from this clone (no `npx lyhna-witness`).
+Quick-connect (stdio) witnesses your calls and seals a receipt chain, but does **not** itself produce a
+`witness-input.json` to render. To see a receipt immediately with no setup, render the **bundled sample**
+(next section).
 
 ### Render a receipt from a capture (CLI)
 
