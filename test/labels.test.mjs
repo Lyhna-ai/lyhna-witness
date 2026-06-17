@@ -209,3 +209,80 @@ test("a blocked call (refused/escalated) is NOT narrated as having run — it ne
   });
   assert.match(errored.human_note, /did not succeed/);
 });
+
+// REGRESSION (P1 fail-open found by the breaker panel): the agent named a specific ACTION the witness
+// could not corroborate (flat/opaque tool name → no derivable witnessed action). A bare returned call
+// must NOT read as SUPPORTED — it is evidence the call ran, not that the claimed action happened.
+test("claimed action the witness can't corroborate (flat tool name) → NOT supported, fail-closed", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "gmail", action: "send", result: "contract emailed to client", user_facing: true },
+    witnessed: { system: "gmail", returned: true } // flat 'gmail' → no witnessed action
+  });
+  assert.ok(!r.labels.includes(L.SUPPORTED), "an uncorroborated claimed action must not be SUPPORTED");
+  assert.ok(r.labels.includes(L.UNSUPPORTED));
+  assert.ok(r.labels.includes(L.NEEDS_EVIDENCE));
+  assert.ok(r.labels.includes(L.DO_NOT_SEND), "a user-facing uncorroborated action must block send");
+  assert.match(r.human_note, /without being able to confirm it performed that action/i);
+});
+
+test("a corroborated action (witnessed action present and equal) still reads SUPPORTED", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "filesystem", action: "write_file", result: "wrote the file" },
+    witnessed: { system: "filesystem", action: "write_file", returned: true }
+  });
+  assert.ok(r.labels.includes(L.SUPPORTED));
+  assert.ok(!r.labels.includes(L.UNSUPPORTED));
+});
+
+test("action-axis only: a claim with NO action on a flat tool stays SUPPORTED (result axis not used)", () => {
+  // Per the owner-approved scope, a claimed RESULT with no witnessed result does NOT flag — a successful
+  // call never carries a witnessed result, so using the result axis would flag every legitimate step.
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "filesystem", result: "did the thing" },
+    witnessed: { system: "filesystem", returned: true }
+  });
+  assert.ok(r.labels.includes(L.SUPPORTED));
+});
+
+// REGRESSION (Codex P2 on #37): a wrapper that resolves an APP but no sub-action (Apify `call-actor`)
+// corroborates the operation at the boundary — the action-axis guard must NOT flag it unsafe.
+test("wrapper with resolved app but no sub-action (Apify call-actor) stays SUPPORTED", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "apify_web-scraper", via: "apify", action: "call_actor" },
+    witnessed: { system: "apify", app: "apify_web-scraper", action: null, returned: true, wrapper_family: "apify" }
+  });
+  assert.ok(r.labels.includes(L.SUPPORTED), "an app-corroborated wrapper call must stay supported");
+  assert.ok(!r.labels.includes(L.UNSUPPORTED));
+});
+
+// REGRESSION (Codex P1 on #37): an app-only wrapper corroborates only the generic invocation. A SPECIFIC
+// claimed action the witness never saw (e.g. "send" on an Apify actor call) must still fail closed.
+test("specific claimed action on an app-only wrapper (not the invocation) fails closed", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "apify_web-scraper", via: "apify", action: "send", user_facing: true },
+    witnessed: { system: "apify", app: "apify_web-scraper", action: null, returned: true, wrapper_family: "apify" }
+  });
+  assert.ok(!r.labels.includes(L.SUPPORTED), "an uncorroborated specific action on a wrapper must not be SUPPORTED");
+  assert.ok(r.labels.includes(L.UNSUPPORTED));
+  assert.ok(r.labels.includes(L.DO_NOT_SEND));
+});
+
+// REGRESSION (Codex P2 on #37): a step that is BOTH a route mismatch AND has an uncorroborated specific
+// action must fail closed on the action axis — not read as a mere route note.
+test("route mismatch + uncorroborated specific action fails closed (not just a route note)", () => {
+  const r = computeStepLabels({
+    index: 0,
+    // Claims a DIRECT apify_web-scraper send; witness saw it routed through the apify wrapper (route
+    // mismatch) and could not corroborate the 'send' action (app only).
+    claimed: { system: "apify_web-scraper", action: "send", user_facing: true },
+    witnessed: { system: "apify", app: "apify_web-scraper", action: null, returned: true, wrapper_family: "apify" }
+  });
+  assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH), "route mismatch still flagged");
+  assert.ok(r.labels.includes(L.UNSUPPORTED), "uncorroborated action must also be unsupported");
+  assert.ok(r.labels.includes(L.DO_NOT_SEND));
+});

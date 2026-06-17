@@ -21,6 +21,11 @@ export const TRUST_LABELS = Object.freeze({
 
 const norm = (s) => (typeof s === "string" ? s.trim().toLowerCase() : "");
 
+// Generic actor/app-invocation verbs. When an app-only wrapper (resolved app, no sub-action — e.g. Apify
+// `call-actor`) is observed, the boundary corroborates only that the actor/app was INVOKED, so only a
+// claim naming that generic invocation rides as supported; any specific claimed action stays fail-closed.
+const APP_INVOCATION_ACTIONS = new Set(["call_actor", "call-actor", "run_actor", "invoke_actor", "call_app", "invoke"]);
+
 /** A result string that denotes failure. Witnessed `returned === false` is also failure. */
 function isErrorResult(result) {
   const r = norm(result);
@@ -221,8 +226,42 @@ export function computeStepLabels(step) {
     }
   }
 
+  // 3b) The agent named a specific ACTION the witness could NOT corroborate. The call returned, but the
+  //     witness saw no matching action — so it cannot confirm the call did the claimed action. A bare
+  //     returned call is evidence the call RAN, not that the agent's stated action happened, so it must
+  //     not read as SUPPORTED. This is the non-wrapper twin of `operationUnverified` (2b): same fail-closed
+  //     stance on the action axis. Two carve-outs keep it from over-firing:
+  //       • An app-only wrapper (resolved app, no sub-action — e.g. Apify `call-actor`) corroborates the
+  //         generic actor/app INVOCATION at the boundary. So a claim that names that generic invocation
+  //         (APP_INVOCATION_ACTIONS) is supported, but a SPECIFIC claimed action the witness never saw
+  //         (e.g. "send" on an opaque actor call) still fails closed.
+  //       • Defer only to an ACTION/RESULT mismatch (which already stamps UNSUPPORTED), NOT to a route-only
+  //         path mismatch — a path mismatch alone adds only CLAIMED_ACTUAL_MISMATCH (the work may be fine
+  //         via another route), so a route-mismatched step with an uncorroborated action must still fail
+  //         closed here rather than read as a mere route note.
+  //     (The RESULT axis is deliberately NOT used — a successful call carries no witnessed result by
+  //     design, so comparing a claimed result against an always-absent witnessed result would flag every
+  //     legitimate supported step.)
+  const appOnlyWrapper = Boolean(norm(witnessed.app)) && !norm(witnessed.action);
+  const claimIsGenericInvocation = appOnlyWrapper && APP_INVOCATION_ACTIONS.has(norm(claimed.action));
+  const actionUnverified =
+    !failed &&
+    !actionResult.mismatch &&
+    !operationUnverified &&
+    Boolean(norm(claimed.action)) &&
+    !norm(witnessed.action) &&
+    !claimIsGenericInvocation;
+  if (actionUnverified) {
+    labels.push(L.NEEDS_EVIDENCE, L.UNSUPPORTED);
+    if (userFacing) labels.push(L.DO_NOT_SEND);
+    notes.push(
+      `The agent claimed ${claimedPhrase(claimed)}, but the witness saw the call return without being ` +
+        `able to confirm it performed that action — there is no evidence the claimed step actually happened.`
+    );
+  }
+
   // 4) Agreement.
-  if (!failed && !mismatch && !operationUnverified) {
+  if (!failed && !mismatch && !operationUnverified && !actionUnverified) {
     labels.push(L.SUPPORTED);
     notes.push(`The agent's account matches what the witness observed.`);
   }
