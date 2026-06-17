@@ -158,3 +158,11 @@ test("observation-only failure does not fabricate a claim count in the cover", (
   assert.doesNotMatch(meaning, /claimed step/i, "an observation must not be reported as a claim");
   assert.match(meaning, /not safe to continue/i);
 });
+
+// REGRESSION (Codex P2 on #40): a zero-step capsule must not assert observations that don't exist.
+test("empty (zero-step) capsule does not claim any observed tool calls", () => {
+  const h = buildWitnessedHandoff({ objective: "Nothing ran.", steps: [] });
+  const meaning = renderCapsule(h, { name: "empty" })["CAPSULE.md"].split("\n").find((l) => l.includes("What this means")) ?? "";
+  assert.match(meaning, /records no steps/i);
+  assert.doesNotMatch(meaning, /recorded the observed tool calls|claimed step/i);
+});

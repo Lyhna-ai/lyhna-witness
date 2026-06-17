@@ -204,6 +204,9 @@ function plainMeaning(handoff) {
   const ceiling = "Lyhna confirms tool-level actions, not business outcomes — use your own judgment before acting.";
 
   if (handoff.safe_to_continue) {
+    if (steps.length === 0) {
+      return `**What this means:** this capsule records no steps — there is nothing witnessed to act on.`;
+    }
     if (totalClaims === 0) {
       return `**What this means:** the witness recorded the observed tool calls and found nothing to flag. (${ceiling})`;
     }
