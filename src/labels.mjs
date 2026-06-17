@@ -243,9 +243,13 @@ export function computeStepLabels(step) {
   // "send" on an opaque actor call) must still fail closed.
   const appOnlyWrapper = Boolean(norm(witnessed.app)) && !norm(witnessed.action);
   const claimIsGenericInvocation = appOnlyWrapper && APP_INVOCATION_ACTIONS.has(norm(claimed.action));
+  // Defer only to an ACTION/RESULT mismatch (which already stamps UNSUPPORTED) — NOT to a route-only
+  // path mismatch. A path mismatch alone adds only CLAIMED_ACTUAL_MISMATCH (the work may be fine via
+  // another route), so when the specific action is ALSO uncorroborated the step must still fail closed
+  // on the action axis, or a route-mismatched user-facing send would read as a mere route note.
   const actionUnverified =
     !failed &&
-    !mismatch &&
+    !actionResult.mismatch &&
     !operationUnverified &&
     Boolean(norm(claimed.action)) &&
     !norm(witnessed.action) &&

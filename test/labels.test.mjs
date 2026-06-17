@@ -271,3 +271,18 @@ test("specific claimed action on an app-only wrapper (not the invocation) fails 
   assert.ok(r.labels.includes(L.UNSUPPORTED));
   assert.ok(r.labels.includes(L.DO_NOT_SEND));
 });
+
+// REGRESSION (Codex P2 on #37): a step that is BOTH a route mismatch AND has an uncorroborated specific
+// action must fail closed on the action axis — not read as a mere route note.
+test("route mismatch + uncorroborated specific action fails closed (not just a route note)", () => {
+  const r = computeStepLabels({
+    index: 0,
+    // Claims a DIRECT apify_web-scraper send; witness saw it routed through the apify wrapper (route
+    // mismatch) and could not corroborate the 'send' action (app only).
+    claimed: { system: "apify_web-scraper", action: "send", user_facing: true },
+    witnessed: { system: "apify", app: "apify_web-scraper", action: null, returned: true, wrapper_family: "apify" }
+  });
+  assert.ok(r.labels.includes(L.CLAIMED_ACTUAL_MISMATCH), "route mismatch still flagged");
+  assert.ok(r.labels.includes(L.UNSUPPORTED), "uncorroborated action must also be unsupported");
+  assert.ok(r.labels.includes(L.DO_NOT_SEND));
+});
