@@ -44,7 +44,7 @@ node src/cli.mjs demo/live-loop-witness-input.json ./receipt --okf --pam
 General usage with the zero-dependency CLI:
 
 ```bash
-node src/cli.mjs <witness-input.json> <outDir>            # writes HANDOFF.md, handoff.json, next-ai-prompt.md
+node src/cli.mjs <witness-input.json> <outDir>            # writes the capsule index (CAPSULE.md + capsule.json) + HANDOFF.md, handoff.json, next-ai-prompt.md
 node src/cli.mjs <witness-input.json> <outDir> --okf --pam  # ALSO write the OKF and PAM bundles
 node src/cli.mjs <witness-input.json> <outDir> --gate       # exit 3 when NOT safe_to_continue (fail-closed)
 node src/cli.mjs - <outDir>                                 # read the capture from stdin
@@ -53,9 +53,24 @@ node src/cli.mjs - <outDir>                                 # read the capture f
 > The witness renderer is not published to npm yet, so run it as `node src/cli.mjs …` from a clone (there
 > is no `npx lyhna-witness`). See [`INSTALL-FRICTION-REPORT.md`](./INSTALL-FRICTION-REPORT.md).
 
-`--okf` / `--pam` are additive — without them you get exactly the handoff trio. Each export is a
-deterministic projection of the same handoff (every OKF step / PAM item carries the receipt's evidence
-labels), so a downstream knowledge/memory system inherits the honesty ceiling instead of stripping it.
+Every run writes the **capsule index** (`CAPSULE.md` + `capsule.json`) — the bundle's self-describing
+table of contents: it names every artifact and the trust boundary it carries, so the deliverable explains
+itself (it asserts nothing new about the work). `--okf` / `--pam` are additive — without them you get the
+handoff trio plus that capsule index. Each export is a deterministic projection of the same handoff (every
+OKF step / PAM item carries the receipt's evidence labels), so a downstream knowledge/memory system
+inherits the honesty ceiling instead of stripping it.
+
+#### Multi-agent capsules (the claim-to-action spine)
+
+The input may carry an optional **spine** so a capsule can attribute each claim across a parent + its
+subagents — *from captured evidence only*, without Lyhna pretending to orchestrate them. All fields are
+optional and never fabricated: per step `agent_id` / `subagent_role` / `artifact_id` / `link_basis`; on
+the claim `claim_id` / `claim_turn_id`; on the event `turn_ref` and `call.call_id`; run-level
+`parent_loop_id` / `receipt_id`. A spine-enabled run attaches a per-step `contract` (attribution +
+rolled-up status + reader explanation) and a run-level `agents` summary; a plain run is byte-identical to
+before. A copyable, worked input is [`demo/agent-team-witness-input.json`](./demo/agent-team-witness-input.json)
+(parent + research + writer, including an unwitnessed branch); its rendered capsule is
+[`examples/agent-team/`](./examples/agent-team/) (`npm run demo:agent-team`).
 
 The demo reproduces the real failure on purpose: the agent reports a clean story; the witness saw
 something different. See the committed output in [`examples/hermes-zapier/`](./examples/hermes-zapier/) —
@@ -71,13 +86,18 @@ business owner must see:
 
 ```
 src/labels.mjs           deterministic per-step trust labels (claimed vs. actual)
+src/contract.mjs         claim-to-action spine: per-step contract + run-level agents summary
 src/generate.mjs         build witnessed-handoff/v1 + render HANDOFF.md / next-ai-prompt.md
+src/capsule.mjs          capsule index (CAPSULE.md + capsule.json) — the bundle's table of contents
+src/okf.mjs              OKF knowledge-bundle projection
+src/pam.mjs              PAM-shaped memory projection
 src/witnessed-event.mjs  adapter: proxy event vocabulary (wrapper call + verdict + runtime report) → step
 src/index.mjs            public surface
 test/                    node:test suite
 demo/hermes-zapier.mjs        the brutal demo (hand-authored witnessed side)
 demo/zapier-google-witness.mjs   the same catch, driven by proxy-shaped events
-examples/                committed sample output (HANDOFF.md, handoff.json, next-ai-prompt.md)
+demo/agent-team-witness.mjs      the multi-agent capsule (spine attribution; unwitnessed branch)
+examples/                committed sample output (the capsule: CAPSULE.md, handoff trio, okf/, pam/)
 ```
 
 ## Wiring to real witnessed events (BUILD-PLAN slice 5)

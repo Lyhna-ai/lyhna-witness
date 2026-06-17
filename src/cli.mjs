@@ -12,6 +12,15 @@
 //                                            { objective, steps:[{claim, event, user_facing}],
 //                                              settled?, open_questions?, next_actions?,
 //                                              do_not_re_litigate?, proof_refs? }
+//                                            Optional claim-to-action SPINE (all optional; omit when
+//                                            absent — nothing is fabricated): per step
+//                                            { agent_id?, subagent_role?, artifact_id?, link_basis? };
+//                                            on the claim { claim_id?, claim_turn_id? }; on the event
+//                                            { turn_ref?, call:{ call_id? } }; run-level
+//                                            { parent_loop_id?, receipt_id? }. A spine-enabled input
+//                                            attaches a per-step `contract` + run-level `agents` summary;
+//                                            a plain input is byte-identical to before. Copyable example:
+//                                            demo/agent-team-witness-input.json.
 //   lyhna-witness <input.json> [outDir] --gate   exit 3 when the handoff is NOT safe_to_continue,
 //                                                 so a caller can fail-closed on DO_NOT_SEND.
 //   lyhna-witness <input.json> [outDir] --okf    ALSO write the OKF knowledge bundle under <outDir>/okf/.
