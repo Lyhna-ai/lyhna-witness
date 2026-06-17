@@ -6,8 +6,33 @@
 // same output (golden-testable). See BUILD-PLAN.md §2.
 
 import { TRUST_LABELS, computeStepLabels } from "./labels.mjs";
+import { buildStepContract, summarizeAgents } from "./contract.mjs";
 
 export const WITNESSED_HANDOFF_SCHEMA = "witnessed-handoff/v1";
+
+const present = (v) => v !== undefined && v !== null && !(typeof v === "string" && v.trim() === "");
+
+// A run is "contract-enabled" only when it carries a MEANINGFUL claim-to-action spine signal — an agent
+// identifier, a claim/turn/call link, an artifact, an explicit/conflicting link basis, or a run-level
+// loop/receipt id. The default link_basis ("ordinal"/"unwitnessed"/…) that every step now carries does
+// NOT count, so a plain run produces byte-identical output to before (no contract block is attached).
+function hasMeaningfulSpine(run) {
+  if (present(run.parent_loop_id) || present(run.receipt_id)) return true;
+  return (run.steps ?? []).some((s) => {
+    const sp = s.spine ?? {};
+    return (
+      present(sp.agent_id) ||
+      present(sp.subagent_role) ||
+      present(sp.artifact_id) ||
+      present(sp.claim_id) ||
+      present(sp.claim_turn_id) ||
+      present(sp.turn_ref) ||
+      present(sp.call_id) ||
+      sp.link_basis === "explicit" ||
+      sp.link_basis === "conflict"
+    );
+  });
+}
 
 /**
  * @param {object} run
@@ -22,7 +47,14 @@ export const WITNESSED_HANDOFF_SCHEMA = "witnessed-handoff/v1";
  */
 export function buildWitnessedHandoff(run) {
   const L = TRUST_LABELS;
-  const steps = (run.steps ?? []).map((s, i) => computeStepLabels({ ...s, index: i }));
+  const contractEnabled = hasMeaningfulSpine(run);
+  const steps = (run.steps ?? []).map((s, i) => {
+    const labeled = computeStepLabels({ ...s, index: i });
+    // Attach the per-step claim-to-action contract only on a contract-enabled run. The contract is a
+    // deterministic projection of the label + human_note + supplied identifiers — it adds no new claim.
+    if (contractEnabled) labeled.contract = buildStepContract(labeled, s.spine ?? {});
+    return labeled;
+  });
 
   const has = (step, label) => step.labels.includes(label);
   const needs_human_approval = steps.filter((s) => has(s, L.NEEDS_HUMAN_APPROVAL)).map((s) => s.index);
@@ -75,7 +107,17 @@ export function buildWitnessedHandoff(run) {
     needs_human_approval,
     do_not_re_litigate: run.do_not_re_litigate ?? [],
     safe_to_continue,
-    proof_refs: run.proof_refs ?? null
+    proof_refs: run.proof_refs ?? null,
+    // Claim-to-action spine, run level. Emitted ONLY on a contract-enabled run, so a plain run's handoff
+    // is byte-identical to before. `agents` attributes steps to agents from CAPTURED EVIDENCE ONLY — an
+    // agent whose tool path was not routed through Lyhna simply never appears (see contract.mjs).
+    ...(contractEnabled
+      ? {
+          ...(present(run.parent_loop_id) ? { parent_loop_id: String(run.parent_loop_id) } : {}),
+          ...(present(run.receipt_id) ? { receipt_id: String(run.receipt_id) } : {}),
+          agents: summarizeAgents(steps)
+        }
+      : {})
   };
 }
 
