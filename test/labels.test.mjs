@@ -223,7 +223,7 @@ test("claimed action the witness can't corroborate (flat tool name) → NOT supp
   assert.ok(r.labels.includes(L.UNSUPPORTED));
   assert.ok(r.labels.includes(L.NEEDS_EVIDENCE));
   assert.ok(r.labels.includes(L.DO_NOT_SEND), "a user-facing uncorroborated action must block send");
-  assert.match(r.human_note, /without being able to confirm it performed that action/i);
+  assert.match(r.human_note, /without being able to confirm what it did/i);
 });
 
 test("a corroborated action (witnessed action present and equal) still reads SUPPORTED", () => {
@@ -236,15 +236,42 @@ test("a corroborated action (witnessed action present and equal) still reads SUP
   assert.ok(!r.labels.includes(L.UNSUPPORTED));
 });
 
-test("action-axis only: a claim with NO action on a flat tool stays SUPPORTED (result axis not used)", () => {
-  // Per the owner-approved scope, a claimed RESULT with no witnessed result does NOT flag — a successful
-  // call never carries a witnessed result, so using the result axis would flag every legitimate step.
+// A result-only claim (no action) on an OPAQUE call the witness could not corroborate (no witnessed
+// action) must fail closed — otherwise omitting the action would launder a consequential result into
+// SUPPORTED (the inversion the breaker panel found: specifying `action` fails closed, so omitting it
+// must not be the cheaper path). The corroborated-action case is covered separately above.
+test("result-only claim on an opaque/uncorroborated call fails closed (no SUPPORTED laundering)", () => {
   const r = computeStepLabels({
     index: 0,
-    claimed: { system: "filesystem", result: "did the thing" },
+    claimed: { system: "send_message", result: "sent to 5000 subscribers", user_facing: true },
+    witnessed: { system: "send_message", returned: true } // flat tool → no witnessed action
+  });
+  assert.ok(!r.labels.includes(L.SUPPORTED), "a result-only claim on an opaque call must not be SUPPORTED");
+  assert.ok(r.labels.includes(L.UNSUPPORTED));
+  assert.ok(r.labels.includes(L.DO_NOT_SEND), "user-facing → blocked");
+});
+
+// But a claim with NO specific assertion at all (system only — no action, no result) stays SUPPORTED:
+// the agent asserted nothing the witness needs to corroborate beyond that a call ran.
+test("system-only claim (no action, no result) on a returned call stays SUPPORTED", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "filesystem" },
     witnessed: { system: "filesystem", returned: true }
   });
   assert.ok(r.labels.includes(L.SUPPORTED));
+});
+
+// And a claimed result on a CORROBORATED action stays SUPPORTED — the result is the agent's account of
+// an outcome Lyhna does not verify (THESIS §6); the result axis only triggers when nothing was corroborated.
+test("claimed result on a corroborated action stays SUPPORTED (result axis only triggers when uncorroborated)", () => {
+  const r = computeStepLabels({
+    index: 0,
+    claimed: { system: "filesystem", action: "write_file", result: "patched the bug" },
+    witnessed: { system: "filesystem", action: "write_file", returned: true }
+  });
+  assert.ok(r.labels.includes(L.SUPPORTED));
+  assert.ok(!r.labels.includes(L.UNSUPPORTED));
 });
 
 // REGRESSION (Codex P2 on #37): a wrapper that resolves an APP but no sub-action (Apify `call-actor`)
