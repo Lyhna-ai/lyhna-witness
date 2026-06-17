@@ -36,8 +36,9 @@ which **is** on npm (`npx -y @lyhna/mcp`). There are two surfaces, and they do d
 
 - **Quick-connect (stdio).** Wrap an MCP server you already use by adding a server to your MCP client's
   `.mcp.json` — set `command` to `npx` and `args` to `["-y", "@lyhna/mcp", "stdio"]` (not the whole
-  string as one command), with your existing server as the upstream. Your agent's calls now route through
-  Lyhna and earn a sealed receipt chain.
+  string as one command), and point it at your existing server with `LYHNA_PROXY_UPSTREAM_COMMAND` +
+  `LYHNA_PROXY_UPSTREAM_ARGS_JSON` (the full block is the proxy's QUICKSTART **Path A**). Your agent's
+  calls now route through Lyhna and earn a sealed receipt chain.
 - **Full claimed-vs-witnessed capsule (standing service).** Capturing the agent's own claims
   (`record_claim`, gated on `LYHNA_PROXY_CLAIM_CAPTURE=1`) and exporting a `witness-input.json`
   (`export-pack`) require the **standing proxy + supervisor control channel** — the guided **Path B** in
@@ -47,7 +48,7 @@ which **is** on npm (`npx -y @lyhna/mcp`). There are two surfaces, and they do d
   decides locally, and sends nothing off your machine (receipts are deliberately *unsigned*). A beta
   `LYHNA_API_KEY` produces signed receipts but routes each tool call through Lyhna's **hosted** service to
   make its decision — so signed mode is not just an unsigned-vs-signed toggle; it sends your calls to the
-  hosted gate. Choose per how sensitive your tool arguments are (see the proxy's install/privacy notes).
+  hosted witness service. Choose per how sensitive your tool arguments are (see the proxy's install/privacy notes).
 
 Only the **standing-service flow** emits a `witness-input.json` (`export-pack`); render it with the CLI
 below — the witness renderer is **not** on npm yet, so it runs from this clone (no `npx lyhna-witness`).
