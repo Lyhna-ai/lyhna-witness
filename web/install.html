@@ -64,9 +64,10 @@ STEP 1 — Show me a real receipt right now (no setup, works offline):
 STEP 2 — Quick-connect so MY agent's calls are witnessed (stdio):
    Add a server to my MCP client config (.mcp.json) that wraps an MCP server I already use.
    command = "npx", args = ["-y","@lyhna/mcp","stdio"], and point it at my server with
-   LYHNA_PROXY_UPSTREAM_COMMAND / LYHNA_PROXY_UPSTREAM_ARGS_JSON; LYHNA_PROXY_BIND_MODE=demo
-   needs no key and makes no Lyhna-hosted call. Then tell me to reload my MCP client. Now my calls to that
-   server route through Lyhna and earn a sealed receipt chain.
+   LYHNA_PROXY_UPSTREAM_COMMAND / LYHNA_PROXY_UPSTREAM_ARGS_JSON, plus LYHNA_PROXY_LOOP_ID and
+   LYHNA_PROXY_GOAL so the calls form a sealed loop (without those two the proxy runs with the loop
+   disabled). LYHNA_PROXY_BIND_MODE=demo needs no key and makes no Lyhna-hosted call. Then tell me to
+   reload my MCP client. Now my calls to that server route through Lyhna and earn a sealed receipt chain.
    (This connects and witnesses. It does NOT by itself produce the rendered
    claimed-vs-witnessed capsule — that's Step 3.)
 
