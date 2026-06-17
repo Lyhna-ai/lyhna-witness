@@ -166,3 +166,31 @@ test("empty (zero-step) capsule does not claim any observed tool calls", () => {
   assert.match(meaning, /records no steps/i);
   assert.doesNotMatch(meaning, /recorded the observed tool calls|claimed step/i);
 });
+
+// REGRESSION (Codex P2 on #40): a route-only mismatch (CLAIMED_ACTUAL_MISMATCH, no UNSUPPORTED) WAS
+// witnessed performing the action via another route — the cover must say "review", not "not backed /
+// don't send", which would overstate a pure route mismatch.
+test("route-only mismatch cover says review the route, not 'not backed by evidence'", () => {
+  const h = buildWitnessedHandoff(
+    runFromWitnessedEvents({
+      objective: "Create the doc.",
+      steps: [
+        {
+          // Agent claimed google_docs directly; witness saw zapier→google_docs do the SAME action.
+          claim: { system: "google_docs", action: "create_document", result: "created" },
+          event: {
+            call: { toolName: "execute_zapier_google_docs_action", arguments: JSON.stringify({ app: "google_docs", action: "create_document" }) },
+            verdict: { kind: "APPROVED" },
+            runtime_report: { returned: true }
+          }
+        }
+      ]
+    })
+  );
+  assert.equal(h.safe_to_continue, false, "a route mismatch blocks safe_to_continue");
+  assert.ok(h.steps[0].labels.includes("CLAIMED_ACTUAL_MISMATCH"));
+  assert.ok(!h.steps[0].labels.includes("UNSUPPORTED"), "route-only: not unsupported");
+  const meaning = renderCapsule(h, { name: "route" })["CAPSULE.md"].split("\n").find((l) => l.includes("What this means")) ?? "";
+  assert.doesNotMatch(meaning, /not backed by witnessed evidence|send anything to a client/i);
+  assert.match(meaning, /different route|review/i);
+});

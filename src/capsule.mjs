@@ -213,22 +213,37 @@ function plainMeaning(handoff) {
     return `**What this means:** every claimed step is backed by what the witness saw at the tool boundary. (${ceiling})`;
   }
 
-  const unconfirmedClaims = claimedSteps.filter((s) => !(s.labels ?? []).includes("SUPPORTED")).length;
-  if (unconfirmedClaims > 0) {
+  // Not safe — categorize the claimed steps by what is actually wrong, because the receipt semantics
+  // differ: an UNSUPPORTED claim has no witnessed backing (don't send); a route-only mismatch
+  // (CLAIMED_ACTUAL_MISMATCH without UNSUPPORTED) WAS witnessed performing the action via another route
+  // (review, not "no evidence"); a human-approval hold gates an otherwise-backed step.
+  const lbl = (s) => s.labels ?? [];
+  const unsupported = claimedSteps.filter((s) => lbl(s).includes("UNSUPPORTED")).length;
+  const routeOnly = claimedSteps.filter(
+    (s) => lbl(s).includes("CLAIMED_ACTUAL_MISMATCH") && !lbl(s).includes("UNSUPPORTED")
+  ).length;
+  const approvals = handoff.needs_human_approval?.length ?? 0;
+  const n = (c) => `${c} of ${totalClaims} claimed step${totalClaims === 1 ? "" : "s"}`;
+  const isAre = (c) => (c === 1 ? "is" : "are");
+
+  // Most dangerous first: claims with no witnessed backing.
+  if (unsupported > 0) {
     return (
-      `**What this means:** ${unconfirmedClaims} of ${totalClaims} claimed step${totalClaims === 1 ? "" : "s"} ` +
-      `${unconfirmedClaims === 1 ? "is" : "are"} not backed by witnessed evidence (unconfirmed or mismatched). ` +
-      `Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in \`HANDOFF.md\`.`
+      `**What this means:** ${n(unsupported)} ${isAre(unsupported)} not backed by witnessed evidence ` +
+      `(unconfirmed, or the witness saw something different). Don't treat the work as done — or send ` +
+      `anything to a client — until you've checked the flagged steps in \`HANDOFF.md\`.`
     );
   }
-  // Not safe, but no claim is missing evidence — the blocker is a human-approval hold, or an observed
-  // failure with no claim attached. Name the real reason; never a false "claimed steps not backed" count.
-  const approvals = handoff.needs_human_approval?.length ?? 0;
-  if (approvals) {
+  // Otherwise every claimed step WAS witnessed performing its action; the holds are route review and/or
+  // approval, not missing evidence — so don't warn "not backed" or "don't send".
+  const holds = [];
+  if (routeOnly > 0)
+    holds.push(`${routeOnly} took a different route than the agent reported (review before relying on the account)`);
+  if (approvals > 0) holds.push(`${approvals} ${isAre(approvals)} held for human approval`);
+  if (holds.length) {
     return (
-      `**What this means:** every claimed step is backed by witnessed evidence, but the run is not safe to ` +
-      `continue yet — ${approvals} step${approvals === 1 ? "" : "s"} ${approvals === 1 ? "is" : "are"} held ` +
-      `for human approval. Don't proceed until the holds in \`HANDOFF.md\` are cleared.`
+      `**What this means:** every claimed step is backed by what the witness saw, but the run is not safe ` +
+      `to continue yet — ${holds.join("; and ")}. See the flagged steps in \`HANDOFF.md\`.`
     );
   }
   return `**What this means:** the run is not safe to continue yet — review the flagged steps in \`HANDOFF.md\` before proceeding.`;

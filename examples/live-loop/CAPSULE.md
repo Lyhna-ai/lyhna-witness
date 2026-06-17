@@ -6,7 +6,7 @@
 
 **Verdict:** ⛔ NOT safe to continue / send yet — see the receipt.
 
-**What this means:** 1 of 3 claimed steps is not backed by witnessed evidence (unconfirmed or mismatched). Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in `HANDOFF.md`.
+**What this means:** 1 of 3 claimed steps is not backed by witnessed evidence (unconfirmed, or the witness saw something different). Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in `HANDOFF.md`.
 
 **Objective:** Fix the checkout total rounding bug and confirm the fix with the client
 

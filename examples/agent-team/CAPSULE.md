@@ -6,7 +6,7 @@
 
 **Verdict:** ⛔ NOT safe to continue / send yet — see the receipt.
 
-**What this means:** 3 of 4 claimed steps are not backed by witnessed evidence (unconfirmed or mismatched). Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in `HANDOFF.md`.
+**What this means:** 3 of 4 claimed steps are not backed by witnessed evidence (unconfirmed, or the witness saw something different). Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in `HANDOFF.md`.
 
 **Objective:** Prepare and send the Q2 client report (parent agent dispatched a research and a writer subagent).
 
