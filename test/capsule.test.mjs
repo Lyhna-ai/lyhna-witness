@@ -194,3 +194,16 @@ test("route-only mismatch cover says review the route, not 'not backed by eviden
   assert.doesNotMatch(meaning, /not backed by witnessed evidence|send anything to a client/i);
   assert.match(meaning, /different route|review/i);
 });
+
+// REGRESSION (Codex P2 on #40): a not-safe run whose only blocker is an UNCLAIMED approval-gated call
+// has no claims — the cover must not say "every claimed step is backed".
+test("unclaimed approval-gated call does not assert a claim-level status", () => {
+  const h = buildWitnessedHandoff({
+    objective: "An unclaimed escalated call.",
+    steps: [{ claimed: null, witnessed: { system: "stripe", action: "refund", returned: false, result: "escalated" }, needs_human_approval: true }]
+  });
+  assert.equal(h.safe_to_continue, false);
+  const meaning = renderCapsule(h, { name: "u" })["CAPSULE.md"].split("\n").find((l) => l.includes("What this means")) ?? "";
+  assert.doesNotMatch(meaning, /every claimed step|claimed step/i);
+  assert.match(meaning, /not safe to continue/i);
+});

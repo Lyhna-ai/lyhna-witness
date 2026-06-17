@@ -241,9 +241,12 @@ function plainMeaning(handoff) {
     holds.push(`${routeOnly} took a different route than the agent reported (review before relying on the account)`);
   if (approvals > 0) holds.push(`${approvals} ${isAre(approvals)} held for human approval`);
   if (holds.length) {
+    // Only assert "every claimed step is backed" when there actually were claims — an unclaimed
+    // approval-gated/observed call has no claim-level status to report.
+    const preamble = totalClaims > 0 ? "every claimed step is backed by what the witness saw, but " : "";
     return (
-      `**What this means:** every claimed step is backed by what the witness saw, but the run is not safe ` +
-      `to continue yet — ${holds.join("; and ")}. See the flagged steps in \`HANDOFF.md\`.`
+      `**What this means:** ${preamble}the run is not safe to continue yet — ${holds.join("; and ")}. ` +
+      `See the flagged steps in \`HANDOFF.md\`.`
     );
   }
   return `**What this means:** the run is not safe to continue yet — review the flagged steps in \`HANDOFF.md\` before proceeding.`;
