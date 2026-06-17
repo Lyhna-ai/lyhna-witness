@@ -145,3 +145,16 @@ test("approval-only not-safe run names the approval hold, not a false missing-ev
   assert.doesNotMatch(meaning, /not backed by witnessed evidence/);
   assert.match(meaning, /held for human approval/i);
 });
+
+// REGRESSION (Codex P2 on #40): an observation-only step (witnessed, NO claim) must not be counted as a
+// "claimed step" in the cover. A no-claim witnessed failure makes the run unsafe but is not a claim.
+test("observation-only failure does not fabricate a claim count in the cover", () => {
+  const h = buildWitnessedHandoff({
+    objective: "An unclaimed tool call that failed.",
+    steps: [{ claimed: null, witnessed: { system: "filesystem", action: "write_file", returned: false, result: "error" } }]
+  });
+  assert.equal(h.safe_to_continue, false);
+  const meaning = renderCapsule(h, { name: "obs" })["CAPSULE.md"].split("\n").find((l) => l.includes("What this means")) ?? "";
+  assert.doesNotMatch(meaning, /claimed step/i, "an observation must not be reported as a claim");
+  assert.match(meaning, /not safe to continue/i);
+});

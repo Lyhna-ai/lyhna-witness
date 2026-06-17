@@ -196,33 +196,39 @@ function capsuleAgentsSection(handoff) {
 // claimed steps the witness could not back and what NOT to do; for a safe run it states the support and
 // the ceiling (tool-level actions, not business outcomes).
 function plainMeaning(handoff) {
-  const s = handoff.summary ?? {};
-  const total = s.total_steps ?? 0;
+  const steps = handoff.steps ?? [];
+  // Count over CLAIMED steps only — an observation-only step (a witnessed call the agent never claimed)
+  // is not a claim, so it must never be counted as one ("N of M claimed steps") in the cover.
+  const claimedSteps = steps.filter((s) => s.claimed);
+  const totalClaims = claimedSteps.length;
+  const ceiling = "Lyhna confirms tool-level actions, not business outcomes — use your own judgment before acting.";
+
   if (handoff.safe_to_continue) {
+    if (totalClaims === 0) {
+      return `**What this means:** the witness recorded the observed tool calls and found nothing to flag. (${ceiling})`;
+    }
+    return `**What this means:** every claimed step is backed by what the witness saw at the tool boundary. (${ceiling})`;
+  }
+
+  const unconfirmedClaims = claimedSteps.filter((s) => !(s.labels ?? []).includes("SUPPORTED")).length;
+  if (unconfirmedClaims > 0) {
     return (
-      `**What this means:** every claimed step is backed by what the witness saw at the tool boundary. ` +
-      `(Lyhna confirms tool-level actions, not business outcomes — use your own judgment before acting.)`
+      `**What this means:** ${unconfirmedClaims} of ${totalClaims} claimed step${totalClaims === 1 ? "" : "s"} ` +
+      `${unconfirmedClaims === 1 ? "is" : "are"} not backed by witnessed evidence (unconfirmed or mismatched). ` +
+      `Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in \`HANDOFF.md\`.`
     );
   }
-  const unconfirmed = Math.max(total - (s.supported ?? 0), 0);
-  // Not safe, but every claimed step IS backed by the witness ⇒ the blocker is not missing evidence.
-  // Name the actual reason: a human-approval hold (the only way an all-supported run is still gated),
-  // or, defensively, a generic hold — never a false "not backed by evidence" count.
-  if (unconfirmed === 0) {
-    const approvals = handoff.needs_human_approval?.length ?? 0;
-    const why = approvals
-      ? `${approvals} step${approvals === 1 ? "" : "s"} ${approvals === 1 ? "is" : "are"} held for human approval`
-      : `${total === 1 ? "the step is" : "one or more steps are"} held before they can proceed`;
+  // Not safe, but no claim is missing evidence — the blocker is a human-approval hold, or an observed
+  // failure with no claim attached. Name the real reason; never a false "claimed steps not backed" count.
+  const approvals = handoff.needs_human_approval?.length ?? 0;
+  if (approvals) {
     return (
       `**What this means:** every claimed step is backed by witnessed evidence, but the run is not safe to ` +
-      `continue yet — ${why}. Don't proceed until the holds in \`HANDOFF.md\` are cleared.`
+      `continue yet — ${approvals} step${approvals === 1 ? "" : "s"} ${approvals === 1 ? "is" : "are"} held ` +
+      `for human approval. Don't proceed until the holds in \`HANDOFF.md\` are cleared.`
     );
   }
-  return (
-    `**What this means:** ${unconfirmed} of ${total} claimed step${total === 1 ? "" : "s"} ` +
-    `${unconfirmed === 1 ? "is" : "are"} not backed by witnessed evidence (unconfirmed or mismatched). ` +
-    `Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in \`HANDOFF.md\`.`
-  );
+  return `**What this means:** the run is not safe to continue yet — review the flagged steps in \`HANDOFF.md\` before proceeding.`;
 }
 
 function renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts }) {
