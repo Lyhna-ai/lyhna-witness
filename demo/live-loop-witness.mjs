@@ -22,7 +22,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runFromWitnessedEvents } from "../src/witnessed-event.mjs";
-import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt, renderOkfBundle, renderPamBundle } from "../src/index.mjs";
+import { buildWitnessedHandoff, renderHandoffMarkdown, renderNextAiPrompt, renderOkfBundle, renderPamBundle, renderCapsule } from "../src/index.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const inputPath = join(here, "live-loop-witness-input.json");
@@ -59,6 +59,14 @@ for (const [relPath, contents] of Object.entries(pam)) {
   const dest = join(outDir, "pam", relPath);
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, contents);
+}
+
+// Capsule index: the bundle's self-describing table of contents (CAPSULE.md + capsule.json), naming
+// every artifact and the trust boundary it carries. This run emits both carriers, so the index lists
+// okf/ and pam/. Deterministic — no timestamp passed.
+const capsule = renderCapsule(handoff, { name: "live-loop", exports: ["okf", "pam"] });
+for (const [relPath, contents] of Object.entries(capsule)) {
+  writeFileSync(join(outDir, relPath), contents);
 }
 
 // ---- plain-language readout ----

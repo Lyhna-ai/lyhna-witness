@@ -1,0 +1,90 @@
+{
+  "schema": "lyhna-capsule/v1",
+  "name": "live-loop",
+  "lyhna_schema": "witnessed-handoff/v1",
+  "objective": "Fix the checkout total rounding bug and confirm the fix with the client",
+  "verdict": {
+    "safe_to_continue": false,
+    "summary": {
+      "total_steps": 3,
+      "supported": 2,
+      "mismatches": 0,
+      "unsupported": 1,
+      "do_not_send": 1
+    }
+  },
+  "artifacts": [
+    {
+      "path": "CAPSULE.md",
+      "role": "Capsule index (start here)",
+      "format": "markdown",
+      "audience": "human",
+      "trust_boundary": "capsule-index",
+      "description": "Human-readable table of contents for this capsule: what each file is and the trust boundary it carries."
+    },
+    {
+      "path": "capsule.json",
+      "role": "Capsule manifest",
+      "format": "json",
+      "audience": "machine",
+      "trust_boundary": "capsule-index",
+      "description": "Machine-readable manifest of this capsule's artifacts, verdict, and honesty ceiling."
+    },
+    {
+      "path": "HANDOFF.md",
+      "role": "The AI Work Receipt (readable)",
+      "format": "markdown",
+      "audience": "human",
+      "trust_boundary": "witnessed-receipt",
+      "description": "What the agent claimed vs. what the witness saw cross the tool boundary, what is supported, what is unsupported or mismatched, and what is safe to continue."
+    },
+    {
+      "path": "handoff.json",
+      "role": "The AI Work Receipt (machine)",
+      "format": "json",
+      "audience": "machine",
+      "trust_boundary": "witnessed-receipt",
+      "description": "The same receipt as structured data: per-step claimed/witnessed pairs, deterministic trust labels, and the run summary."
+    },
+    {
+      "path": "next-ai-prompt.md",
+      "role": "Continuation prompt",
+      "format": "markdown",
+      "audience": "agent",
+      "trust_boundary": "witnessed-continuation",
+      "description": "A safe-continuation handoff for the next human or AI: unverified steps to confirm, approvals required, and what not to re-litigate."
+    },
+    {
+      "path": "okf/",
+      "role": "OKF knowledge bundle",
+      "format": "okf-directory",
+      "audience": "knowledge-system",
+      "trust_boundary": "carrier-projection",
+      "description": "Portable Open-Knowledge-Format projection of the receipt — every step and label travels with its evidence boundary intact."
+    },
+    {
+      "path": "pam/",
+      "role": "PAM-shaped memory bundle",
+      "format": "pam-shaped-directory",
+      "audience": "memory-system",
+      "trust_boundary": "carrier-projection",
+      "description": "PAM-shaped memory projection of the receipt — every memory item carries its evidence_status, so an unsupported claim is never upgraded into a fact."
+    }
+  ],
+  "trust_boundaries": {
+    "capsule-index": "Tool-generated description of this bundle. Not witnessed evidence and asserts nothing about the work.",
+    "witnessed-receipt": "Claimed-vs-witnessed receipt. Action-level witnessed truth; the Settled / Do-Not-Re-Litigate sections are operator-declared, not witnessed by Lyhna.",
+    "witnessed-continuation": "Continuation handoff derived from the receipt. Carries the same witnessed verdicts and operator-declared context — adds no new claim.",
+    "carrier-projection": "Portable projection in a carrier format. A carrier proves transport (the bundle was not altered), not origin; every item still carries its Lyhna evidence label, so an unsupported claim stays unsupported."
+  },
+  "honesty_ceiling": {
+    "witnessed": "action-level only — what crossed the tool boundary vs. what the agent claimed",
+    "never_asserts": [
+      "that a claimed-but-unwitnessed action happened (e.g. an email was sent)",
+      "business / legal / quality correctness of the work",
+      "client or third-party behavior",
+      "anything outside the observed workflow",
+      "agent confidence as evidence"
+    ]
+  }
+}

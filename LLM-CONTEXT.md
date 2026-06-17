@@ -1,6 +1,6 @@
 # Lyhna — LLM Context Sheet
 
-> **Last updated: 2026-06-15.** Read this first at the start of any session in this project. It is the
+> **Last updated: 2026-06-17.** Read this first at the start of any session in this project. It is the
 > single source of truth for *what Lyhna is now*, how the pieces fit, what's live, and the rules for
 > changing things safely. If you change something material, update this file's date and the relevant
 > section in the same PR.
@@ -63,8 +63,11 @@ imports the other's internals — the witness mirrors the proxy's event vocabula
 3. **Loop close → `export-pack`** pairs the agent's claims with the witnessed judgment turns
    (`assembleWitnessInput`) and emits **`witness-input.json`** (verified-context only; plaintext).
 4. **`lyhna-witness <witness-input.json>`** applies the deterministic labeler and writes the
-   receipt: `HANDOFF.md` (readable receipt) · `handoff.json` (machine) · `next-ai-prompt.md` (continuation) ·
-   `okf/` (knowledge bundle) · `pam/` (PAM-shaped memory projection — every item carries its evidence_status).
+   **AI Work Receipt Capsule**: `CAPSULE.md` + `capsule.json` (the capsule's self-describing index —
+   every artifact + the trust boundary it carries) · `HANDOFF.md` (readable receipt) · `handoff.json`
+   (machine) · `next-ai-prompt.md` (continuation) · and, with `--okf`/`--pam`, `okf/` (knowledge bundle) ·
+   `pam/` (PAM-shaped memory projection — every item carries its evidence_status). The capsule index is
+   written by default; it asserts nothing new (`lyhna-capsule/v1`, `src/capsule.mjs`).
 5. **`web/`** renders a committed `handoff.json` for a user or AI to audit.
 
 ### The canonical "came through the live loop" receipt
@@ -193,10 +196,11 @@ npm run demo:gmail       # examples/live-gmail
 npm run demo:live-loop   # examples/live-loop  (the canonical receipt)
 node web/build-data.mjs  # regenerate web/data/handoff.js from examples/live-loop/handoff.json
 ```
-CLI: `node src/cli.mjs <witness-input.json> [outDir] [--gate] [--okf] [--pam]`. `--okf`/`--pam` are
-additive — they also write the OKF knowledge bundle (`<outDir>/okf/`) and the PAM-shaped memory bundle
-(`<outDir>/pam/`); without them the output is exactly the handoff trio. `npm run gauntlet` runs the
-reliability gauntlet (needs the sibling proxy).
+CLI: `node src/cli.mjs <witness-input.json> [outDir] [--gate] [--okf] [--pam]`. By default it writes the
+handoff trio **plus the capsule index** (`CAPSULE.md` + `capsule.json`). `--okf`/`--pam` are additive —
+they also write the OKF knowledge bundle (`<outDir>/okf/`) and the PAM-shaped memory bundle
+(`<outDir>/pam/`), and the capsule index then lists them. `npm run gauntlet` runs the reliability
+gauntlet (needs the sibling proxy).
 
 ### `lyhna-mcp-proxy` (TypeScript)
 ```bash
@@ -258,7 +262,8 @@ second engineer; don't merge around it.
   `PROJECT-BRIEF.md` — supporting docs.
 - `src/labels.mjs` — deterministic trust labels. `src/generate.mjs` — handoff builder + renderers.
   `src/witnessed-event.mjs` — maps proxy events → labeler input. `src/okf.mjs` — OKF (knowledge) export.
-  `src/pam.mjs` — PAM (memory) projection. `src/cli.mjs` — the `lyhna-witness` CLI.
+  `src/pam.mjs` — PAM (memory) projection. `src/capsule.mjs` — the capsule index (CAPSULE.md +
+  capsule.json). `src/cli.mjs` — the `lyhna-witness` CLI.
 - `demo/*.mjs` — regenerate `examples/*`. `examples/live-loop/` — the canonical receipt.
 - `web/` — the live demo (see §5). `.github/workflows/{ci.yml,pages.yml}`.
 
