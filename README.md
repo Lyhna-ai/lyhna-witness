@@ -29,6 +29,17 @@ npm test     # node:test, no install needed (Node >= 20)
 npm run demo # the Hermes/Zapier "claimed Google, used Zapier" demo
 ```
 
+### Connect it to your agent (install by agent)
+
+The capture comes from the sibling [`lyhna-mcp-proxy`](https://github.com/Lyhna-ai/lyhna-mcp-proxy),
+which **is** on npm. Wrap an MCP server you already use by adding a block to your MCP client config
+(e.g. `.mcp.json`) — `npx -y @lyhna/mcp stdio` as the command, your existing server as the upstream, and
+`LYHNA_PROXY_CLAIM_CAPTURE=1` so the receipt can compare claimed vs. witnessed. `LYHNA_PROXY_BIND_MODE=demo`
+runs offline with no key (receipts are deliberately *unsigned*); a beta `LYHNA_API_KEY` produces signed
+receipts. The agent-paste version of this flow is the website [Install](./web/install.html) page; the full
+config is the proxy's `docs/QUICKSTART.md`. Then render the capture with the CLI below — the witness
+renderer is **not** on npm yet, so it runs from this clone (no `npx lyhna-witness`).
+
 ### Render a receipt from a capture (CLI)
 
 You need a `witness-input.json` — the proxy emits one at loop close. To produce a fresh one, run
