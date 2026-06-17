@@ -191,6 +191,67 @@ function capsuleAgentsSection(handoff) {
   ];
 }
 
+// One plain-language line a non-technical buyer can act on, derived ONLY from the verdict + counts that
+// are already on the page (it restates them, asserts nothing new). For a not-safe run it names how many
+// claimed steps the witness could not back and what NOT to do; for a safe run it states the support and
+// the ceiling (tool-level actions, not business outcomes).
+function plainMeaning(handoff) {
+  const steps = handoff.steps ?? [];
+  // Count over CLAIMED steps only — an observation-only step (a witnessed call the agent never claimed)
+  // is not a claim, so it must never be counted as one ("N of M claimed steps") in the cover.
+  const claimedSteps = steps.filter((s) => s.claimed);
+  const totalClaims = claimedSteps.length;
+  const ceiling = "Lyhna confirms tool-level actions, not business outcomes — use your own judgment before acting.";
+
+  if (handoff.safe_to_continue) {
+    if (steps.length === 0) {
+      return `**What this means:** this capsule records no steps — there is nothing witnessed to act on.`;
+    }
+    if (totalClaims === 0) {
+      return `**What this means:** the witness recorded the observed tool calls and found nothing to flag. (${ceiling})`;
+    }
+    return `**What this means:** every claimed step is backed by what the witness saw at the tool boundary. (${ceiling})`;
+  }
+
+  // Not safe — categorize the claimed steps by what is actually wrong, because the receipt semantics
+  // differ: an UNSUPPORTED claim has no witnessed backing (don't send); a route-only mismatch
+  // (CLAIMED_ACTUAL_MISMATCH without UNSUPPORTED) WAS witnessed performing the action via another route
+  // (review, not "no evidence"); a human-approval hold gates an otherwise-backed step.
+  const lbl = (s) => s.labels ?? [];
+  const unsupported = claimedSteps.filter((s) => lbl(s).includes("UNSUPPORTED")).length;
+  const routeOnly = claimedSteps.filter(
+    (s) => lbl(s).includes("CLAIMED_ACTUAL_MISMATCH") && !lbl(s).includes("UNSUPPORTED")
+  ).length;
+  const approvals = handoff.needs_human_approval?.length ?? 0;
+  const n = (c) => `${c} of ${totalClaims} claimed step${totalClaims === 1 ? "" : "s"}`;
+  const isAre = (c) => (c === 1 ? "is" : "are");
+
+  // Most dangerous first: claims with no witnessed backing.
+  if (unsupported > 0) {
+    return (
+      `**What this means:** ${n(unsupported)} ${isAre(unsupported)} not backed by witnessed evidence ` +
+      `(unconfirmed, or the witness saw something different). Don't treat the work as done — or send ` +
+      `anything to a client — until you've checked the flagged steps in \`HANDOFF.md\`.`
+    );
+  }
+  // Otherwise every claimed step WAS witnessed performing its action; the holds are route review and/or
+  // approval, not missing evidence — so don't warn "not backed" or "don't send".
+  const holds = [];
+  if (routeOnly > 0)
+    holds.push(`${routeOnly} took a different route than the agent reported (review before relying on the account)`);
+  if (approvals > 0) holds.push(`${approvals} ${isAre(approvals)} held for human approval`);
+  if (holds.length) {
+    // Only assert "every claimed step is backed" when there actually were claims — an unclaimed
+    // approval-gated/observed call has no claim-level status to report.
+    const preamble = totalClaims > 0 ? "every claimed step is backed by what the witness saw, but " : "";
+    return (
+      `**What this means:** ${preamble}the run is not safe to continue yet — ${holds.join("; and ")}. ` +
+      `See the flagged steps in \`HANDOFF.md\`.`
+    );
+  }
+  return `**What this means:** the run is not safe to continue yet — review the flagged steps in \`HANDOFF.md\` before proceeding.`;
+}
+
 function renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts }) {
   const summary = handoff.summary ?? {};
   const safe = Boolean(handoff.safe_to_continue);
@@ -209,13 +270,18 @@ function renderCapsuleMarkdown(handoff, { name, artifacts, boundariesPresent, ts
     ``,
     `**Verdict:** ${verdict}`,
     ``,
+    plainMeaning(handoff),
+    ``,
     `**Objective:** ${handoff.objective || "_(none stated)_"}`,
     ``,
     `**Summary:** ${summary.total_steps ?? 0} steps · ${summary.supported ?? 0} supported · ` +
       `${summary.mismatches ?? 0} mismatch · ${summary.unsupported ?? 0} unsupported · ${summary.do_not_send ?? 0} do-not-send`,
+    `_Counts can overlap — a step may carry more than one flag — so they need not add up to the step total._`,
     ``,
     ...capsuleAgentsSection(handoff),
     `## What's in this capsule`,
+    ``,
+    `**You only need \`HANDOFF.md\`** (and this index). The rest are machine-readable copies of the same receipt.`,
     ``,
     `| File | What it is | For | Trust boundary | Description |`,
     `| --- | --- | --- | --- | --- |`,

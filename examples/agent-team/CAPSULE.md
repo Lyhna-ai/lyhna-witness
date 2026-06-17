@@ -6,9 +6,12 @@
 
 **Verdict:** ⛔ NOT safe to continue / send yet — see the receipt.
 
+**What this means:** 3 of 4 claimed steps are not backed by witnessed evidence (unconfirmed, or the witness saw something different). Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in `HANDOFF.md`.
+
 **Objective:** Prepare and send the Q2 client report (parent agent dispatched a research and a writer subagent).
 
 **Summary:** 4 steps · 1 supported · 1 mismatch · 3 unsupported · 2 do-not-send
+_Counts can overlap — a step may carry more than one flag — so they need not add up to the step total._
 
 ## Agents witnessed
 _Attributed from captured evidence only — an agent whose tool path was not routed through Lyhna does not appear._
@@ -17,6 +20,8 @@ _Attributed from captured evidence only — an agent whose tool path was not rou
 - **parent agent** (`orchestrator-1`) — step 4 — ⚠ not all supported — branch status: unsupported
 
 ## What's in this capsule
+
+**You only need `HANDOFF.md`** (and this index). The rest are machine-readable copies of the same receipt.
 
 | File | What it is | For | Trust boundary | Description |
 | --- | --- | --- | --- | --- |

@@ -6,11 +6,16 @@
 
 **Verdict:** ⛔ NOT safe to continue / send yet — see the receipt.
 
+**What this means:** 1 of 3 claimed steps is not backed by witnessed evidence (unconfirmed, or the witness saw something different). Don't treat the work as done — or send anything to a client — until you've checked the flagged steps in `HANDOFF.md`.
+
 **Objective:** Fix the checkout total rounding bug and confirm the fix with the client
 
 **Summary:** 3 steps · 2 supported · 0 mismatch · 1 unsupported · 1 do-not-send
+_Counts can overlap — a step may carry more than one flag — so they need not add up to the step total._
 
 ## What's in this capsule
+
+**You only need `HANDOFF.md`** (and this index). The rest are machine-readable copies of the same receipt.
 
 | File | What it is | For | Trust boundary | Description |
 | --- | --- | --- | --- | --- |
