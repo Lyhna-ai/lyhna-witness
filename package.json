@@ -13,6 +13,7 @@
     "demo:real": "node demo/live-google-witness.mjs",
     "demo:gmail": "node demo/live-gmail-witness.mjs",
     "demo:live-loop": "node demo/live-loop-witness.mjs",
+    "demo:agent-team": "node demo/agent-team-witness.mjs",
     "gauntlet": "node reliability/run-gauntlet.mjs"
   },
   "license": "UNLICENSED"

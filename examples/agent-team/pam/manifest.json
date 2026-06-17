@@ -1,0 +1,96 @@
+{
+  "schema": "lyhna-pam/v0",
+  "pam_projection": "v0",
+  "conformance": "PAM-shaped projection of a Lyhna witnessed-handoff/v1 receipt. Validated against the Portable AI Memory v1.0 schema and found non-conformant: this is a projection, not a conformant PAM document.",
+  "source": "lyhna-witness",
+  "lyhna_schema": "witnessed-handoff/v1",
+  "name": "agent-team",
+  "objective": "Prepare and send the Q2 client report (parent agent dispatched a research and a writer subagent).",
+  "safe_to_continue": false,
+  "summary": {
+    "total_steps": 4,
+    "supported": 1,
+    "mismatches": 1,
+    "unsupported": 3,
+    "do_not_send": 2
+  },
+  "memory_types": [
+    "episodic",
+    "semantic",
+    "procedural",
+    "working",
+    "identity"
+  ],
+  "memory_counts": {
+    "episodic": 4,
+    "semantic": 5,
+    "procedural": 6,
+    "working": 4,
+    "identity": 1
+  },
+  "memory_total": 20,
+  "memories_file": "memories.jsonl",
+  "handoff_resource": "../handoff.json",
+  "parent_loop_id": "loop-q2-client-report",
+  "receipt_id": "rcpt-q2-2026-0617",
+  "agents": [
+    {
+      "agent_id": "research-1",
+      "subagent_role": "research",
+      "steps": [
+        1,
+        2
+      ],
+      "statuses": [
+        "supported",
+        "unsupported"
+      ],
+      "has_unsupported": true,
+      "all_supported": false,
+      "nonsupported_statuses": [
+        "unsupported"
+      ]
+    },
+    {
+      "agent_id": "writer-1",
+      "subagent_role": "writer",
+      "steps": [
+        3
+      ],
+      "statuses": [
+        "unsupported"
+      ],
+      "has_unsupported": true,
+      "all_supported": false,
+      "nonsupported_statuses": [
+        "unsupported"
+      ]
+    },
+    {
+      "agent_id": "orchestrator-1",
+      "subagent_role": "parent",
+      "steps": [
+        4
+      ],
+      "statuses": [
+        "unsupported"
+      ],
+      "has_unsupported": true,
+      "all_supported": false,
+      "nonsupported_statuses": [
+        "unsupported"
+      ]
+    }
+  ],
+  "honesty_ceiling": {
+    "witnessed": "action-level only — what crossed the tool boundary vs. what the agent claimed",
+    "never_asserts": [
+      "that a claimed-but-unwitnessed action happened (e.g. an email was sent)",
+      "business / legal / quality correctness of the work",
+      "client or third-party behavior",
+      "anything outside the observed workflow",
+      "agent confidence as evidence"
+    ],
+    "rule": "every memory item carries evidence_status; an unsupported claim stays unsupported and is never upgraded into a fact"
+  }
+}
