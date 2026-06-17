@@ -14,7 +14,10 @@
 // canonical owner, lyhna-mcp-proxy @ c20fca9), plus the mapping from a witnessed tool call +
 // verdict + runtime report into the `witnessed` step the deterministic labeler already understands.
 
+import { resolveLink } from "./contract.mjs";
+
 const norm = (s) => (typeof s === "string" ? s.trim().toLowerCase() : "");
+const present = (v) => v !== undefined && v !== null && !(typeof v === "string" && v.trim() === "");
 
 // --- Wrapper-family descriptors: a faithful mirror of WRAPPER_FAMILY_DESCRIPTORS in the frozen
 // proxy (src/extractors/wrapper-registry.ts). Mirrored, not imported, because the proxy is TS and
@@ -197,11 +200,23 @@ export function witnessedFromEvent(event) {
 export function runFromWitnessedEvents(input) {
   const steps = (input.steps ?? []).map((s) => {
     const claimed = s.claim ?? null;
-    if (!s.event) {
+    // The claim-to-action spine identifiers the proxy may have supplied (all optional). Carried onto the
+    // step as `spine` so buildWitnessedHandoff can attach the per-step contract. Run-level identifiers
+    // (parent_loop_id, receipt_id) are carried on the run, not duplicated per step.
+    const spine = collectSpine(s);
+
+    // Resolve how the claim links to its witnessed call. An EXPLICIT link (claim_turn_id ↔ turn_ref)
+    // governs over ordinal pairing: a CONFLICT means the supplied call does not belong to this claim, so
+    // we drop the witnessed call for this step (fail safe — the claim then reads unsupported rather than
+    // being vouched for by the wrong call).
+    const link = resolveLink(s);
+
+    if (!s.event || link.conflict) {
       return {
         claimed,
         witnessed: null,
-        user_facing: Boolean(s.user_facing ?? claimed?.user_facing)
+        user_facing: Boolean(s.user_facing ?? claimed?.user_facing),
+        spine: { ...spine, link_basis: s.event && link.conflict ? "conflict" : link.basis }
       };
     }
     const { witnessed, needs_human_approval } = witnessedFromEvent(s.event);
@@ -209,7 +224,8 @@ export function runFromWitnessedEvents(input) {
       claimed,
       witnessed,
       needs_human_approval,
-      user_facing: Boolean(s.user_facing ?? claimed?.user_facing)
+      user_facing: Boolean(s.user_facing ?? claimed?.user_facing),
+      spine: { ...spine, link_basis: link.basis }
     };
   });
 
@@ -220,6 +236,27 @@ export function runFromWitnessedEvents(input) {
     open_questions: input.open_questions ?? [],
     next_actions: input.next_actions ?? [],
     do_not_re_litigate: input.do_not_re_litigate ?? [],
-    proof_refs: input.proof_refs ?? null
+    proof_refs: input.proof_refs ?? null,
+    ...(present(input.parent_loop_id) ? { parent_loop_id: String(input.parent_loop_id) } : {}),
+    ...(present(input.receipt_id) ? { receipt_id: String(input.receipt_id) } : {})
   };
+}
+
+// Pull the optional spine identifiers off an input step (step-level wins over claim-level for agent
+// attribution; the proxy may put agent_id on either). call_id may sit on the event or its call. Returns
+// only the keys that are actually present, so an empty bag stays empty (no spine ⇒ no contract).
+function collectSpine(s) {
+  const bag = {};
+  const claim = s.claim ?? null;
+  const event = s.event ?? null;
+  if (present(s.agent_id ?? claim?.agent_id)) bag.agent_id = String(s.agent_id ?? claim.agent_id);
+  if (present(s.subagent_role ?? claim?.subagent_role))
+    bag.subagent_role = String(s.subagent_role ?? claim.subagent_role);
+  if (present(s.artifact_id)) bag.artifact_id = String(s.artifact_id);
+  if (present(claim?.claim_id)) bag.claim_id = String(claim.claim_id);
+  if (present(claim?.claim_turn_id)) bag.claim_turn_id = String(claim.claim_turn_id);
+  if (present(event?.turn_ref)) bag.turn_ref = String(event.turn_ref);
+  const callId = event?.call_id ?? event?.call?.call_id;
+  if (present(callId)) bag.call_id = String(callId);
+  return bag;
 }

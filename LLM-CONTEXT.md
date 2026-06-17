@@ -70,6 +70,19 @@ imports the other's internals — the witness mirrors the proxy's event vocabula
    written by default; it asserts nothing new (`lyhna-capsule/v1`, `src/capsule.mjs`).
 5. **`web/`** renders a committed `handoff.json` for a user or AI to audit.
 
+### Claim-to-action receipt contract (the spine, `src/contract.mjs`)
+Each receipt step can carry an optional **`contract`** block that attributes the claim and links it to the
+witnessed call: `agent_id` · `subagent_role` · `claim_id` · `claim_turn_id` · `turn_ref` · `call_id` ·
+`artifact_id` (optional, never fabricated) · `claimed/observed_action_family` · `claimed/observed_result_state`
+(observed is never "success" — only "returned"/"blocked_*"/"error"/"no_observed_call") · a rolled-up
+`status` (supported/unsupported/mismatch/needs_evidence/needs_approval) · `link_basis` · `reader_explanation`
+(agent-attributed but bounded to the witnessed note). Run level adds `parent_loop_id`, `receipt_id`, and an
+`agents` summary (captured evidence only — an agent whose tool path wasn't routed through Lyhna never
+appears). **Backward-compatible & opt-in:** the contract is attached ONLY when the input carries a
+meaningful spine signal, so a plain run is byte-identical to before. An **explicit** `claim_turn_id ↔
+turn_ref` link governs over ordinal pairing; a **conflict** drops the mis-linked call so the claim fails
+safe to unsupported.
+
 ### The canonical "came through the live loop" receipt
 - Proxy: `scripts/live-loop-receipt.mjs` (`npm run demo:live-loop`) drives the real loop and emits
   `lyhna-mcp-proxy/examples/live-loop/witness-input.json` (deterministic; a test asserts it byte-for-byte).
@@ -263,7 +276,8 @@ second engineer; don't merge around it.
 - `src/labels.mjs` — deterministic trust labels. `src/generate.mjs` — handoff builder + renderers.
   `src/witnessed-event.mjs` — maps proxy events → labeler input. `src/okf.mjs` — OKF (knowledge) export.
   `src/pam.mjs` — PAM (memory) projection. `src/capsule.mjs` — the capsule index (CAPSULE.md +
-  capsule.json). `src/cli.mjs` — the `lyhna-witness` CLI.
+  capsule.json). `src/contract.mjs` — the claim-to-action receipt contract (spine). `src/cli.mjs` —
+  the `lyhna-witness` CLI.
 - `demo/*.mjs` — regenerate `examples/*`. `examples/live-loop/` — the canonical receipt.
 - `web/` — the live demo (see §5). `.github/workflows/{ci.yml,pages.yml}`.
 
