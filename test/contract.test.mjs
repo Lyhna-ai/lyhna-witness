@@ -225,3 +225,59 @@ test("REGRESSION: reader_explanation stays bounded to witnessed evidence (no fab
   assert.doesNotMatch(h.steps[2].contract.reader_explanation, /\b(sent|delivered|done|succeeded)\b/i);
   assert.match(h.steps[2].contract.reader_explanation, /no tool call|no evidence|witness saw/i);
 });
+
+// REGRESSION (breaker panel): an observation-only step (witnessed call, NO claim) must not be phrased
+// as "<Agent> claimed …" — there is no claimant to attribute.
+test("observation-only step is not attributed as a claim in reader_explanation", () => {
+  const h = buildWitnessedHandoff(
+    runFromWitnessedEvents({
+      objective: "obs",
+      steps: [
+        { agent_id: "obs-1", subagent_role: "observer", claim: null,
+          event: approved("mcp__filesystem__read_file", { turn_ref: "t1" }) }
+      ]
+    })
+  );
+  const c = h.steps[0].contract;
+  assert.ok(c, "spine-enabled (agent_id present) so a contract is attached");
+  assert.doesNotMatch(c.reader_explanation, /claimed/i, "an observation must not be phrased as a claim");
+});
+
+// REGRESSION (breaker panel): a ROLE-ONLY step (subagent_role, no agent_id) must appear in the agents
+// roster, not just as a per-step footnote — otherwise a flagged branch is hidden from the summary.
+test("a role-only agent (no agent_id) still appears in the agents roster", () => {
+  const h = buildWitnessedHandoff(
+    runFromWitnessedEvents({
+      objective: "role only",
+      steps: [
+        { subagent_role: "writer", claim: { system: "gmail", action: "send", user_facing: true }, event: null }
+      ]
+    })
+  );
+  assert.ok(Array.isArray(h.agents) && h.agents.length === 1, "the role-only agent is in the roster");
+  assert.equal(h.agents[0].subagent_role, "writer");
+  assert.equal(h.agents[0].agent_id, undefined);
+  assert.equal(h.agents[0].all_supported, false);
+});
+
+// REGRESSION (breaker panel): on a link conflict the mis-linked call's id must not stay attached to the
+// claim (it belongs to a different turn).
+test("a link conflict drops the mis-linked call_id / turn_ref from the contract", () => {
+  const h = buildWitnessedHandoff(
+    runFromWitnessedEvents({
+      objective: "conflict",
+      steps: [
+        {
+          agent_id: "a1",
+          claim: { system: "filesystem", action: "write_file", claim_turn_id: "t1" },
+          event: { call: { toolName: "mcp__filesystem__write_file", call_id: "call-9" }, verdict: { kind: "APPROVED" }, runtime_report: { returned: true }, turn_ref: "t9" }
+        }
+      ]
+    })
+  );
+  const c = h.steps[0].contract;
+  assert.equal(c.link_basis, "conflict");
+  assert.equal(c.call_id, undefined, "the mis-linked call_id must not ride along");
+  assert.equal(c.turn_ref, undefined, "the mis-linked turn_ref must not ride along");
+  assert.equal(c.status, "unsupported");
+});

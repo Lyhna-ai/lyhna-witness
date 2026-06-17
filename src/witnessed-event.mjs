@@ -212,11 +212,19 @@ export function runFromWitnessedEvents(input) {
     const link = resolveLink(s);
 
     if (!s.event || link.conflict) {
+      // On a conflict the supplied call does not belong to this claim, so the event-derived identifiers
+      // (call_id, turn_ref) must NOT ride along — keeping them would re-associate the wrong call with the
+      // claim that just failed safe. Strip them; keep only the claim-side spine.
+      const safeSpine = { ...spine };
+      if (link.conflict) {
+        delete safeSpine.call_id;
+        delete safeSpine.turn_ref;
+      }
       return {
         claimed,
         witnessed: null,
         user_facing: Boolean(s.user_facing ?? claimed?.user_facing),
-        spine: { ...spine, link_basis: s.event && link.conflict ? "conflict" : link.basis }
+        spine: { ...safeSpine, link_basis: s.event && link.conflict ? "conflict" : link.basis }
       };
     }
     const { witnessed, needs_human_approval } = witnessedFromEvent(s.event);

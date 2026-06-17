@@ -177,10 +177,11 @@ function capsuleAgentsSection(handoff) {
   if (!handoff.agents?.length) return [];
   const rows = handoff.agents.map((a) => {
     const label = a.subagent_role ? `${a.subagent_role} agent` : a.agent_id;
+    const idPart = a.agent_id ? ` (\`${a.agent_id}\`)` : "";
     const flag = a.all_supported
       ? "all attributed steps supported"
       : `⚠ not all supported — branch status: ${(a.nonsupported_statuses ?? []).join(", ") || "unknown"}`;
-    return `- **${label}** (\`${a.agent_id}\`) — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${flag}`;
+    return `- **${label}**${idPart} — step${a.steps.length === 1 ? "" : "s"} ${a.steps.join(", ")} — ${flag}`;
   });
   return [
     `## Agents witnessed`,
