@@ -47,57 +47,45 @@
     <!-- INSTALL BY AGENT -->
     <section class="block">
       <h2>Install by agent</h2>
-      <p class="lede">Paste this into your MCP-capable agent (Claude Code, Cursor, Codex…). It sets up the connection, runs a test call, and renders your first receipt.</p>
+      <p class="lede">Paste this into your MCP-capable agent (Claude Code, Cursor, Codex…). It shows you a receipt now, connects Lyhna so your calls are witnessed, and points to the guided flow for your first claimed-vs-witnessed capsule. It's a multi-step beta setup — your agent will stop and ask you for anything it can't do itself.</p>
       <div class="prompt-wrap">
         <button id="copy-prompt" class="btn btn-secondary copy-prompt-btn" type="button">Copy prompt</button>
         <span id="copy-prompt-status" class="copy-status" aria-live="polite"></span>
-        <pre id="agent-prompt" class="cmd mono prompt-block">Set up Lyhna so my tool calls produce an AI Work Receipt. Lyhna is an MCP proxy that
-wraps an MCP server I already use and witnesses every tool call routed through it.
+        <pre id="agent-prompt" class="cmd mono prompt-block">Help me set up Lyhna so I can see an AI Work Receipt for my agent's work. Lyhna is an MCP
+proxy that witnesses the tool calls routed through it. This is a guided, multi-step beta
+setup: do what you can in my terminal, and STOP to ask me for anything you can't (a client
+restart, a beta key). Never fake a result or claim a step worked if it didn't.
 
-1. Wrap ONE MCP server I already use (e.g. filesystem) by adding this to my MCP client
-   config (e.g. .mcp.json), keeping my existing server as the upstream:
+STEP 1 — Show me a real receipt right now (no setup, works offline):
+   git clone https://github.com/Lyhna-ai/lyhna-witness &amp;&amp; cd lyhna-witness
+   node src/cli.mjs demo/live-loop-witness-input.json ./receipt --okf --pam
+   Open ./receipt/CAPSULE.md and walk me through the verdict — that's the capsule shape.
 
-   {
-     "mcpServers": {
-       "filesystem-witnessed": {
-         "command": "npx",
-         "args": ["-y", "@lyhna/mcp", "stdio"],
-         "env": {
-           "LYHNA_PROXY_BIND_MODE": "demo",
-           "LYHNA_PROXY_CLAIM_CAPTURE": "1",
-           "LYHNA_PROXY_LOOP_ID": "lyhna-setup-test",
-           "LYHNA_PROXY_GOAL": "first witnessed run",
-           "LYHNA_PROXY_UPSTREAM_COMMAND": "npx",
-           "LYHNA_PROXY_UPSTREAM_ARGS_JSON": "[\"-y\",\"@modelcontextprotocol/server-filesystem\",\"/path/I/allow\"]"
-         }
-       }
-     }
-   }
+STEP 2 — Quick-connect so MY agent's calls are witnessed (stdio):
+   Add a server to my MCP client config (.mcp.json) that wraps an MCP server I already use.
+   command = "npx", args = ["-y","@lyhna/mcp","stdio"], and point it at my server with
+   LYHNA_PROXY_UPSTREAM_COMMAND / LYHNA_PROXY_UPSTREAM_ARGS_JSON, plus LYHNA_PROXY_LOOP_ID and
+   LYHNA_PROXY_GOAL so the calls form a sealed loop (without those two the proxy runs with the loop
+   disabled). LYHNA_PROXY_BIND_MODE=demo needs no key and makes no Lyhna-hosted call. Then tell me to
+   reload my MCP client. Now my calls to that server route through Lyhna and earn a sealed receipt chain.
+   (This connects and witnesses. It does NOT by itself produce the rendered
+   claimed-vs-witnessed capsule — that's Step 3.)
 
-   demo mode runs offline with no key (receipts are unsigned). For signed receipts,
-   replace LYHNA_PROXY_BIND_MODE=demo with LYHNA_API_KEY=&lt;my beta key&gt;.
-   LYHNA_PROXY_CLAIM_CAPTURE=1 turns on claim capture so the receipt can compare what
-   I claimed to what was witnessed — without it, the receipt only shows observed calls.
-
-2. Tell me to reload/restart my MCP client so the "filesystem-witnessed" server connects.
-
-3. Once it's connected, record a claim with the record_claim tool describing what you're
-   about to do, then make ONE real tool call through "filesystem-witnessed" — a small test
-   call — so Lyhna witnesses it. The claim + the witnessed call are what the receipt compares.
-
-4. Export the closed loop with the proxy's export-pack verb to get a witness-input.json,
-   then render the AI Work Receipt Capsule with the witness CLI (from a lyhna-witness
-   clone):
+STEP 3 — My first claimed-vs-witnessed capsule (guided, standing service):
+   Comparing what I CLAIMED to what was WITNESSED needs the proxy's standing service: claim
+   capture (LYHNA_PROXY_CLAIM_CAPTURE=1) plus a control loop you open and close. Follow the
+   proxy's QUICKSTART "Path B": start the standing proxy, open a loop, record a claim
+   (record_claim) and make a tool call, close/seal the loop, then export-pack to get a
+   witness-input.json. Render it with:
        node src/cli.mjs &lt;witness-input.json&gt; ./receipt --okf --pam
-
-5. Open ./receipt/CAPSULE.md and show me the verdict and what was witnessed vs. claimed.
-
-If any step needs me (editing config, restarting the client, a beta key), stop and tell me
-exactly what to do — don't guess or fake a result.</pre>
+   Use a beta LYHNA_API_KEY for signed receipts; demo mode works unsigned with no key. Tell
+   me exactly which of these you need me to do.</pre>
       </div>
       <p class="install-foot-note">
-        The last line matters: Lyhna only witnesses calls routed through it. If your agent can't reload
-        its MCP config itself, it will ask you to — that's expected during the beta.
+        Two surfaces, on purpose: quick-connect (Step 2) witnesses your calls; the rendered
+        claimed-vs-witnessed capsule (Step 3) is the proxy's standing-service flow — the guided
+        <a href="https://github.com/Lyhna-ai/lyhna-mcp-proxy/blob/master/docs/QUICKSTART.md">QUICKSTART
+        “Path B”</a>. Lyhna only witnesses calls routed through it; anything else isn't on the receipt.
       </p>
     </section>
 
@@ -106,7 +94,7 @@ exactly what to do — don't guess or fake a result.</pre>
       <h2>What actually works today</h2>
       <ul class="bill-rules">
         <li class="bill-yes"><strong>The proxy is on npm.</strong> <span class="mono">npx -y @lyhna/mcp</span> wraps an MCP server you already use. No rewrite, no new platform.</li>
-        <li class="bill-yes"><strong>Demo mode needs no key.</strong> <span class="mono">LYHNA_PROXY_BIND_MODE=demo</span> runs fully offline — same flow, same artifacts — but receipts are deliberately <em>unsigned</em>.</li>
+        <li class="bill-yes"><strong>Demo mode needs no key.</strong> <span class="mono">LYHNA_PROXY_BIND_MODE=demo</span> decides locally and sends nothing <em>to Lyhna</em> — the proxy makes no hosted call (your upstream tools still do their own network I/O). Same flow, same artifacts; receipts are deliberately <em>unsigned</em>.</li>
         <li class="bill-no"><strong>Signed receipts need a beta key.</strong> A <span class="mono">LYHNA_API_KEY</span> connects to Lyhna's hosted witness service, which is invite-only during the private beta.</li>
         <li class="bill-no"><strong>The receipt renderer isn't on npm yet.</strong> The witness CLI (<span class="mono">node src/cli.mjs</span>) runs from a source clone for now — packaging it is part of what the beta is for.</li>
         <li class="bill-no"><strong>No plugin store, no one-command install.</strong> Setup is the guided sequence above. We won't pretend otherwise.</li>
@@ -128,7 +116,7 @@ exactly what to do — don't guess or fake a result.</pre>
         </li>
         <li class="state state-ok">
           <span class="chip chip-ok">🟢 Test receipt created</span>
-          <p>Lyhna rendered your first AI Work Receipt Capsule. Open <span class="mono">CAPSULE.md</span> and read the verdict.</p>
+          <p>Lyhna rendered an AI Work Receipt Capsule — the bundled sample (Step 1) or your own run (Step 3). Open <span class="mono">CAPSULE.md</span> and read the verdict.</p>
         </li>
         <li class="state state-bad">
           <span class="chip chip-bad">🔴 Not connected · outside the witness path</span>
