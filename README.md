@@ -29,16 +29,29 @@ npm test     # node:test, no install needed (Node >= 20)
 npm run demo # the Hermes/Zapier "claimed Google, used Zapier" demo
 ```
 
-### Connect it to your agent (install by agent)
+### Connect it to your agent
 
 The capture comes from the sibling [`lyhna-mcp-proxy`](https://github.com/Lyhna-ai/lyhna-mcp-proxy),
-which **is** on npm. Wrap an MCP server you already use by adding a block to your MCP client config
-(e.g. `.mcp.json`) — `npx -y @lyhna/mcp stdio` as the command, your existing server as the upstream, and
-`LYHNA_PROXY_CLAIM_CAPTURE=1` so the receipt can compare claimed vs. witnessed. `LYHNA_PROXY_BIND_MODE=demo`
-runs offline with no key (receipts are deliberately *unsigned*); a beta `LYHNA_API_KEY` produces signed
-receipts. The agent-paste version of this flow is the website [Install](./web/install.html) page; the full
-config is the proxy's `docs/QUICKSTART.md`. Then render the capture with the CLI below — the witness
-renderer is **not** on npm yet, so it runs from this clone (no `npx lyhna-witness`).
+which **is** on npm (`npx -y @lyhna/mcp`). There are two surfaces, and they do different things:
+
+- **Quick-connect (stdio).** Wrap an MCP server you already use by adding a server to your MCP client's
+  `.mcp.json` — set `command` to `npx` and `args` to `["-y", "@lyhna/mcp", "stdio"]` (not the whole
+  string as one command), with your existing server as the upstream. Your agent's calls now route through
+  Lyhna and earn a sealed receipt chain.
+- **Full claimed-vs-witnessed capsule (standing service).** Capturing the agent's own claims
+  (`record_claim`, gated on `LYHNA_PROXY_CLAIM_CAPTURE=1`) and exporting a `witness-input.json`
+  (`export-pack`) require the **standing proxy + supervisor control channel** — the guided **Path B** in
+  the proxy's [`docs/QUICKSTART.md`](https://github.com/Lyhna-ai/lyhna-mcp-proxy/blob/master/docs/QUICKSTART.md)
+  (open a loop → run with claim capture → close/seal → `export-pack`).
+- **Demo vs. signed — and the privacy boundary.** `LYHNA_PROXY_BIND_MODE=demo` runs offline with no key,
+  decides locally, and sends nothing off your machine (receipts are deliberately *unsigned*). A beta
+  `LYHNA_API_KEY` produces signed receipts but routes each tool call through Lyhna's **hosted** service to
+  make its decision — so signed mode is not just an unsigned-vs-signed toggle; it sends your calls to the
+  hosted gate. Choose per how sensitive your tool arguments are (see the proxy's install/privacy notes).
+
+Either way you then render the capture with the CLI below — the witness renderer is **not** on npm yet, so
+it runs from this clone (no `npx lyhna-witness`). To see a receipt immediately with no setup, render the
+**bundled sample** (next section).
 
 ### Render a receipt from a capture (CLI)
 
