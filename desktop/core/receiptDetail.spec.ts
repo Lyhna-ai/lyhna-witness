@@ -140,6 +140,18 @@ describe("buildReceiptDetail", () => {
     expect(d.warnings.some((w) => /2 steps in handoff\.json could not be read/.test(w))).toBe(true);
   });
 
+  test("malformed capsule artifacts are skipped, not a throw", () => {
+    const capsuleBadArtifacts = JSON.stringify({
+      schema: "lyhna-capsule/v1",
+      name: "corrupt",
+      verdict: { safe_to_continue: true, summary: {} },
+      artifacts: [null, "nope", { role: "no path" }, { path: "HANDOFF.md" }]
+    });
+    const d = buildReceiptDetail({ ...baseFiles, capsuleJson: capsuleBadArtifacts, handoffJson: null });
+    expect(d.artifacts).toHaveLength(1);
+    expect(d.artifacts[0].path).toBe("HANDOFF.md");
+  });
+
   test("malformed capsule.json is recorded as a warning, not a throw", () => {
     const d = buildReceiptDetail({ ...baseFiles, capsuleJson: "{ not json" });
     expect(d.hasCapsule).toBe(false);

@@ -198,20 +198,22 @@ export function buildReceiptDetail(files: ReceiptFiles): ReceiptDetail {
 
   const summary = coerceSummary(capsule?.verdict?.summary ?? handoff?.summary);
 
-  const artifacts: DetailArtifact[] = Array.isArray(capsule?.artifacts)
-    ? capsule.artifacts
-        .map((a): DetailArtifact | null => {
-          const path = strOrNull(a.path);
-          if (!path) return null;
-          return {
-            path,
-            role: strOrNull(a.role),
-            trustBoundary: strOrNull(a.trust_boundary),
-            present: present.has(path.replace(/\/+$/, ""))
-          };
-        })
-        .filter((a): a is DetailArtifact => a !== null)
-    : [];
+  // Coerce each declared artifact defensively, like the steps above: a malformed entry (e.g.
+  // `artifacts: [null]`) must be skipped, not crash the detail view.
+  const rawArtifacts: unknown[] = Array.isArray(capsule?.artifacts) ? (capsule.artifacts as unknown[]) : [];
+  const artifacts: DetailArtifact[] = [];
+  for (const raw of rawArtifacts) {
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const a = raw as CapsuleArtifact;
+    const path = strOrNull(a.path);
+    if (!path) continue;
+    artifacts.push({
+      path,
+      role: strOrNull(a.role),
+      trustBoundary: strOrNull(a.trust_boundary),
+      present: present.has(path.replace(/\/+$/, ""))
+    });
+  }
   for (const a of artifacts) {
     if (!a.present) warnings.push(`Declared artifact missing on disk: ${a.path}`);
   }
