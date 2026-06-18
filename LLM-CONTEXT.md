@@ -1,6 +1,6 @@
 # Lyhna — LLM Context Sheet
 
-> **Last updated: 2026-06-17.** Read this first at the start of any session in this project. It is the
+> **Last updated: 2026-06-18.** Read this first at the start of any session in this project. It is the
 > single source of truth for *what Lyhna is now*, how the pieces fit, what's live, and the rules for
 > changing things safely. If you change something material, update this file's date and the relevant
 > section in the same PR.
@@ -16,8 +16,22 @@ compares them to what the agent *claimed* it did, and prints a deterministic, ho
 - 🟡 **CLAIMED_ACTUAL_MISMATCH** — the agent took a different route/action than it claimed (review note).
 - 🔴 **UNSUPPORTED / DO_NOT_SEND** — the agent claimed something the witness never saw happen.
 
-**Buyer:** AI agencies, bookkeepers, ops teams, VAs — anyone who white-labels the receipt to *their*
-clients ("before your AI tells a client 'done,' get the receipt").
+**Buyer:** people running their own agents — independent agent operators, local/private-AI and
+Ollama/local-model users, Claude Code / Codex power users, consultants and agencies installing agent
+workflows for clients, and small businesses that want AI help without another hosted cloud system.
+(Agencies can still white-label the receipt to *their* clients.)
+
+**Product packaging — Lyhna Desktop (current buyer-facing direction, 2026-06-18):** a *local* receipt
+layer — a desktop app that starts/controls the local Lyhna MCP adapter, lands receipts in a local
+**receipt inbox**, and lets the user export the capsule when they choose. Promise: *"Run your agents.
+Walk away. Come back to receipts."* Ownership: **buy once · use with all your agents · unlimited local
+receipts · your receipts stay yours.** BYO: *your agents use your keys, models, and tools; Lyhna gives
+you the receipts* (Lyhna doesn't pay for model usage, host the work by default, or orchestrate agents).
+**Honesty:** the desktop app is **not** a download yet — it's the packaging direction; what's runnable
+today is the MCP adapter + witness CLI. Say "local by default" / "MCP-compatible", never "local-only"
+(cloud-hosted agents may need a remote/tunnel bridge later). This **replaces** the earlier
+hosted/metered/private-beta framing — do not reintroduce "metered by witnessed action", a free tier, or
+private-beta-as-the-main-frame on buyer surfaces.
 
 **The moat = the honesty ceiling.** Lyhna only asserts *action-level witnessed truth*, and the receipt
 shows what was proven, what lacked evidence, and what Lyhna refuses to fake. That discipline lets the demo survive
@@ -104,23 +118,40 @@ safe to unsupported.
 
 A self-contained, multi-page **marketing site** (vanilla HTML/CSS/JS, no build, no backend) on the
 **receipt grammar** — the green/amber/red verdict palette on a clean, monospace-tinged document surface.
-Anchor noun: **proof** (proof of *witnessed tool-boundary action* — never outcome/delivery/correctness).
-Pages (each links the others via a shared header/footer nav):
+The product framing is **Lyhna Desktop** (see §1): a local receipt layer for people running their own
+agents. Through-line noun: **proof** (proof of *witnessed tool-boundary action* — never
+outcome/delivery/correctness); the headline deliverable is the **AI Work Receipt Capsule**. Five pages,
+shared header/footer nav (**The capsule · Demo · Install · Receipt inbox · Pricing**):
 
-- **`index.html`** — the homepage. Sells the why: hero ("Prove what your agents did"), the receipt's
-  three verdict states (SUPPORTED / MISMATCH / DO-NOT-SEND), the **honesty ceiling as the differentiator**
-  ("It tells you less than other tools. On purpose."), the agent-native trio (MCP / OKF / PAM-shaped
-  memory bundle), carrier-vs-witness, and a demo CTA. Static, no JS.
+- **`index.html`** — the homepage. Hero: *"Run your agents. Walk away. Come back to receipts."* +
+  product/ownership/BYO sentences (buy once · use with all your agents · unlimited local receipts · your
+  receipts stay yours; your agents use your keys, models, and tools). "What one run produces" shows the
+  capsule bundle (readable receipt · machine receipt · capsule index · continuation prompt · OKF ·
+  PAM-shaped memory · **proof refs**), each tagged with its trust boundary; then "How Lyhna Desktop works"
+  (local adapter → agents route through Lyhna → receipt inbox → export when you want, with an honest "not a
+  download yet" status note), the three verdict states, witness-not-orchestrator, the honesty ceiling as
+  the differentiator, and carrier-vs-witness. Static, no JS.
 - **`demo.html`** — the demo, *replayed*. A visitor clicks **Generate Witness Capsule**, watches the
   witnessed run animate, and gets the **Client Review AI Work Receipt** (10-second verdict, supported
   steps, the flagged DO-NOT-SEND + why, the "proves / refuses to fake" section, and a **Copy receipt**
   button: *"Ask your AI: does this receipt overclaim?"*). Loads `app.js` + `data/handoff.js`.
-- **`install.html`** — honest **private-beta** install: an MCP proof layer in the tool path; setup is
-  stated as *guided, not one-command*; the one concrete command is the real witness CLI render. No
-  `lyhna.com`, no one-command promise.
-- **`pricing.html`** — the billing **model** only ("metered by witnessed action"; billing keys on
-  *was a tool call observed?*, whatever its verdict — a claim with no observed call isn't billed).
-  **No pricing numbers** — they "open with the private beta."
+- **`install.html`** — honest **connect-your-agent-through-the-Lyhna-MCP-adapter** install. Real surfaces:
+  quick-connect (stdio, `npx -y @lyhna/mcp stdio`) wraps an MCP server so calls are witnessed + sealed;
+  the full claimed-vs-witnessed **capsule** comes from the standing-service flow (QUICKSTART Path B). Step 1
+  renders the bundled sample with the witness CLI. States plainly what works today (adapter on npm;
+  local-by-default demo mode sends nothing to Lyhna; **signed mode routes each tool call through Lyhna's
+  hosted witness service to decide — args leave the machine**; witness renderer from a source clone; no
+  desktop download / plugin store / one-command install; cloud agents may need a bridge) + the four setup
+  states. Lyhna Desktop framed as packaging direction, not a download.
+- **`dashboard.html`** — the **Lyhna Desktop receipt inbox**, as a **static design preview** (local device
+  bar, summary stats, per-agent status / last witnessed call / receipts / unsupported / DO-NOT-SEND /
+  test-receipt). Clearly labeled *preview, not live telemetry* — no download, billing, or live data. No
+  inbox backend exists in-repo; it shows the intended experience built from real CLI receipt data.
+- **`pricing.html`** — the **ownership model** only: **buy once · use with all your agents · unlimited
+  local receipts · your receipts stay yours.** Core receipt + every export included (no artificial
+  upsells); hosted signing/verification, team sync, and a remote bridge are optional future add-ons (the
+  signing add-on discloses the hosted-call boundary). **No pricing numbers.** Do **not** reintroduce the
+  old "metered by witnessed action" / free-tier story.
 
 - **The demo is a REPLAY, not live.** `demo.html` renders the committed `examples/live-loop/handoff.json`
   — the receipt that came through the real loop offline. Tools are **simulated** ("Demo tools. Real
@@ -128,12 +159,16 @@ Pages (each links the others via a shared header/footer nav):
   browser is witnessing a live run.
 - **Honesty ceiling applies to the marketing too** — tighter than any deck. No surface may imply
   outcome/delivery/correctness/client-behavior truth; prefer "what crossed the tool boundary"; keep
-  "AI Work Receipt"; **PAM-shaped** (never "PAM-compatible"); no pricing numbers and no open/one-command
-  install claim until they are real/approved; kill-list scrubbed (no gate/authority/governance/
-  judgment-ledger/binding/SDK on buyer surfaces). Codex review on each web PR catches copy overclaims
-  (e.g. it caught an absolute "It didn't" non-occurrence claim, fixed to "Lyhna saw no such call").
-- **Files:** `index.html`, `demo.html`, `install.html`, `pricing.html`, `styles.css`, `app.js`
-  (demo only), `data/handoff.js` (generated), `build-data.mjs` (generator), `README.md`, `DEPLOY.md`.
+  "AI Work Receipt"; **PAM-shaped** (never "PAM-compatible"); say "local by default" / "MCP-compatible",
+  never "local-only"; the Desktop app is a packaging direction, never a "download now"; no pricing numbers;
+  don't advertise a deliverable a run can't produce today (e.g. there is **no standalone "proof pack"** —
+  proof refs live inside the existing artifacts); kill-list scrubbed on buyer surfaces (no
+  gate/authority/governance/judgment-ledger/binding/SDK — even in negative phrasing; prefer
+  "paywalls"/"limits"). Codex review on each web PR catches copy overclaims (e.g. it caught an absolute
+  "It didn't" non-occurrence claim, fixed to "Lyhna saw no such call").
+- **Files:** `index.html`, `demo.html`, `install.html`, `dashboard.html`, `pricing.html`, `styles.css`,
+  `app.js` (demo only), `data/handoff.js` (generated), `build-data.mjs` (generator), `README.md`,
+  `PORT-NOTES.md`, `DEPLOY.md`.
 - **Data flow:** `examples/live-loop/handoff.json` --(`node web/build-data.mjs`)--> `web/data/handoff.js`
   (the demo's browser payload). Guarded by `test/web-data.test.mjs` (byte-for-byte). If you change the
   receipt, regenerate the web data or CI fails.
@@ -177,10 +212,20 @@ expectations. Open follow-ups: ordinal claim↔turn correlation; live-MCP real-t
 for a public beta; optional `settled`-section attribution (audit N1).
 
 **Website relaunch (2026-06-15):** the `web/` site became a multi-page **marketing site** on the receipt
-grammar (see §5): homepage (merged), honest private-beta install (merged), pricing-model page (numbers
-held), and a demo-page redesign — implemented page-by-page from a copy deck, each a gated PR with an
-overclaim audit. Pricing/free-tier numbers and an open install flow are intentionally **not** published
-(owner decisions). The demo is preserved at `/demo.html`.
+grammar (see §5): homepage (merged), install (merged), pricing-model page (numbers held), and a demo-page
+redesign — implemented page-by-page from a copy deck, each a gated PR with an overclaim audit. The demo is
+preserved at `/demo.html`.
+
+**Capsule + dashboard product pass (2026-06-17, merged #43–#47):** homepage rebuilt capsule-first ("What
+one run produces"), install reworked into the honest two-surface story, a connected-agents **dashboard
+preview** added, and docs aligned.
+
+**Lyhna Desktop pivot (2026-06-18, current):** buyer surfaces reframed from hosted/metered/private-beta
+SaaS to **Lyhna Desktop** — a local, buy-once receipt layer (see §1, §5). Homepage leads with "Run your
+agents. Walk away. Come back to receipts."; pricing is buy-once ownership (no metered/free-tier);
+dashboard reframed as the local **receipt inbox** preview; install reframed around the local MCP adapter.
+`LLM-CONTEXT.md` updated in the same PR. The desktop app is a packaging direction (not a shipped
+download); the MCP adapter + witness CLI are what runs today.
 
 **Health:** witness `main` green (88 tests); proxy `master` green (512 tests). Check GitHub for open
 PRs before starting a new lane.
@@ -193,10 +238,10 @@ into every item so a consumer inherits the honesty ceiling instead of stripping 
 consumer of Lyhna, not Lyhna. (PAM wording stays "PAM-shaped projection / `lyhna-pam/v0`" until matched
 against a formal PAM schema.)
 
-**Deferred / next lanes (NOT V1 blockers):** real beta-capture path (mailto/Tally/waitlist) to replace
-the static "Private beta soon"; buyer copy + MCP install instructions; proxy README repositioning onto
-"witness"; live Zapier/Gmail demos; concurrency-safe claim↔turn correlation (opt-in sequential is fine
-for V1).
+**Deferred / next lanes (NOT V1 blockers):** the actual **Lyhna Desktop app** (local app + receipt inbox
+backend that lists real local receipts) — the site previews it but it isn't built; a real buy-once
+purchase path when numbers are approved; proxy README repositioning onto "witness"; live Zapier/Gmail
+demos; concurrency-safe claim↔turn correlation (opt-in sequential is fine for V1).
 
 ---
 

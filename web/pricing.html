@@ -3,90 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lyhna — Pricing: metered by witnessed action</title>
+  <title>Lyhna Desktop — Pricing: buy once, use with all your agents</title>
   <meta
     name="description"
-    content="Lyhna is metered by witnessed action — one tool call observed at the boundary. You're billed for watching, not for the agent's empty claims. Numbers open with the private beta."
+    content="Lyhna Desktop is buy once. Use it with all your agents, render unlimited local receipts, and keep your receipts yours. Your agents use your keys, models, and tools — Lyhna gives you the receipts. Numbers open later."
   />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="site-header">
-    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">AI Work Receipts</span></a>
+    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">Desktop · AI Work Receipts</span></a>
     <nav class="nav">
       <a href="index.html#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Receipt inbox</a>
       <a href="pricing.html" aria-current="page">Pricing</a>
     </nav>
   </header>
 
   <main class="page page-wide">
     <section class="home-hero">
-      <p class="eyebrow">Pricing · private beta</p>
-      <h1>Metered by witnessed action.</h1>
+      <p class="eyebrow">Pricing · ownership</p>
+      <h1>Buy once. Use with all your agents.</h1>
       <p class="subhead">
-        You're billed for the work Lyhna actually does — watching the tool boundary — not for the agent's
-        story.
+        Lyhna Desktop is a local app you own — not a meter running in the background. Unlimited local
+        receipts, and your receipts stay yours.
       </p>
     </section>
 
     <section class="block">
       <p class="beta-banner">
-        <strong>The model below is final. The numbers aren't published yet</strong> — they open with the
-        private beta. Until then there's nothing to buy and no card to enter.
+        <strong>The model below is final. The numbers aren't published yet.</strong> Until then there's
+        nothing to buy and no card to enter. Lyhna Desktop isn't a download yet — what works today is the
+        MCP adapter and the receipt renderer (see <a href="install.html">Install</a>).
       </p>
-
-      <h2>What a witnessed action is</h2>
-      <p>A <strong>witnessed action = one tool call observed at the boundary</strong> — work Lyhna can see, record on a receipt, and classify without overclaiming. The criterion is simple: <strong>was a tool call observed?</strong> — not which verdict it earned.</p>
-      <ul class="bill-rules">
-        <li class="bill-yes"><strong>Counts:</strong> any tool call Lyhna observes — whatever its verdict. Approved, failed, refused, escalated, or a claimed-vs-actual mismatch: Lyhna did the work of watching it.</li>
-        <li class="bill-no"><strong>Doesn't count:</strong> a claim with no tool call behind it. If the agent says it emailed the client but no send crossed the boundary, there's nothing to witness — so there's nothing to bill. That absence is exactly why the receipt flags it DO-NOT-SEND.</li>
-      </ul>
-      <p class="bill-punch">You're billed for watching tool calls, not for the agent's empty claims.</p>
     </section>
 
+    <!-- WHAT YOU OWN -->
     <section class="block">
-      <h2>Tiers</h2>
-      <p class="lede">Who each tier is for. Prices open with the private beta.</p>
+      <h2>What buy-once means</h2>
+      <p class="lede">One purchase, your machine, your receipts. No per-action meter on your own runs.</p>
       <div class="tiers">
         <div class="tier">
-          <h3>Free</h3>
-          <p class="tier-for">For builders proving the loop.</p>
-          <p>Every receipt. Every export. No card.</p>
-          <p class="tier-price">Free tier — limit set at beta.</p>
+          <h3>Buy once</h3>
+          <p class="tier-for">One purchase, not a subscription meter.</p>
+          <p>Pay for the app, not for every tool call your agents make.</p>
         </div>
         <div class="tier">
-          <h3>Growth</h3>
-          <p class="tier-for">For agencies, consultants, and operators running real client work through agents.</p>
-          <p>When the work leaves your desk, the receipt goes with it.</p>
-          <p class="tier-price">Per-witnessed-action — set at beta.</p>
+          <h3>Use with all your agents</h3>
+          <p class="tier-for">One app across your whole setup.</p>
+          <p>Claude Code, Codex, Cursor, local models — every agent you route through Lyhna earns receipts.</p>
         </div>
         <div class="tier">
-          <h3>Scale</h3>
-          <p class="tier-for">For teams where agent work is throughput.</p>
-          <p>More volume, same proof.</p>
-          <p class="tier-price">Lower per-action rate — set at beta.</p>
+          <h3>Unlimited local receipts</h3>
+          <p class="tier-for">No cap on what you witness.</p>
+          <p>Render as many runs as you want. Receipts are generated on your machine.</p>
         </div>
         <div class="tier">
-          <h3>Enterprise</h3>
-          <p class="tier-for">For organizations where the receipt has to satisfy an auditor, not just the person who ran the agent.</p>
-          <p>Deployment, retention, and audit controls scoped with you.</p>
-          <p class="tier-price">Custom.</p>
+          <h3>Your receipts stay yours</h3>
+          <p class="tier-for">Local by default.</p>
+          <p>Receipts land in a local inbox. You export the capsule and its proof references when you choose.</p>
         </div>
       </div>
     </section>
 
+    <!-- WHAT'S INCLUDED -->
+    <section class="block">
+      <h2>What's included — no artificial upsells</h2>
+      <p class="lede">The core receipt and every export are part of the product, not a paywalled tier.</p>
+      <ul class="bill-rules">
+        <li class="bill-yes"><strong>The readable receipt and the Work Receipt Capsule.</strong> The whole point — never held back.</li>
+        <li class="bill-yes"><strong>Every export.</strong> Markdown, JSON, OKF-style knowledge bundle, PAM-shaped memory bundle. All in the box.</li>
+        <li class="bill-yes"><strong>Bring your own everything.</strong> Your agents use your keys, models, and tools. Lyhna doesn't pay for or host your model usage.</li>
+      </ul>
+    </section>
+
+    <!-- FUTURE ADD-ONS -->
+    <section class="block">
+      <h2>Optional add-ons, later</h2>
+      <p class="lede">The local app stands on its own. These are optional extras for people who need them — not paywalls or limits on the core product.</p>
+      <ul class="bill-rules">
+        <li class="bill-no"><strong>Hosted signing &amp; verification.</strong> Cryptographic proof refs anyone can check offline, via an optional signing key — signed mode routes your tool calls through Lyhna's hosted service to decide. Local unsigned receipts always work without it and send nothing to Lyhna.</li>
+        <li class="bill-no"><strong>Team sync &amp; shared inboxes.</strong> For agencies and teams that want receipts in one place. Later, and optional.</li>
+        <li class="bill-no"><strong>Remote/tunnel bridge.</strong> For cloud-hosted agents that can't route through a local adapter directly. Later, if there's demand.</li>
+      </ul>
+      <p class="bill-punch">None of these split the core receipt or its exports into a paywall.</p>
+    </section>
+
     <section class="block demo-cta">
-      <h2>See what you'd be paying to witness.</h2>
-      <p>Run the demo, read the receipt, and decide for yourself whether watching the tool boundary is worth it — before any number is on the table.</p>
+      <h2>See what you'd own.</h2>
+      <p>Run the demo, read the receipt, and decide for yourself whether a local receipt layer for your agents is worth owning — before any number is on the table.</p>
       <a class="btn btn-primary" href="demo.html">Run the demo</a>
     </section>
   </main>
 
   <footer class="home-foot">
-    <p class="foot-beta">Private beta opening soon.</p>
+    <p class="foot-beta">Lyhna Desktop — a local receipt layer for the agents you already run.</p>
     <p class="foot-ceiling">
       Lyhna asserts action-level witnessed truth only — what crossed the tool boundary vs. what the agent
       claimed. It does not verify outcomes, delivery, correctness, or anything outside the observed
@@ -96,7 +109,7 @@
       <a href="index.html#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Receipt inbox</a>
       <a href="pricing.html">Pricing</a>
     </nav>
   </footer>

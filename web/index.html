@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lyhna — AI Work Receipts your clients can trust.</title>
+  <title>Lyhna Desktop — Run your agents. Walk away. Come back to receipts.</title>
   <meta
     name="description"
-    content="Your agent said it did the work. Lyhna shows what was witnessed, what was missing, and what needs review — packaged into an AI Work Receipt Capsule: a readable receipt plus machine, agent, knowledge, and memory copies that tell the same honest story."
+    content="Lyhna Desktop gives people running agents readable AI Work Receipts, backed by witnessed evidence. Bring your own agents, keys, and tools — Lyhna gives you the receipts. Buy once, use with all your agents, unlimited local receipts, your receipts stay yours."
   />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="site-header">
-    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">AI Work Receipts</span></a>
+    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">Desktop · AI Work Receipts</span></a>
     <nav class="nav">
       <a href="#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Receipt inbox</a>
       <a href="pricing.html">Pricing</a>
     </nav>
   </header>
@@ -25,21 +25,57 @@
   <main class="page page-wide">
     <!-- HERO -->
     <section class="home-hero">
-      <p class="eyebrow">The AI Work Receipt Capsule</p>
-      <h1>AI Work Receipts your clients can trust.</h1>
+      <p class="eyebrow">Lyhna Desktop · a local receipt layer for your agents</p>
+      <h1>Run your agents. Walk away. Come back to receipts.</h1>
       <p class="subhead">
-        Your agent said it did the work. Lyhna shows what was <em>witnessed</em>, what was
-        <em>missing</em>, and what needs <em>review</em>.
+        Lyhna Desktop gives people running agents readable <strong>AI Work Receipts</strong>, backed by
+        <em>witnessed evidence</em>.
       </p>
       <p class="hero-explainer">
-        One witnessed run produces a <strong>Work Receipt Capsule</strong> — a readable receipt plus
-        machine, agent, knowledge, and memory copies that all tell the same honest story.
+        You let your agents work while you weren't watching. Can you trust what they say happened? Lyhna
+        shows you <strong>what the agent claimed</strong>, <strong>what was witnessed</strong>,
+        <strong>what was missing</strong>, and <strong>what needs review</strong>.
       </p>
       <div class="cta-row">
         <a class="btn btn-primary" href="demo.html">Run the demo</a>
         <a class="btn btn-secondary" href="#capsule">See what's in a capsule</a>
       </div>
-      <p class="surface-line">Rides in the tool path of MCP-capable agents — Claude Code, Codex, Cursor, and more.</p>
+      <p class="surface-line">Local by default. MCP-compatible — works with agents that can route through Lyhna: Claude Code, Codex, Cursor, Ollama and local models, and more.</p>
+    </section>
+
+    <!-- OWNERSHIP -->
+    <section class="block">
+      <h2>Buy once. Use with all your agents.</h2>
+      <p class="lede">Lyhna Desktop is a local app you own — not another hosted cloud system that bills every call.</p>
+      <div class="tiers">
+        <div class="tier">
+          <h3>Buy once</h3>
+          <p>One purchase, not a meter running in the background. No per-action billing on your own machine.</p>
+        </div>
+        <div class="tier">
+          <h3>Use with all your agents</h3>
+          <p>Every agent you route through Lyhna earns receipts — one app across your whole setup.</p>
+        </div>
+        <div class="tier">
+          <h3>Unlimited local receipts</h3>
+          <p>Witness and render as many runs as you want. The receipts are generated on your machine.</p>
+        </div>
+        <div class="tier">
+          <h3>Your receipts stay yours</h3>
+          <p>Receipts land in a local receipt inbox. You export the capsule when <em>you</em> decide to.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- BYO -->
+    <section class="block">
+      <h2>Bring your own agents, keys, and tools.</h2>
+      <p>
+        Your agents keep using your existing providers, local models, tools, keys, and workflows. Lyhna
+        doesn't pay for your model usage, doesn't host your agent work by default, and doesn't run or
+        orchestrate your agents.
+      </p>
+      <p class="compare-punch">Your agents use your keys, models, and tools. Lyhna gives you the receipts.</p>
     </section>
 
     <!-- WHAT ONE RUN PRODUCES (the bundle) -->
@@ -84,6 +120,35 @@
         </div>
       </div>
       <p class="bundle-note">Every copy carries the same verdicts. None of them upgrades an unsupported claim into a fact.</p>
+    </section>
+
+    <!-- HOW LYHNA DESKTOP WORKS -->
+    <section class="block">
+      <h2>How Lyhna Desktop works.</h2>
+      <p class="lede">A local app, a local adapter, a local receipt inbox, and an export you control.</p>
+      <ol class="state-list">
+        <li class="state">
+          <span class="chip chip-info">1 · Local adapter</span>
+          <p>Lyhna Desktop starts and controls the local Lyhna MCP adapter on your machine.</p>
+        </li>
+        <li class="state">
+          <span class="chip chip-info">2 · Agents route through Lyhna</span>
+          <p>Your agents send their tool calls through the adapter, with your own keys, models, and tools.</p>
+        </li>
+        <li class="state">
+          <span class="chip chip-info">3 · Receipts appear in your inbox</span>
+          <p>Each witnessed run lands in your local receipt inbox — claimed vs. witnessed, with verdicts.</p>
+        </li>
+        <li class="state">
+          <span class="chip chip-info">4 · Export when you want</span>
+          <p>Export the receipt, the Work Receipt Capsule, and the proof references it carries — on your terms, when you choose.</p>
+        </li>
+      </ol>
+      <p class="install-foot-note">
+        Honest status: the MCP adapter, the receipt renderer, and the capsule exports already exist in this
+        repo (<a href="install.html">connect an agent today</a>). Lyhna Desktop packages that receipt layer
+        into a local app — the app itself isn't a download yet, and we won't pretend it is.
+      </p>
     </section>
 
     <!-- THE RECEIPT, SHOWN -->
@@ -161,7 +226,7 @@
   </main>
 
   <footer class="home-foot">
-    <p class="foot-beta">Private beta opening soon.</p>
+    <p class="foot-beta">Lyhna Desktop — a local receipt layer for the agents you already run.</p>
     <p class="foot-ceiling">
       Lyhna asserts action-level witnessed truth only — what crossed the tool boundary vs. what the agent
       claimed. It does not verify outcomes, delivery, correctness, or anything outside the observed
@@ -171,7 +236,7 @@
       <a href="#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Receipt inbox</a>
       <a href="pricing.html">Pricing</a>
     </nav>
   </footer>

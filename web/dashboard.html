@@ -3,60 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lyhna — Dashboard (preview)</title>
+  <title>Lyhna Desktop — Receipt inbox (preview)</title>
   <meta
     name="description"
-    content="A design preview of the Lyhna dashboard: one account, your connected agents, and what Lyhna has witnessed for each — connection status, last witnessed call, receipts, unsupported claims, and DO-NOT-SEND flags. Preview, not live telemetry."
+    content="A design preview of the Lyhna Desktop receipt inbox: your connected agents and the receipts they've earned on this device — connection status, last witnessed call, receipts, unsupported claims, and DO-NOT-SEND flags. Local receipts you own. Preview, not live telemetry."
   />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="site-header">
-    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">AI Work Receipts</span></a>
+    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">Desktop · AI Work Receipts</span></a>
     <nav class="nav">
       <a href="index.html#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
-      <a href="dashboard.html" aria-current="page">Dashboard</a>
+      <a href="dashboard.html" aria-current="page">Receipt inbox</a>
       <a href="pricing.html">Pricing</a>
     </nav>
   </header>
 
   <main class="page page-wide">
     <section class="home-hero">
-      <p class="eyebrow">Dashboard · preview</p>
-      <h1>Is Lyhna attached to this agent — and what has it witnessed?</h1>
+      <p class="eyebrow">Receipt inbox · preview</p>
+      <h1>Run your agents. Come back to receipts.</h1>
       <p class="subhead">
-        One account, all your agents, and exactly what crossed the tool boundary for each one.
+        Your connected agents and exactly what crossed the tool boundary for each one — local receipts,
+        on your device, that you own.
       </p>
     </section>
 
     <section class="block">
       <p class="beta-banner">
-        <strong>Design preview — not live telemetry.</strong> The account, agents, and figures below are
-        a <em>sample</em> to show the intended experience. Nothing here is a real connected agent, and no
-        data is live. The dashboard ships during the private beta.
+        <strong>Design preview — not live telemetry.</strong> The agents and figures below are a
+        <em>sample</em> to show the intended Lyhna Desktop experience. Nothing here is a real connected
+        agent, and no data is live. The desktop receipt inbox is the product direction — the receipts it
+        will list are the same ones the witness CLI already produces today.
       </p>
     </section>
 
-    <!-- ACCOUNT / TENANT BAR -->
+    <!-- DEVICE / LOCAL BAR -->
     <section class="block dash-account">
       <div class="dash-account-row">
         <div>
-          <p class="dash-k">Account</p>
-          <p class="dash-v">Acme Automations <span class="dash-sample">sample</span></p>
+          <p class="dash-k">Device</p>
+          <p class="dash-v">This Mac <span class="dash-sample">sample</span></p>
         </div>
         <div>
-          <p class="dash-k">Workspace key</p>
-          <p class="dash-v mono">lyk_sample_••••••••3f2a</p>
+          <p class="dash-k">License</p>
+          <p class="dash-v">Lyhna Desktop · buy once</p>
         </div>
         <div>
-          <p class="dash-k">Plan</p>
-          <p class="dash-v">Private beta</p>
+          <p class="dash-k">Receipts stored</p>
+          <p class="dash-v">Local · this device</p>
         </div>
         <div>
           <p class="dash-k">Receipt signing</p>
-          <p class="dash-v">On <span class="dash-sample">key attached</span></p>
+          <p class="dash-v">Optional <span class="dash-sample">key attached</span></p>
         </div>
       </div>
     </section>
@@ -70,7 +72,7 @@
       </div>
       <div class="dash-stat">
         <p class="dash-stat-n">185</p>
-        <p class="dash-stat-l">Receipts created</p>
+        <p class="dash-stat-l">Local receipts</p>
       </div>
       <div class="dash-stat dash-stat-warn">
         <p class="dash-stat-n">13</p>
@@ -103,7 +105,7 @@
           </thead>
           <tbody>
             <tr>
-              <td class="agent-name">Acme Ops Bot</td>
+              <td class="agent-name">Ops Bot</td>
               <td>Claude Code</td>
               <td><span class="chip chip-ok">🟢 Connected</span></td>
               <td><span class="mono">filesystem.write_file</span> · 14:32 UTC <span class="dash-sample">sample</span></td>
@@ -123,8 +125,8 @@
               <td><span class="tag-yes">✅ created</span></td>
             </tr>
             <tr>
-              <td class="agent-name">Invoice Drafter</td>
-              <td>Cursor</td>
+              <td class="agent-name">Local Drafter</td>
+              <td>Ollama</td>
               <td><span class="chip chip-warn">🟡 Waiting for first call</span></td>
               <td class="dash-empty">—</td>
               <td class="num">0</td>
@@ -146,9 +148,9 @@
         </table>
       </div>
       <p class="install-foot-note">
-        <strong>Legacy Mailer</strong> is connected to the account but its tool calls don't route through
-        Lyhna, so there's nothing to witness — it shows as <em>outside the witness path</em>, never as
-        silently fine. Lyhna witnesses an agent only when its tool calls are routed through it.
+        <strong>Legacy Mailer</strong> runs on this device but its tool calls don't route through Lyhna, so
+        there's nothing to witness — it shows as <em>outside the witness path</em>, never as silently fine.
+        Lyhna witnesses an agent only when its tool calls are routed through it.
       </p>
     </section>
 
@@ -156,14 +158,14 @@
     <section class="block">
       <h2>What's live vs. preview</h2>
       <ul class="bill-rules">
-        <li class="bill-yes"><strong>Live today:</strong> the proxy witnesses real tool calls and the witness CLI renders real receipts (see <a href="install.html">Install</a>). The receipt itself is the product, and it's real.</li>
-        <li class="bill-no"><strong>Preview only:</strong> this hosted dashboard view. There's no sign-up, no billing, and no live agent telemetry here yet — it's the design of what the beta dashboard will show, built from the same receipt data the CLI already produces.</li>
+        <li class="bill-yes"><strong>Live today:</strong> the MCP adapter witnesses real tool calls and the witness CLI renders real receipts (see <a href="install.html">Install</a>). The receipt itself is the product, and it's real.</li>
+        <li class="bill-no"><strong>Preview only:</strong> this receipt-inbox view. There's no desktop download, no billing, and no live agent telemetry here yet — it's the design of what the Lyhna Desktop inbox will show, built from the same local receipt data the CLI already produces.</li>
       </ul>
     </section>
   </main>
 
   <footer class="home-foot">
-    <p class="foot-beta">Private beta opening soon.</p>
+    <p class="foot-beta">Lyhna Desktop — a local receipt layer for the agents you already run.</p>
     <p class="foot-ceiling">
       Lyhna asserts action-level witnessed truth only — what crossed the tool boundary vs. what the agent
       claimed. It does not verify outcomes, delivery, correctness, or anything outside the observed
@@ -173,7 +175,7 @@
       <a href="index.html#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Receipt inbox</a>
       <a href="pricing.html">Pricing</a>
     </nav>
   </footer>
