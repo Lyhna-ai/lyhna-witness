@@ -57,7 +57,11 @@ This is the **v1 build in progress**, staged inside `lyhna-witness/desktop/` (se
 - **Slice 6 (exports / open folder):** the receipt detail view has **Open folder** (reveals the capsule
   folder in the OS file manager via `shell.openPath`) and **Copy path**, so you can grab a capsule's
   existing artifacts. Read-only — it surfaces files, never creates or mutates them.
-- **Next slices:** adapter status, packaging.
+- **Slice 7 (adapter status):** the **Adapter** screen is honest about what it can and can't know — it
+  doesn't manage/observe the MCP adapter yet, so it **never shows a fake "Connected"**. It explains the
+  four states (legend) and reports only the library-derived signal it can truly tell (no library / waiting
+  / receipts present), plus a "check a receipt library" action and a pointer to Install.
+- **Next slice:** packaging pass.
 
 The desktop **app is not a public download yet.** Don’t imply one exists.
 

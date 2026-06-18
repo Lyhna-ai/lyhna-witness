@@ -4,6 +4,7 @@ import { toInboxView, type InboxView, type InboxRow } from "../core/inboxView.js
 import { buildReceiptDetail, type ReceiptDetail, type DetailStep, type DetailArtifact } from "../core/receiptDetail.js";
 import { isSampleFolder } from "../core/sample.js";
 import { AGENT_TARGETS, snippetFor, INSTALL_NOTES } from "../core/installSnippets.js";
+import { ADAPTER_STATES, deriveLibrarySignal, ADAPTER_DISCLAIMER, type LibrarySignal } from "../core/adapterStatus.js";
 
 // Lyhna Desktop — app frame + Receipt Inbox + Receipt detail (Slices 1–3).
 //
@@ -64,7 +65,7 @@ export function App(): JSX.Element {
       <main className="main">
         {screen === "inbox" && <InboxScreen />}
         {screen === "install" && <InstallScreen />}
-        {screen === "adapter" && <PlaceholderScreen title="Adapter" what="honest local adapter status" />}
+        {screen === "adapter" && <AdapterScreen />}
         {screen === "settings" && <PlaceholderScreen title="Settings" what="receipt library path and adapter settings" />}
       </main>
     </div>
@@ -509,6 +510,70 @@ function ArtifactItem({ artifact }: { artifact: DetailArtifact }): JSX.Element {
         {artifact.present ? "present" : "missing"}
       </span>
     </li>
+  );
+}
+
+function AdapterScreen(): JSX.Element {
+  const [signal, setSignal] = useState<LibrarySignal>(
+    deriveLibrarySignal({ hasLibrary: false, readableCount: 0, unreadableCount: 0 })
+  );
+  const [checking, setChecking] = useState(false);
+  const hasShell = typeof window.lyhna !== "undefined";
+
+  const checkLibrary = useCallback(async () => {
+    const p = await window.lyhna?.selectLibrary();
+    if (!p) return;
+    setChecking(true);
+    const res = await window.lyhna?.loadInbox(p, true);
+    // Always replace the signal — never leave a stale "Receipts present" from a previous library.
+    if (!res || !res.ok) {
+      setSignal({
+        label: "Couldn’t read that library",
+        tone: "muted",
+        detail: res && !res.ok ? res.error : "No response from the desktop shell."
+      });
+    } else {
+      try {
+        const entries = parseInboxIndex(res.stdout).entries;
+        const readableCount = entries.filter((e) => e.kind === "capsule" || e.kind === "partial").length;
+        const unreadableCount = entries.filter((e) => e.kind === "unreadable").length;
+        setSignal(deriveLibrarySignal({ hasLibrary: true, readableCount, unreadableCount }));
+      } catch (e) {
+        setSignal({ label: "Couldn’t read that library", tone: "muted", detail: (e as Error).message });
+      }
+    }
+    setChecking(false);
+  }, []);
+
+  return (
+    <section className="screen">
+      <Header />
+      <div className="panel">
+        <h2 className="panel-title">Adapter status</h2>
+        <p className="disclaimer-banner">{ADAPTER_DISCLAIMER}</p>
+
+        <div className="signal">
+          <span className={"verdict tone-" + signal.tone}>{signal.label}</span>
+          <p className="signal-detail">{signal.detail}</p>
+          <button type="button" className="btn-ghost" onClick={checkLibrary} disabled={!hasShell || checking}>
+            {checking ? "Checking…" : "Check a receipt library…"}
+          </button>
+        </div>
+      </div>
+
+      <div className="panel">
+        <h3 className="panel-title">What the states mean</h3>
+        <ul className="states-legend">
+          {ADAPTER_STATES.map((s) => (
+            <li key={s.id}>
+              <span className="state-label">{s.label}</span>
+              <span className="state-meaning">{s.meaning}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="install-foot-note">Not connected yet? Wire your agent from the <strong>Install</strong> tab.</p>
+      </div>
+    </section>
   );
 }
 
