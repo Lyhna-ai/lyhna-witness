@@ -94,6 +94,12 @@ function InboxScreen(): JSX.Element {
   // Monotonic request token: if the user switches folders / toggles partials mid-load, only the latest
   // request is allowed to commit state — a slower earlier load can't clobber the newer view.
   const reqRef = useRef(0);
+  // Mirror of the active library path, so async callbacks (e.g. sample render) can tell whether the user
+  // switched libraries while they were awaiting, and bail instead of loading the wrong folder.
+  const pathRef = useRef<string | null>(null);
+  useEffect(() => {
+    pathRef.current = path;
+  }, [path]);
 
   const load = useCallback(async (root: string, ip: boolean) => {
     if (!window.lyhna) {
@@ -141,10 +147,14 @@ function InboxScreen(): JSX.Element {
   }, [load, includePartial]);
 
   const createSample = useCallback(async () => {
-    if (!window.lyhna || !path) return;
+    const target = path;
+    if (!window.lyhna || !target) return;
     setSampleNote(null);
     setError(null);
-    const res = await window.lyhna.createSampleReceipt(path);
+    const res = await window.lyhna.createSampleReceipt(target);
+    // If the user switched libraries while the CLI ran, drop this result — don't load the old folder's
+    // receipts under the newer library path.
+    if (pathRef.current !== target) return;
     if (!res.ok) {
       setError(res.error);
       return;
@@ -153,7 +163,7 @@ function InboxScreen(): JSX.Element {
       `Created a sample receipt at ${res.folder} — rendered from the bundled demo input by the real engine. ` +
         `Sample data, not a live witnessed run.`
     );
-    void load(path, includePartial);
+    void load(target, includePartial);
   }, [path, includePartial, load]);
 
   const togglePartial = useCallback(() => {
