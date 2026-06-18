@@ -88,6 +88,7 @@ function InboxScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [sampleNote, setSampleNote] = useState<string | null>(null);
 
   const hasShell = typeof window.lyhna !== "undefined";
   // Monotonic request token: if the user switches folders / toggles partials mid-load, only the latest
@@ -123,6 +124,7 @@ function InboxScreen(): JSX.Element {
     const p = await window.lyhna?.selectLibrary();
     if (p) {
       setSelected(null);
+      setSampleNote(null);
       setPath(p);
       void load(p, includePartial);
     }
@@ -132,10 +134,27 @@ function InboxScreen(): JSX.Element {
     const p = await window.lyhna?.exampleLibraryPath();
     if (p) {
       setSelected(null);
+      setSampleNote(null);
       setPath(p);
       void load(p, includePartial);
     }
   }, [load, includePartial]);
+
+  const createSample = useCallback(async () => {
+    if (!window.lyhna || !path) return;
+    setSampleNote(null);
+    setError(null);
+    const res = await window.lyhna.createSampleReceipt(path);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setSampleNote(
+      `Created a sample receipt at ${res.folder} — rendered from the bundled demo input by the real engine. ` +
+        `Sample data, not a live witnessed run.`
+    );
+    void load(path, includePartial);
+  }, [path, includePartial, load]);
 
   const togglePartial = useCallback(() => {
     const next = !includePartial;
@@ -165,6 +184,11 @@ function InboxScreen(): JSX.Element {
                 Refresh
               </button>
             )}
+            {path && (
+              <button type="button" className="btn-ghost" onClick={createSample} disabled={loading}>
+                Create sample receipt
+              </button>
+            )}
             <label className="check">
               <input type="checkbox" checked={includePartial} onChange={togglePartial} /> Include partial
             </label>
@@ -172,6 +196,8 @@ function InboxScreen(): JSX.Element {
         </div>
 
         {path && <p className="lib-path mono">{path}</p>}
+
+        {sampleNote && <p className="sample-banner">🧪 {sampleNote}</p>}
 
         {!hasShell && (
           <div className="empty">
