@@ -6,9 +6,24 @@
 // it as a sample; the folder name makes it unmistakable on disk. Electron-free so it's headlessly testable.
 
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 export const SAMPLE_FOLDER_NAME = "lyhna-sample-receipt";
+
+/**
+ * Pick a sample folder name that does NOT already exist in the library, so creating a sample never
+ * overwrites an existing receipt folder (a real user capsule could happen to be named the same). Pure:
+ * the caller supplies the existence predicate, so it unit-tests without the filesystem.
+ */
+export function pickSampleFolderName(exists: (name: string) => boolean): string {
+  if (!exists(SAMPLE_FOLDER_NAME)) return SAMPLE_FOLDER_NAME;
+  for (let i = 2; i <= 1000; i++) {
+    const name = `${SAMPLE_FOLDER_NAME}-${i}`;
+    if (!exists(name)) return name;
+  }
+  throw new Error("could not find an unused sample folder name in this library");
+}
 
 export interface RenderSampleResult {
   code: number;
@@ -24,7 +39,8 @@ export function sampleRenderArgs(cliPath: string, inputPath: string, outDir: str
 
 /** Render the bundled sample input into `<libraryRoot>/lyhna-sample-receipt/` using the witness CLI. */
 export function renderSample(cliPath: string, inputPath: string, libraryRoot: string): Promise<RenderSampleResult> {
-  const folder = join(libraryRoot, SAMPLE_FOLDER_NAME);
+  // Never overwrite an existing folder — pick the first unused lyhna-sample-receipt[-N] name.
+  const folder = join(libraryRoot, pickSampleFolderName((n) => existsSync(join(libraryRoot, n))));
   const args = sampleRenderArgs(cliPath, inputPath, folder);
   return new Promise<RenderSampleResult>((resolve, reject) => {
     const child = spawn(process.execPath, args, {
