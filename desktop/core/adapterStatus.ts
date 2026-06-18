@@ -48,9 +48,15 @@ export interface LibrarySignal {
 
 /**
  * The honest, library-derived status — the only thing the app can assert without managing the adapter.
+ * It counts only READABLE receipts (capsule/partial); folders the indexer couldn't read (unreadable) are
+ * never counted as receipts, and an unreadable-only library is surfaced as such rather than shown green.
  * It reports presence of receipts, never a live connection.
  */
-export function deriveLibrarySignal(input: { hasLibrary: boolean; receiptCount: number }): LibrarySignal {
+export function deriveLibrarySignal(input: {
+  hasLibrary: boolean;
+  readableCount: number;
+  unreadableCount: number;
+}): LibrarySignal {
   if (!input.hasLibrary) {
     return {
       label: "No receipt library checked",
@@ -58,17 +64,28 @@ export function deriveLibrarySignal(input: { hasLibrary: boolean; receiptCount: 
       detail: "Pick a receipt library to see what Lyhna can tell from it."
     };
   }
-  if (input.receiptCount <= 0) {
+  if (input.readableCount <= 0) {
+    if (input.unreadableCount > 0) {
+      return {
+        label: "No readable receipts",
+        tone: "review",
+        detail: `${input.unreadableCount} folder${input.unreadableCount === 1 ? "" : "s"} here couldn't be read as a capsule — nothing readable to show yet.`
+      };
+    }
     return {
       label: "Waiting for first witnessed tool call",
       tone: "review",
       detail: "This library has no receipts yet. Route an agent's tool calls through Lyhna to create one."
     };
   }
+  const skipped =
+    input.unreadableCount > 0
+      ? ` (${input.unreadableCount} unreadable folder${input.unreadableCount === 1 ? "" : "s"} skipped)`
+      : "";
   return {
     label: "Receipts present",
     tone: "ok",
-    detail: `${input.receiptCount} receipt${input.receiptCount === 1 ? "" : "s"} in this library — open the inbox to read them. (This shows receipts exist, not a live adapter connection.)`
+    detail: `${input.readableCount} readable receipt${input.readableCount === 1 ? "" : "s"} in this library${skipped} — open the inbox to read them. (This shows receipts exist, not a live adapter connection.)`
   };
 }
 

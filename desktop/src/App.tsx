@@ -514,7 +514,9 @@ function ArtifactItem({ artifact }: { artifact: DetailArtifact }): JSX.Element {
 }
 
 function AdapterScreen(): JSX.Element {
-  const [signal, setSignal] = useState<LibrarySignal>(deriveLibrarySignal({ hasLibrary: false, receiptCount: 0 }));
+  const [signal, setSignal] = useState<LibrarySignal>(
+    deriveLibrarySignal({ hasLibrary: false, readableCount: 0, unreadableCount: 0 })
+  );
   const [checking, setChecking] = useState(false);
   const hasShell = typeof window.lyhna !== "undefined";
 
@@ -532,7 +534,10 @@ function AdapterScreen(): JSX.Element {
       });
     } else {
       try {
-        setSignal(deriveLibrarySignal({ hasLibrary: true, receiptCount: parseInboxIndex(res.stdout).count }));
+        const entries = parseInboxIndex(res.stdout).entries;
+        const readableCount = entries.filter((e) => e.kind === "capsule" || e.kind === "partial").length;
+        const unreadableCount = entries.filter((e) => e.kind === "unreadable").length;
+        setSignal(deriveLibrarySignal({ hasLibrary: true, readableCount, unreadableCount }));
       } catch (e) {
         setSignal({ label: "Couldn’t read that library", tone: "muted", detail: (e as Error).message });
       }

@@ -13,25 +13,37 @@ describe("ADAPTER_STATES legend", () => {
 
 describe("deriveLibrarySignal", () => {
   test("no library → muted, no claim", () => {
-    const s = deriveLibrarySignal({ hasLibrary: false, receiptCount: 0 });
+    const s = deriveLibrarySignal({ hasLibrary: false, readableCount: 0, unreadableCount: 0 });
     expect(s.tone).toBe("muted");
     expect(s.label).toMatch(/No receipt library/i);
   });
   test("library with no receipts → waiting", () => {
-    const s = deriveLibrarySignal({ hasLibrary: true, receiptCount: 0 });
+    const s = deriveLibrarySignal({ hasLibrary: true, readableCount: 0, unreadableCount: 0 });
     expect(s.tone).toBe("review");
     expect(s.label).toMatch(/Waiting for first witnessed tool call/i);
   });
-  test("library with receipts → present, and explicitly not a live connection", () => {
-    const s = deriveLibrarySignal({ hasLibrary: true, receiptCount: 3 });
+  test("library with only unreadable folders → NOT green (no fake 'Receipts present')", () => {
+    const s = deriveLibrarySignal({ hasLibrary: true, readableCount: 0, unreadableCount: 2 });
+    expect(s.tone).toBe("review");
+    expect(s.label).toBe("No readable receipts");
+    expect(s.detail).toMatch(/couldn.t be read as a capsule/);
+  });
+  test("library with readable receipts → present, not a live connection", () => {
+    const s = deriveLibrarySignal({ hasLibrary: true, readableCount: 3, unreadableCount: 0 });
     expect(s.tone).toBe("ok");
     expect(s.label).toBe("Receipts present");
-    expect(s.detail).toMatch(/3 receipts/);
+    expect(s.detail).toMatch(/3 readable receipts/);
     expect(s.detail).toMatch(/not a live adapter connection/i);
   });
+  test("readable + some unreadable → present, notes the skipped folders", () => {
+    const s = deriveLibrarySignal({ hasLibrary: true, readableCount: 1, unreadableCount: 2 });
+    expect(s.tone).toBe("ok");
+    expect(s.detail).toMatch(/1 readable receipt/);
+    expect(s.detail).toMatch(/2 unreadable folders skipped/);
+  });
   test("never returns a 'Connected' label (no fake green)", () => {
-    for (const count of [0, 1, 99]) {
-      expect(deriveLibrarySignal({ hasLibrary: true, receiptCount: count }).label).not.toMatch(/^Connected$/);
+    for (const readable of [0, 1, 99]) {
+      expect(deriveLibrarySignal({ hasLibrary: true, readableCount: readable, unreadableCount: 0 }).label).not.toMatch(/^Connected$/);
     }
   });
 });
