@@ -9,6 +9,7 @@ import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
+// Keep in sync with core/sample.ts SAMPLE_FOLDER_NAME (the renderer can't import this node-only module).
 export const SAMPLE_FOLDER_NAME = "lyhna-sample-receipt";
 
 /**

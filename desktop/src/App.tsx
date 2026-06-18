@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { parseInboxIndex } from "../core/inboxIndex.js";
 import { toInboxView, type InboxView, type InboxRow } from "../core/inboxView.js";
 import { buildReceiptDetail, type ReceiptDetail, type DetailStep, type DetailArtifact } from "../core/receiptDetail.js";
+import { isSampleFolder } from "../core/sample.js";
 
 // Lyhna Desktop — app frame + Receipt Inbox + Receipt detail (Slices 1–3).
 //
@@ -292,6 +293,7 @@ function ReceiptRow({ row, onOpen }: { row: InboxRow; onOpen: (folder: string) =
       <button type="button" className="row" onClick={() => onOpen(row.folder)}>
         <div className="row-top">
           <span className="row-title">{row.title}</span>
+          {isSampleFolder(row.folder) && <span className="tag tag-sample">sample</span>}
           {row.kindTag && <span className={"tag tag-" + row.kindTag}>{row.kindTag}</span>}
           <span className={"verdict tone-" + row.verdictTone}>{row.verdictLabel}</span>
         </div>
@@ -361,6 +363,12 @@ function ReceiptDetailScreen({ folder, onBack }: { folder: string; onBack: () =>
       <button type="button" className="btn-ghost back" onClick={onBack}>
         ← Back to inbox
       </button>
+
+      {isSampleFolder(folder) && (
+        <p className="sample-banner">
+          🧪 Sample receipt — rendered from the bundled demo input, not a live witnessed run.
+        </p>
+      )}
 
       {loading && <p className="status">Opening receipt…</p>}
       {error && (
