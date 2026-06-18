@@ -83,8 +83,12 @@ export interface InboxStats {
   count: number;
   shown: number;
   includedPartial: boolean;
-  /** Entries with at least one unsupported claim or do-not-send flag. */
-  flagged: number;
+  /**
+   * Entries that need review before continuing — i.e. `safe_to_continue === false`. This matches the
+   * per-row "Review before continuing" verdict exactly (including route-only mismatches and approval
+   * holds, which carry no unsupported/do-not-send count), so the header can never disagree with the rows.
+   */
+  needsReview: number;
 }
 
 export interface InboxView {
@@ -93,7 +97,6 @@ export interface InboxView {
   rows: InboxRow[];
 }
 
-const n = (v: number | null | undefined): number => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 const numText = (v: number | null | undefined): string =>
   v === null || v === undefined ? "?" : String(v);
 
@@ -126,9 +129,14 @@ export function agentLabels(agents: InboxAgent[] | null): string[] {
     .filter((s): s is string => s.length > 0);
 }
 
-/** True if an entry carries witnessed gaps a person should look at. */
-export function isFlagged(entry: InboxEntry): boolean {
-  return n(entry.summary.unsupported) > 0 || n(entry.summary.do_not_send) > 0;
+/**
+ * True if an entry needs review before continuing. Tied to the receipt's own verdict
+ * (`safe_to_continue === false`) so it matches the row-level "Review before continuing" pill — a
+ * route-only mismatch or approval hold (no unsupported/do-not-send count) still counts. An unreadable
+ * entry (verdict null) is NOT counted here; it surfaces via its own tag + warning instead.
+ */
+export function needsReview(entry: InboxEntry): boolean {
+  return entry.safe_to_continue === false;
 }
 
 export function toInboxRow(entry: InboxEntry): InboxRow {
@@ -157,7 +165,7 @@ export function inboxStats(index: InboxIndex): InboxStats {
     count: index.count,
     shown: index.shown,
     includedPartial: index.included_partial,
-    flagged: index.entries.filter(isFlagged).length
+    needsReview: index.entries.filter(needsReview).length
   };
 }
 

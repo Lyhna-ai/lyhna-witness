@@ -217,7 +217,7 @@ function InboxList({ view }: { view: InboxView }): JSX.Element {
         {view.stats.shown < view.stats.count
           ? `Showing ${view.stats.shown} of ${view.stats.count} receipts`
           : `${view.stats.count} receipt${view.stats.count === 1 ? "" : "s"}`}
-        {view.stats.flagged > 0 ? ` · ${view.stats.flagged} need review` : ""}
+        {view.stats.needsReview > 0 ? ` · ${view.stats.needsReview} need review` : ""}
         {view.stats.includedPartial ? " · partial included" : ""}
       </p>
       <ul className="rows">
