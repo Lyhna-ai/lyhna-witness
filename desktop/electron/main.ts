@@ -5,7 +5,7 @@
 // the framework-agnostic core (../core) and the node-only transport (./inboxSource). The shell never
 // re-implements receipt/capsule semantics and never invents data — it returns the engine's raw output.
 
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { runInbox } from "./inboxSource.js";
@@ -104,6 +104,23 @@ ipcMain.handle(
         return { ok: false, error: r.stderr.trim() || `sample render exited with code ${r.code}` };
       }
       return { ok: true, folder: r.folder };
+    } catch (e) {
+      return { ok: false, error: (e as Error).message };
+    }
+  }
+);
+
+// Reveal a capsule folder in the OS file manager so the user can grab its existing artifacts. Read-only:
+// it opens the folder, it never creates or modifies receipt files.
+ipcMain.handle(
+  "lyhna:openFolder",
+  async (_e, folder: string): Promise<{ ok: true } | { ok: false; error: string }> => {
+    if (typeof folder !== "string" || folder.length === 0) {
+      return { ok: false, error: "No folder to open." };
+    }
+    try {
+      const err = await shell.openPath(folder); // returns "" on success, else an error string
+      return err ? { ok: false, error: err } : { ok: true };
     } catch (e) {
       return { ok: false, error: (e as Error).message };
     }

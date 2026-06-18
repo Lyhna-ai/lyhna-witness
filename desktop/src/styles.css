@@ -185,3 +185,7 @@ body {
 .snippet { margin: 0; max-height: 360px; }
 .bill { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; }
 .bill li { color: var(--ink-soft); line-height: 1.5; }
+
+/* Receipt detail actions (open folder / copy path) */
+.detail-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.detail-actions-note { color: var(--ink-faint); font-size: 12px; }

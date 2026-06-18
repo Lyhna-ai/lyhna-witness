@@ -12,6 +12,7 @@ interface ReceiptFilesRaw {
 }
 type LoadReceiptResult = { ok: true; files: ReceiptFilesRaw } | { ok: false; error: string };
 type CreateSampleResult = { ok: true; folder: string } | { ok: false; error: string };
+type OpenFolderResult = { ok: true } | { ok: false; error: string };
 
 declare global {
   interface Window {
@@ -22,6 +23,7 @@ declare global {
       loadInbox(root: string, includePartial: boolean): Promise<LoadInboxResult>;
       loadReceipt(folder: string): Promise<LoadReceiptResult>;
       createSampleReceipt(libraryRoot: string): Promise<CreateSampleResult>;
+      openFolder(folder: string): Promise<OpenFolderResult>;
     };
   }
 }
