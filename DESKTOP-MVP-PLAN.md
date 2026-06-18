@@ -15,10 +15,12 @@
 >   repo, and on-display visual QA. No prebuilt download, billing, signup, telemetry, or cloud sync.
 >
 > Honesty boundaries that bind every screen and every claim below:
-> - Lyhna Desktop is **packaging direction**, not a shipped download.
+> - Lyhna Desktop **exists in-repo and runs from source** (`desktop/`), but is **not a shipped/downloadable
+>   product** — there is no prebuilt installer (see §8 packaging for the engine-bundling blocker).
 > - The **MCP adapter exists** (`@lyhna/mcp` on npm); the **witness CLI exists** (`node src/cli.mjs`);
 >   the **capsule exports exist** (`CAPSULE.md` / `capsule.json` / `HANDOFF.md` / `handoff.json` /
->   `next-ai-prompt.md` / optional `okf/` / `pam/`). The **desktop app does not exist yet.**
+>   `next-ai-prompt.md` / optional `okf/` / `pam/`). The **desktop app runs from source today** (`desktop/`)
+>   but is **not yet a standalone download.**
 > - An agent is **witnessed only when its tool calls route through Lyhna** — never imply that connecting
 >   the app automatically witnesses everything an agent does.
 > - **Local by default** (not "local-only"): cloud-hosted agents may need a remote/tunnel bridge later.
