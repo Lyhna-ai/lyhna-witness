@@ -39,8 +39,13 @@ This is the **v1 build in progress**, staged inside `lyhna-witness/desktop/` (se
   witnessed counts, agents, spine ids, and warning/missing-file counts. Transport (`electron/inboxSource.ts`,
   electron-free) spawns the CLI; parsing lives in `core/inboxIndex.ts` (unit-tested). The GUI re-implements
   no receipt semantics.
-- **Next slices:** receipt detail, sample-receipt flow, install snippets, exports/open-folder, adapter
-  status, packaging.
+- **Slice 3 (receipt detail):** click a receipt → the detail view renders the readable receipt
+  (`HANDOFF.md`, verbatim, as the main surface) plus the engine’s own verdict, per-step claimed-vs-
+  witnessed labels (`SUPPORTED` / `UNSUPPORTED` / mismatch, with `human_note`), declared artifacts marked
+  present/missing, and structural warnings. The GUI renders engine fields — it never re-judges or
+  re-labels. Transport (`electron/receiptSource.ts`) reads the folder; shaping is pure in
+  `core/receiptDetail.ts` (unit-tested).
+- **Next slices:** sample-receipt flow, install snippets, exports/open-folder, adapter status, packaging.
 
 The desktop **app is not a public download yet.** Don’t imply one exists.
 

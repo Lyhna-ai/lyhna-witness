@@ -9,6 +9,7 @@ import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { runInbox } from "./inboxSource.js";
+import { readReceipt, type ReceiptFilesRaw } from "./receiptSource.js";
 
 const here = dirname(fileURLToPath(import.meta.url)); // <repo>/desktop/dist-electron
 
@@ -68,6 +69,18 @@ ipcMain.handle(
         return { ok: false, error: stderr.trim() || `inbox exited with code ${code}` };
       }
       return { ok: true, stdout };
+    } catch (e) {
+      return { ok: false, error: (e as Error).message };
+    }
+  }
+);
+
+// Read one capsule folder's receipt files (raw); the renderer shapes them via core/receiptDetail.
+ipcMain.handle(
+  "lyhna:loadReceipt",
+  async (_e, folder: string): Promise<{ ok: true; files: ReceiptFilesRaw } | { ok: false; error: string }> => {
+    try {
+      return { ok: true, files: await readReceipt(folder) };
     } catch (e) {
       return { ok: false, error: (e as Error).message };
     }
