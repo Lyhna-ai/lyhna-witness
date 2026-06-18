@@ -29,6 +29,14 @@
 
 ---
 
+> **Reading note (sections 1–10 are the ORIGINAL plan, pre-implementation).** They are kept for rationale
+> and history — the decisions, screen list, and storage/indexing rules still describe how the app is
+> built. But where a section says something is "missing", "not added yet", or "not built" (e.g. §2 missing
+> pieces, §3 "no Tauri/Electron dependency is added", §9 what-not-to-build-yet), that reflects the state
+> *before* the slices landed. **Current status is the status block above + [`desktop/README.md`](./desktop/README.md):**
+> Lyhna Desktop v1 is built in-repo (Electron + Vite/React under `desktop/`); what remains is a standalone
+> installer (engine bundling), live adapter management, signing UI, Settings, and repo extraction.
+
 ## 1. Existing reusable code (the engine is already here)
 
 `lyhna-witness` is the deterministic engine; the desktop app is a thin local shell over it.
