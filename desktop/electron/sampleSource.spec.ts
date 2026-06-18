@@ -1,5 +1,8 @@
 import { describe, test, expect } from "vitest";
-import { sampleRenderArgs, pickSampleFolderName, SAMPLE_FOLDER_NAME } from "./sampleSource.js";
+import { mkdtempSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { sampleRenderArgs, reserveSampleFolder, SAMPLE_FOLDER_NAME } from "./sampleSource.js";
 
 describe("sampleRenderArgs", () => {
   test("renders the input into outDir with both carrier bundles, in order", () => {
@@ -17,15 +20,24 @@ describe("sampleRenderArgs", () => {
   });
 });
 
-describe("pickSampleFolderName (never overwrite)", () => {
-  test("uses the base name when free", () => {
-    expect(pickSampleFolderName(() => false)).toBe("lyhna-sample-receipt");
+describe("reserveSampleFolder (atomic, never overwrite)", () => {
+  test("reserves the base name in an empty library and creates it", () => {
+    const lib = mkdtempSync(join(tmpdir(), "lyhna-reserve-"));
+    const dir = reserveSampleFolder(lib);
+    expect(dir).toBe(join(lib, "lyhna-sample-receipt"));
+    expect(existsSync(dir)).toBe(true);
   });
-  test("suffixes to the first unused name on collision", () => {
-    const taken = new Set(["lyhna-sample-receipt", "lyhna-sample-receipt-2"]);
-    expect(pickSampleFolderName((n) => taken.has(n))).toBe("lyhna-sample-receipt-3");
+  test("two reservations yield two distinct, real folders (no overwrite, no collision)", () => {
+    const lib = mkdtempSync(join(tmpdir(), "lyhna-reserve-"));
+    const a = reserveSampleFolder(lib);
+    const b = reserveSampleFolder(lib);
+    expect(a).not.toBe(b);
+    expect(b).toBe(join(lib, "lyhna-sample-receipt-2"));
+    expect(existsSync(a)).toBe(true);
+    expect(existsSync(b)).toBe(true);
   });
-  test("throws if no unused name is available", () => {
-    expect(() => pickSampleFolderName(() => true)).toThrow(/unused sample folder/);
+  test("throws when the library root does not exist", () => {
+    const base = mkdtempSync(join(tmpdir(), "lyhna-reserve-"));
+    expect(() => reserveSampleFolder(join(base, "does-not-exist"))).toThrow();
   });
 });

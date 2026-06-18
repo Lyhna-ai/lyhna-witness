@@ -6,23 +6,31 @@
 // it as a sample; the folder name makes it unmistakable on disk. Electron-free so it's headlessly testable.
 
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 export const SAMPLE_FOLDER_NAME = "lyhna-sample-receipt";
 
 /**
- * Pick a sample folder name that does NOT already exist in the library, so creating a sample never
- * overwrites an existing receipt folder (a real user capsule could happen to be named the same). Pure:
- * the caller supplies the existence predicate, so it unit-tests without the filesystem.
+ * Atomically reserve an unused sample folder in the library and return its path. Uses an exclusive
+ * (non-recursive) mkdir so the create is never destructive AND two near-simultaneous creates (e.g. a
+ * double-click) can't both claim the same name — the loser gets EEXIST and moves to the next. The CLI
+ * then renders into the now-existing directory. Errors other than EEXIST (e.g. a missing library root)
+ * propagate so the caller can report them.
  */
-export function pickSampleFolderName(exists: (name: string) => boolean): string {
-  if (!exists(SAMPLE_FOLDER_NAME)) return SAMPLE_FOLDER_NAME;
-  for (let i = 2; i <= 1000; i++) {
-    const name = `${SAMPLE_FOLDER_NAME}-${i}`;
-    if (!exists(name)) return name;
+export function reserveSampleFolder(libraryRoot: string): string {
+  for (let i = 1; i <= 1000; i++) {
+    const name = i === 1 ? SAMPLE_FOLDER_NAME : `${SAMPLE_FOLDER_NAME}-${i}`;
+    const dir = join(libraryRoot, name);
+    try {
+      mkdirSync(dir);
+      return dir;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "EEXIST") continue;
+      throw e;
+    }
   }
-  throw new Error("could not find an unused sample folder name in this library");
+  throw new Error("could not reserve an unused sample folder name in this library");
 }
 
 export interface RenderSampleResult {
@@ -39,8 +47,8 @@ export function sampleRenderArgs(cliPath: string, inputPath: string, outDir: str
 
 /** Render the bundled sample input into `<libraryRoot>/lyhna-sample-receipt/` using the witness CLI. */
 export function renderSample(cliPath: string, inputPath: string, libraryRoot: string): Promise<RenderSampleResult> {
-  // Never overwrite an existing folder — pick the first unused lyhna-sample-receipt[-N] name.
-  const folder = join(libraryRoot, pickSampleFolderName((n) => existsSync(join(libraryRoot, n))));
+  // Atomically reserve a fresh folder (never overwrites; safe against double-clicks) before rendering.
+  const folder = reserveSampleFolder(libraryRoot);
   const args = sampleRenderArgs(cliPath, inputPath, folder);
   return new Promise<RenderSampleResult>((resolve, reject) => {
     const child = spawn(process.execPath, args, {
