@@ -5,9 +5,29 @@ import {
   verdict,
   countsLine,
   agentLabels,
-  isFlagged,
-  type InboxIndex
+  needsReview,
+  type InboxIndex,
+  type InboxEntry
 } from "./inboxView.js";
+
+// A receipt that is not-safe ONLY because of a route/action mismatch — no unsupported, no do-not-send.
+// This is the case the header "need review" count must still catch (it mirrors the row verdict).
+const routeOnlyMismatch: InboxEntry = {
+  folder: "/receipts/route-mismatch",
+  folderName: "route-mismatch",
+  kind: "capsule",
+  name: "route-mismatch",
+  objective: "Post the update.",
+  safe_to_continue: false,
+  summary: { total_steps: 1, supported: 0, mismatches: 1, unsupported: 0, do_not_send: 0 },
+  parent_loop_id: null,
+  receipt_id: null,
+  agents: null,
+  artifacts: ["capsule.json"],
+  missing_files: [],
+  timestamp: null,
+  warnings: []
+};
 
 // A fixture mirroring `node src/inbox-cli.mjs examples --json --include-partial` output shape:
 // a full capsule with the run spine, a plain full capsule, a degraded handoff-only entry, and an
@@ -125,10 +145,18 @@ describe("agentLabels", () => {
   });
 });
 
-describe("isFlagged", () => {
-  test("flags unsupported / do-not-send", () => {
-    expect(isFlagged(index.entries[0])).toBe(true);
-    expect(isFlagged(index.entries[1])).toBe(false);
+describe("needsReview", () => {
+  test("true when safe_to_continue is false (matches the row verdict)", () => {
+    expect(needsReview(index.entries[0])).toBe(true); // agent-team, not safe
+    expect(needsReview(index.entries[1])).toBe(false); // live-loop, safe
+  });
+  test("catches a route-only mismatch with no unsupported/do-not-send count", () => {
+    expect(routeOnlyMismatch.summary.unsupported).toBe(0);
+    expect(routeOnlyMismatch.summary.do_not_send).toBe(0);
+    expect(needsReview(routeOnlyMismatch)).toBe(true);
+  });
+  test("an unreadable entry (verdict null) is not counted as needs-review", () => {
+    expect(needsReview(index.entries[3])).toBe(false);
   });
 });
 
@@ -166,6 +194,16 @@ describe("toInboxView", () => {
     const view = toInboxView(index);
     expect(view.root).toBe("/receipts");
     expect(view.rows).toHaveLength(4);
-    expect(view.stats).toEqual({ count: 4, shown: 4, includedPartial: true, flagged: 2 });
+    expect(view.stats).toEqual({ count: 4, shown: 4, includedPartial: true, needsReview: 2 });
+  });
+  test("needsReview counts route-only mismatches the narrow flag would miss", () => {
+    const withMismatch: InboxIndex = {
+      ...index,
+      count: index.entries.length + 1,
+      shown: index.entries.length + 1,
+      entries: [...index.entries, routeOnlyMismatch]
+    };
+    // agent-team + partial + route-mismatch = 3 (live-loop safe, unreadable verdict null)
+    expect(toInboxView(withMismatch).stats.needsReview).toBe(3);
   });
 });
