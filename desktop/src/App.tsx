@@ -523,11 +523,18 @@ function AdapterScreen(): JSX.Element {
     if (!p) return;
     setChecking(true);
     const res = await window.lyhna?.loadInbox(p, true);
-    if (res && res.ok) {
+    // Always replace the signal — never leave a stale "Receipts present" from a previous library.
+    if (!res || !res.ok) {
+      setSignal({
+        label: "Couldn’t read that library",
+        tone: "muted",
+        detail: res && !res.ok ? res.error : "No response from the desktop shell."
+      });
+    } else {
       try {
         setSignal(deriveLibrarySignal({ hasLibrary: true, receiptCount: parseInboxIndex(res.stdout).count }));
-      } catch {
-        setSignal(deriveLibrarySignal({ hasLibrary: true, receiptCount: 0 }));
+      } catch (e) {
+        setSignal({ label: "Couldn’t read that library", tone: "muted", detail: (e as Error).message });
       }
     }
     setChecking(false);
