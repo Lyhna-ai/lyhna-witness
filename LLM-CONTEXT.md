@@ -244,6 +244,11 @@ index over the capsule folders the engine already produces — `src/capsule-inde
 Tauri/Electron, no backend. The desktop app itself is still unbuilt (packaging direction). Recommended
 shell: Tauri + Vite/React in a **separate** `lyhna-desktop` repo, with `lyhna-witness` as the engine.
 
+**Desktop MVP — lane 2 (2026-06-18):** the headless **inbox CLI** — `src/inbox-cli.mjs` (`npm run inbox`)
++ `test/inbox-cli.test.mjs`. Lists a receipt-library folder's capsules as deterministic text or `--json`
+(`--include-partial` / `--limit` / `--help`); invalid root exits nonzero, malformed capsule → unreadable
+warning entry. The usable, CI-tested local inbox primitive the GUI will render over. Still no GUI.
+
 **Deferred / next lanes (NOT V1 blockers):** the actual **Lyhna Desktop app** (local app + receipt inbox
 backend that lists real local receipts) — the site previews it but it isn't built; a real buy-once
 purchase path when numbers are approved; proxy README repositioning onto "witness"; live Zapier/Gmail
@@ -334,7 +339,9 @@ second engineer; don't merge around it.
   capsule.json). `src/contract.mjs` — the claim-to-action receipt contract (spine). `src/cli.mjs` —
   the `lyhna-witness` CLI. `src/capsule-indexer.mjs` — **Lyhna Desktop read model**: a pure,
   deterministic local indexer over capsule folders (`indexReceiptLibrary` + `summarizeCapsuleManifest` /
-  `summarizeHandoff`); reads what `capsule.json`/`handoff.json` say, never fabricates. See
+  `summarizeHandoff`); reads what `capsule.json`/`handoff.json` say, never fabricates.
+  `src/inbox-cli.mjs` — **Lyhna Desktop inbox CLI** (`npm run inbox`): headless, deterministic, no-color
+  lister over the indexer (text or `--json`; `--include-partial` / `--limit` / `--help`). See
   `DESKTOP-MVP-PLAN.md`.
 - `demo/*.mjs` — regenerate `examples/*`. `examples/live-loop/` — the canonical receipt.
   `examples/agent-team/` — the parent+subagent capsule (spine attribution incl. an unwitnessed branch;

@@ -1,10 +1,13 @@
 # Lyhna Desktop — MVP Plan
 
-> **Status (2026-06-18):** direction + first proof. The desktop **app does not exist yet** — it is the
-> packaging direction for the receipt layer that already works today (the MCP adapter and the witness
-> CLI). This document plans the build; the only code shipped alongside it is a small, zero-dependency
-> **local capsule indexer** (`src/capsule-indexer.mjs`) that proves the receipt inbox can be a read model
-> over the capsule folders the engine already produces.
+> **Status (2026-06-18):** direction + first primitives. The desktop **app does not exist yet** — it is
+> the packaging direction for the receipt layer that already works today (the MCP adapter and the witness
+> CLI). This document plans the build. Shipped so far:
+> - **Lane 1 — local capsule indexer** (`src/capsule-indexer.mjs`): the read model — proves the receipt
+>   inbox can be a deterministic index over the capsule folders the engine already produces.
+> - **Lane 2 — headless inbox CLI** (`src/inbox-cli.mjs`, `npm run inbox`): the local inbox primitive —
+>   lists the capsules in a receipt-library folder (human or `--json`), with no GUI. This is the exact
+>   data layer the desktop inbox will sit on.
 >
 > Honesty boundaries that bind every screen and every claim below:
 > - Lyhna Desktop is **packaging direction**, not a shipped download.
@@ -34,10 +37,14 @@
   sample receipt."
 - **Canonical fixtures** — `examples/live-loop/` (plain capsule) and `examples/agent-team/` (capsule with
   the run spine + subagent attribution). The indexer and future inbox UI test against these.
-- **NEW in this PR — `src/capsule-indexer.mjs`** — `indexReceiptLibrary(root, { includePartial })`
-  returns a deterministic, compact inbox summary per capsule folder (verdict, counts, spine, agents,
-  artifacts, missing files, warnings). Pure summarizers `summarizeCapsuleManifest` / `summarizeHandoff`
-  are exported for reuse. This is the **read model** behind the receipt inbox.
+- **`src/capsule-indexer.mjs`** (lane 1) — `indexReceiptLibrary(root, { includePartial })` returns a
+  deterministic, compact inbox summary per capsule folder (verdict, counts, spine, agents, artifacts,
+  missing files, warnings). Pure summarizers `summarizeCapsuleManifest` / `summarizeHandoff` are exported
+  for reuse. This is the **read model** behind the receipt inbox.
+- **`src/inbox-cli.mjs`** (lane 2) — the headless **inbox primitive**: `node src/inbox-cli.mjs <root>`
+  (or `npm run inbox -- <root>`) prints the inbox deterministically as text or `--json`, with
+  `--include-partial` / `--limit <n>` / `--help`. No GUI, no color, no clock. The desktop inbox screen
+  is a renderer over this exact data; until the GUI exists, this is the usable, CI-tested inbox.
 
 ## 2. Missing pieces (what the desktop app still needs)
 
@@ -167,13 +174,16 @@ Everything left of the receipt library is the existing engine. The desktop app o
 
 ## 10. Next implementation PR (after this one)
 
-**PR N+1 — "Inbox CLI + watch": a headless, dependency-free path to the inbox before any GUI.**
+Lane 2 (the headless inbox CLI) is **landed** — `src/inbox-cli.mjs` + `npm run inbox`, with text/JSON
+output, `--include-partial`, `--limit`, and `--help`, gated by `test/inbox-cli.test.mjs`. Candidates for
+the next lane, in order of preference:
 
-- Add a small `node src/inbox-cli.mjs <receipt-root> [--full-only] [--json]` that prints the indexer's
-  summary (human table + `--json`), so the receipt inbox is usable and testable from the terminal and CI
-  before the desktop shell exists.
-- Optionally a `--watch` that re-indexes on folder change (still zero-dep; `fs.watch`).
-- Keep it in `lyhna-witness` (engine-side, deterministic, gated by tests).
+- **Lane 3a — `--watch` (optional, small):** re-index and re-print on folder change (zero-dep `fs.watch`),
+  so a terminal user sees new receipts land. Deferred from lane 2 to keep that PR small and because a
+  watch loop is inherently time/event-driven (it must stay out of the deterministic core; only the
+  *printed snapshot* is deterministic). Ship only if it stays tiny and well-tested.
+- **Lane 3b — the desktop shell:** in the separate `lyhna-desktop` repo, Tauri + Vite/React over this
+  exact indexer/CLI, starting with the Home/status + Receipt inbox + Receipt detail screens.
 
-**Then** the desktop shell lands in the separate `lyhna-desktop` repo: Tauri + Vite/React over this exact
-indexer, starting with the Home/status + Receipt inbox + Receipt detail screens.
+Either way the engine-side contract is now stable: the GUI consumes `--json` (or imports the indexer
+directly); it does not re-implement capsule parsing.

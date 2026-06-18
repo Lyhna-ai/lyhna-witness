@@ -95,6 +95,27 @@ handoff trio plus that capsule index. Each export is a deterministic projection 
 OKF step / PAM item carries the receipt's evidence labels), so a downstream knowledge/memory system
 inherits the honesty ceiling instead of stripping it.
 
+### Browse your receipts — the local inbox (Lyhna Desktop primitive)
+
+Once you have a folder of capsules, list them with the headless **receipt inbox**:
+
+```bash
+node src/inbox-cli.mjs <receipt-library-root>      # e.g. the examples/ folder in this repo
+npm run inbox -- examples                            # same thing via npm
+node src/inbox-cli.mjs examples --json              # machine-readable, deterministic
+node src/inbox-cli.mjs examples --include-partial   # also list handoff-only folders (degraded)
+node src/inbox-cli.mjs examples --limit 10          # show at most 10
+node src/inbox-cli.mjs --help
+```
+
+It scans the immediate child folders of the root, treats each folder containing `capsule.json` as a
+capsule, and prints what the capsule files say — objective, verdict, the claimed-vs-witnessed counts,
+agents, and the run spine — newest first (by a capsule's recorded timestamp when present, else by folder
+name). It is **read-only and local**: it does not run agents, make network calls, or report live adapter
+status, and it never fabricates absent fields — a malformed `capsule.json` shows up as an `unreadable`
+warning entry rather than crashing. This is the **data primitive the Lyhna Desktop receipt inbox is built
+on**; the desktop GUI itself is not built yet (see [`DESKTOP-MVP-PLAN.md`](./DESKTOP-MVP-PLAN.md)).
+
 #### Multi-agent capsules (the claim-to-action spine)
 
 The input may carry an optional **spine** so a capsule can attribute each claim across a parent + its
