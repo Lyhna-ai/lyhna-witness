@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { parseInboxIndex } from "../core/inboxIndex.js";
 import { toInboxView, type InboxView, type InboxRow } from "../core/inboxView.js";
+import { buildReceiptDetail, type ReceiptDetail, type DetailStep, type DetailArtifact } from "../core/receiptDetail.js";
 
-// Lyhna Desktop — app frame + real Receipt Inbox (Slices 1–2).
+// Lyhna Desktop — app frame + Receipt Inbox + Receipt detail (Slices 1–3).
 //
 // The inbox runs the lyhna-witness engine CLI over a local folder and renders what the capsule files
-// already say — claimed vs. witnessed, what's missing, what needs review. It reads only; it does not run
-// agents, witness anything, or invent data. Copy stays inside the honesty ceiling, and a not-safe run
-// reads as "review before continuing" (never a block).
+// already say; the detail view renders one capsule's readable receipt (HANDOFF.md, the main surface) plus
+// the engine's own verdict, per-step claimed-vs-witnessed labels, and declared artifacts. It reads only;
+// it does not run agents, witness anything, re-judge, or invent data. A not-safe run reads as "review
+// before continuing" — never a block.
 
 type ScreenId = "inbox" | "install" | "adapter" | "settings";
 
@@ -85,6 +87,7 @@ function InboxScreen(): JSX.Element {
   const [view, setView] = useState<InboxView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const hasShell = typeof window.lyhna !== "undefined";
   // Monotonic request token: if the user switches folders / toggles partials mid-load, only the latest
@@ -119,6 +122,7 @@ function InboxScreen(): JSX.Element {
   const pickLibrary = useCallback(async () => {
     const p = await window.lyhna?.selectLibrary();
     if (p) {
+      setSelected(null);
       setPath(p);
       void load(p, includePartial);
     }
@@ -127,6 +131,7 @@ function InboxScreen(): JSX.Element {
   const openExamples = useCallback(async () => {
     const p = await window.lyhna?.exampleLibraryPath();
     if (p) {
+      setSelected(null);
       setPath(p);
       void load(p, includePartial);
     }
@@ -137,6 +142,10 @@ function InboxScreen(): JSX.Element {
     setIncludePartial(next);
     if (path) void load(path, next);
   }, [includePartial, path, load]);
+
+  if (selected) {
+    return <ReceiptDetailScreen folder={selected} onBack={() => setSelected(null)} />;
+  }
 
   return (
     <section className="screen">
@@ -193,20 +202,20 @@ function InboxScreen(): JSX.Element {
           </div>
         )}
 
-        {view && !loading && <InboxList view={view} />}
+        {view && !loading && <InboxList view={view} onOpen={setSelected} />}
       </div>
     </section>
   );
 }
 
-function InboxList({ view }: { view: InboxView }): JSX.Element {
+function InboxList({ view, onOpen }: { view: InboxView; onOpen: (folder: string) => void }): JSX.Element {
   if (view.rows.length === 0) {
     return (
       <div className="empty">
         <p className="empty-title">No receipts here yet.</p>
         <p className="empty-body">
-          This folder has no Work Receipt Capsules. When your agents route their tool calls through Lyhna, their
-          receipts land here. Use <strong>Include partial</strong> to also show handoff-only folders.
+          This folder has no Work Receipt Capsules. When your agents route their tool calls through Lyhna,
+          their receipts land here. Use <strong>Include partial</strong> to also show handoff-only folders.
         </p>
       </div>
     );
@@ -222,47 +231,198 @@ function InboxList({ view }: { view: InboxView }): JSX.Element {
       </p>
       <ul className="rows">
         {view.rows.map((row) => (
-          <ReceiptRow key={row.id} row={row} />
+          <ReceiptRow key={row.id} row={row} onOpen={onOpen} />
         ))}
       </ul>
     </>
   );
 }
 
-function ReceiptRow({ row }: { row: InboxRow }): JSX.Element {
+function ReceiptRow({ row, onOpen }: { row: InboxRow; onOpen: (folder: string) => void }): JSX.Element {
   return (
-    <li className="row">
-      <div className="row-top">
-        <span className="row-title">{row.title}</span>
-        {row.kindTag && <span className={"tag tag-" + row.kindTag}>{row.kindTag}</span>}
-        <span className={"verdict tone-" + row.verdictTone}>{row.verdictLabel}</span>
+    <li>
+      <button type="button" className="row" onClick={() => onOpen(row.folder)}>
+        <div className="row-top">
+          <span className="row-title">{row.title}</span>
+          {row.kindTag && <span className={"tag tag-" + row.kindTag}>{row.kindTag}</span>}
+          <span className={"verdict tone-" + row.verdictTone}>{row.verdictLabel}</span>
+        </div>
+        {row.objective && <p className="row-objective">{row.objective}</p>}
+        {row.countsLine && <p className="row-counts mono">{row.countsLine}</p>}
+        {row.agentLabels.length > 0 && (
+          <p className="row-agents">
+            agents: {row.agentLabels.map((a) => (
+              <span key={a} className="chip">
+                {a}
+              </span>
+            ))}
+          </p>
+        )}
+        {(row.receiptId || row.parentLoopId) && (
+          <p className="row-ids mono">
+            {row.receiptId ? `receipt ${row.receiptId}` : ""}
+            {row.receiptId && row.parentLoopId ? " · " : ""}
+            {row.parentLoopId ? `loop ${row.parentLoopId}` : ""}
+          </p>
+        )}
+        {(row.warningCount > 0 || row.missingCount > 0) && (
+          <p className="row-flags">
+            {row.warningCount > 0 ? `⚠ ${row.warningCount} warning${row.warningCount === 1 ? "" : "s"}` : ""}
+            {row.warningCount > 0 && row.missingCount > 0 ? " · " : ""}
+            {row.missingCount > 0 ? `${row.missingCount} missing file${row.missingCount === 1 ? "" : "s"}` : ""}
+          </p>
+        )}
+        <p className="row-folder mono">{row.folder}</p>
+      </button>
+    </li>
+  );
+}
+
+function labelTone(label: string): string {
+  if (label === "SUPPORTED") return "tone-ok";
+  if (label.includes("UNSUPPORTED") || label.includes("DO_NOT_SEND") || label.includes("MISMATCH")) return "tone-review";
+  return "tone-muted";
+}
+
+function ReceiptDetailScreen({ folder, onBack }: { folder: string; onBack: () => void }): JSX.Element {
+  const [detail, setDetail] = useState<ReceiptDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setError(null);
+    void window.lyhna?.loadReceipt(folder).then((res) => {
+      if (!alive) return;
+      if (!res.ok) {
+        setError(res.error);
+        setLoading(false);
+        return;
+      }
+      setDetail(buildReceiptDetail(res.files));
+      setLoading(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [folder]);
+
+  return (
+    <section className="screen">
+      <button type="button" className="btn-ghost back" onClick={onBack}>
+        ← Back to inbox
+      </button>
+
+      {loading && <p className="status">Opening receipt…</p>}
+      {error && (
+        <div className="error">
+          <p className="error-title">Couldn’t open this receipt.</p>
+          <p className="error-body mono">{error}</p>
+        </div>
+      )}
+
+      {detail && !loading && (
+        <>
+          <div className="panel">
+            <div className="detail-head">
+              <h2 className="detail-title">{detail.title}</h2>
+              <span className={"verdict tone-" + detail.verdictTone}>{detail.verdictLabel}</span>
+            </div>
+            {detail.objective && <p className="detail-objective">{detail.objective}</p>}
+            {detail.summaryLine && <p className="detail-counts mono">{detail.summaryLine}</p>}
+            {detail.agentLabels.length > 0 && (
+              <p className="row-agents">
+                agents: {detail.agentLabels.map((a) => (
+                  <span key={a} className="chip">
+                    {a}
+                  </span>
+                ))}
+              </p>
+            )}
+            {(detail.receiptId || detail.parentLoopId) && (
+              <p className="row-ids mono">
+                {detail.receiptId ? `receipt ${detail.receiptId}` : ""}
+                {detail.receiptId && detail.parentLoopId ? " · " : ""}
+                {detail.parentLoopId ? `loop ${detail.parentLoopId}` : ""}
+              </p>
+            )}
+            <p className="row-folder mono">{folder}</p>
+            {detail.warnings.length > 0 && (
+              <ul className="warn-list">
+                {detail.warnings.map((w) => (
+                  <li key={w}>⚠ {w}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="panel">
+            <h3 className="panel-title">The receipt</h3>
+            {detail.handoffMarkdown ? (
+              <pre className="md">{detail.handoffMarkdown}</pre>
+            ) : (
+              <p className="empty-body">No readable receipt (HANDOFF.md) in this folder.</p>
+            )}
+          </div>
+
+          {detail.steps.length > 0 && (
+            <div className="panel">
+              <h3 className="panel-title">Claimed vs. witnessed</h3>
+              <ul className="steps">
+                {detail.steps.map((s) => (
+                  <StepItem key={s.index} step={s} />
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {detail.artifacts.length > 0 && (
+            <div className="panel">
+              <h3 className="panel-title">Files in this capsule</h3>
+              <ul className="artifacts">
+                {detail.artifacts.map((a) => (
+                  <ArtifactItem key={a.path} artifact={a} />
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function StepItem({ step }: { step: DetailStep }): JSX.Element {
+  return (
+    <li className="step">
+      <div className="step-labels">
+        {step.labels.map((l) => (
+          <span key={l} className={"label " + labelTone(l)}>
+            {l}
+          </span>
+        ))}
       </div>
-      {row.objective && <p className="row-objective">{row.objective}</p>}
-      {row.countsLine && <p className="row-counts mono">{row.countsLine}</p>}
-      {row.agentLabels.length > 0 && (
-        <p className="row-agents">
-          agents: {row.agentLabels.map((a) => (
-            <span key={a} className="chip">
-              {a}
-            </span>
-          ))}
-        </p>
-      )}
-      {(row.receiptId || row.parentLoopId) && (
-        <p className="row-ids mono">
-          {row.receiptId ? `receipt ${row.receiptId}` : ""}
-          {row.receiptId && row.parentLoopId ? " · " : ""}
-          {row.parentLoopId ? `loop ${row.parentLoopId}` : ""}
-        </p>
-      )}
-      {(row.warningCount > 0 || row.missingCount > 0) && (
-        <p className="row-flags">
-          {row.warningCount > 0 ? `⚠ ${row.warningCount} warning${row.warningCount === 1 ? "" : "s"}` : ""}
-          {row.warningCount > 0 && row.missingCount > 0 ? " · " : ""}
-          {row.missingCount > 0 ? `${row.missingCount} missing file${row.missingCount === 1 ? "" : "s"}` : ""}
-        </p>
-      )}
-      <p className="row-folder mono">{row.folder}</p>
+      <p className="step-line">
+        <span className="step-k">claimed</span> <span className="mono">{step.claimedText}</span>
+      </p>
+      <p className="step-line">
+        <span className="step-k">witnessed</span> <span className="mono">{step.witnessedText}</span>
+      </p>
+      {step.note && <p className="step-note">{step.note}</p>}
+    </li>
+  );
+}
+
+function ArtifactItem({ artifact }: { artifact: DetailArtifact }): JSX.Element {
+  return (
+    <li className="artifact">
+      <span className="mono artifact-path">{artifact.path}</span>
+      {artifact.role && <span className="artifact-role">{artifact.role}</span>}
+      {artifact.trustBoundary && <span className="chip">{artifact.trustBoundary}</span>}
+      <span className={artifact.present ? "artifact-present" : "artifact-missing"}>
+        {artifact.present ? "present" : "missing"}
+      </span>
     </li>
   );
 }
