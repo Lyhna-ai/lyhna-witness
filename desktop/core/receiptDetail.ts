@@ -110,7 +110,9 @@ function tolerantParse<T>(text: string | null): T | null {
   if (text === null) return null;
   try {
     const v = JSON.parse(text);
-    return v && typeof v === "object" ? (v as T) : null;
+    // Reject non-objects AND arrays: an array is `typeof "object"` but is not a manifest, so treating it
+    // as one would skip the degraded/warning path and render a malformed receipt as an empty valid one.
+    return v !== null && typeof v === "object" && !Array.isArray(v) ? (v as T) : null;
   } catch {
     return null;
   }

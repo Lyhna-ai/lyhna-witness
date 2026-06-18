@@ -152,6 +152,15 @@ describe("buildReceiptDetail", () => {
     expect(d.artifacts[0].path).toBe("HANDOFF.md");
   });
 
+  test("array-valued capsule.json / handoff.json are treated as malformed (degraded), not empty-valid", () => {
+    const d = buildReceiptDetail({ ...baseFiles, capsuleJson: "[]", handoffJson: "[]" });
+    expect(d.hasCapsule).toBe(false);
+    expect(d.hasHandoff).toBe(false);
+    expect(d.warnings.some((w) => /could not be parsed/.test(w))).toBe(true);
+    expect(d.steps).toHaveLength(0);
+    expect(d.artifacts).toHaveLength(0);
+  });
+
   test("malformed capsule.json is recorded as a warning, not a throw", () => {
     const d = buildReceiptDetail({ ...baseFiles, capsuleJson: "{ not json" });
     expect(d.hasCapsule).toBe(false);
