@@ -4,6 +4,10 @@
 > single source of truth for *what Lyhna is now*, how the pieces fit, what's live, and the rules for
 > changing things safely. If you change something material, update this file's date and the relevant
 > section in the same PR.
+>
+> **Catching up after the Desktop pivot?** Read [`HANDOFF-DESKTOP.md`](./HANDOFF-DESKTOP.md) — it explains
+> that Lyhna Desktop is the *full* witness engine + the `@lyhna/mcp` adapter packaged as a local app (not
+> a smaller product), and lists exactly what's been built (the capsule indexer + inbox CLI) vs. not.
 
 ---
 
