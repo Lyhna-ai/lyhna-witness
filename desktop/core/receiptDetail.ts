@@ -29,10 +29,18 @@ interface CapsuleManifest {
   artifacts?: CapsuleArtifact[];
 }
 
+interface HandoffCall {
+  system?: string;
+  app?: string;
+  action?: string;
+  result?: string;
+  returned?: boolean;
+}
+
 interface HandoffStep {
   index?: number;
-  claimed?: { system?: string; action?: string; result?: string } | null;
-  witnessed?: { system?: string; action?: string; returned?: boolean } | null;
+  claimed?: HandoffCall | null;
+  witnessed?: HandoffCall | null;
   labels?: string[];
   human_note?: string;
 }
@@ -129,18 +137,32 @@ function coerceSummary(s: Partial<InboxSummary> | undefined): InboxSummary {
   };
 }
 
+// The call route, preserving wrapper routing: a call witnessed through a wrapper carries both the wrapper
+// (system, e.g. "zapier") and the upstream it hit (app, e.g. "google_docs"), which is exactly what a
+// claimed-vs-witnessed mismatch hinges on — so render "zapier→google_docs.create_document", not just
+// "zapier.create_document".
+function routeText(c: HandoffCall): string {
+  const route = [c.system, c.app].filter(Boolean).join("→");
+  return [route, c.action].filter(Boolean).join(".");
+}
+
 function stepClaimedText(step: HandoffStep): string {
   const c = step.claimed;
   if (!c) return "(no claim)";
-  const head = [c.system, c.action].filter(Boolean).join(".");
-  return c.result ? `${head || "claim"} — ${c.result}` : head || "(claim)";
+  const head = routeText(c) || "(claim)";
+  return c.result ? `${head} — ${c.result}` : head;
 }
 
+// Surface the engine's own witnessed fields verbatim: the route, whether the call returned (returned ===
+// false is a refused/escalated/error call, not a silent success), and the recorded result. No re-judging.
 function stepWitnessedText(step: HandoffStep): string {
   const w = step.witnessed;
   if (!w) return "no witnessed call";
-  const head = [w.system, w.action].filter(Boolean).join(".");
-  return w.returned ? `${head || "call"} · returned` : head || "(witnessed call)";
+  const bits: string[] = [routeText(w) || "(witnessed call)"];
+  if (w.returned === true) bits.push("returned");
+  else if (w.returned === false) bits.push("did not return");
+  if (w.result) bits.push(w.result);
+  return bits.length > 1 ? `${bits[0]} · ${bits.slice(1).join(" · ")}` : bits[0];
 }
 
 /**

@@ -75,6 +75,32 @@ describe("buildReceiptDetail", () => {
     expect(d.steps[1].note).toMatch(/No send was witnessed/);
   });
 
+  test("witnessed cue preserves wrapper routing (app), result, and returned state", () => {
+    // Mirrors the bundled Hermes/Zapier receipt: claimed google_docs directly, witnessed via the zapier
+    // wrapper hitting google_docs — the route that the CLAIMED_ACTUAL_MISMATCH hinges on.
+    const handoffJsonRouted = JSON.stringify({
+      steps: [
+        {
+          index: 0,
+          claimed: { system: "google_docs", action: "create_document", result: "created" },
+          witnessed: { system: "zapier", app: "google_docs", action: "create_document", returned: true, result: "created" },
+          labels: ["CLAIMED_ACTUAL_MISMATCH"]
+        },
+        {
+          index: 1,
+          claimed: { system: "gmail", action: "send", result: "sent" },
+          witnessed: { system: "gmail", action: "send", returned: false },
+          labels: ["UNSUPPORTED"]
+        }
+      ]
+    });
+    const d = buildReceiptDetail({ ...baseFiles, capsuleJson: null, handoffJson: handoffJsonRouted });
+    expect(d.steps[0].claimedText).toBe("google_docs.create_document — created");
+    expect(d.steps[0].witnessedText).toBe("zapier→google_docs.create_document · returned · created");
+    // returned === false must be visible, not rendered as a silent success
+    expect(d.steps[1].witnessedText).toBe("gmail.send · did not return");
+  });
+
   test("artifacts are marked present/missing against the folder listing", () => {
     const d = buildReceiptDetail({ ...baseFiles, presentNames: ["capsule.json", "okf"] });
     const handoffArt = d.artifacts.find((a) => a.path === "HANDOFF.md");
