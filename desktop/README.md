@@ -31,11 +31,16 @@ through Lyhna. A not-safe run reads as *“review before continuing,”* never a
 
 This is the **v1 build in progress**, staged inside `lyhna-witness/desktop/` (see *Repo placement* below).
 
-- **Slice 1 (this scaffold):** Electron + Vite + React + TypeScript app frame, a thin IPC bridge, and the
-  pure, unit-tested **inbox view model** (`core/inboxView.ts`) that turns the engine’s
-  `lyhna-inbox/v0` JSON into screen-ready rows. The Receipt Inbox renders an honest empty state.
-- **Next slices:** real receipt library selection + inbox data (consuming `inbox-cli --json`), receipt
-  detail, sample-receipt flow, install snippets, exports/open-folder, adapter status, packaging.
+- **Slice 1:** Electron + Vite + React + TypeScript app frame, a thin IPC bridge, and the pure,
+  unit-tested **inbox view model** (`core/inboxView.ts`).
+- **Slice 2 (real inbox):** pick a receipt-library folder (or open the repo’s bundled examples), and the
+  app runs the engine inbox CLI (`src/inbox-cli.mjs --json`) over it and renders the real indexed
+  capsules — name, objective, verdict (*review before continuing* when not safe), the five claimed-vs-
+  witnessed counts, agents, spine ids, and warning/missing-file counts. Transport (`electron/inboxSource.ts`,
+  electron-free) spawns the CLI; parsing lives in `core/inboxIndex.ts` (unit-tested). The GUI re-implements
+  no receipt semantics.
+- **Next slices:** receipt detail, sample-receipt flow, install snippets, exports/open-folder, adapter
+  status, packaging.
 
 The desktop **app is not a public download yet.** Don’t imply one exists.
 
