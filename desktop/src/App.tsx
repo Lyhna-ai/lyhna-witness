@@ -339,6 +339,24 @@ function ReceiptDetailScreen({ folder, onBack }: { folder: string; onBack: () =>
   const [detail, setDetail] = useState<ReceiptDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [openError, setOpenError] = useState<string | null>(null);
+
+  const openFolder = useCallback(async () => {
+    setOpenError(null);
+    const res = await window.lyhna?.openFolder(folder);
+    if (res && !res.ok) setOpenError(res.error);
+  }, [folder]);
+
+  const copyPath = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(folder);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  }, [folder]);
 
   useEffect(() => {
     let alive = true;
@@ -405,6 +423,16 @@ function ReceiptDetailScreen({ folder, onBack }: { folder: string; onBack: () =>
               </p>
             )}
             <p className="row-folder mono">{folder}</p>
+            <div className="detail-actions">
+              <button type="button" className="btn-ghost" onClick={openFolder}>
+                Open folder
+              </button>
+              <button type="button" className="btn-ghost" onClick={copyPath}>
+                {copied ? "Copied path" : "Copy path"}
+              </button>
+              <span className="detail-actions-note">Opens this capsule’s folder so you can use its existing files. Lyhna never changes them.</span>
+            </div>
+            {openError && <p className="error-body mono">Couldn’t open the folder: {openError}</p>}
             {detail.warnings.length > 0 && (
               <ul className="warn-list">
                 {detail.warnings.map((w) => (
