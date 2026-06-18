@@ -7,7 +7,7 @@
   "engines": { "node": ">=20" },
   "bin": { "lyhna-witness": "src/cli.mjs" },
   "scripts": {
-    "test": "node --test",
+    "test": "node --test \"test/**/*.test.mjs\"",
     "inbox": "node src/inbox-cli.mjs",
     "demo": "node demo/hermes-zapier.mjs",
     "demo:live": "node demo/zapier-google-witness.mjs",

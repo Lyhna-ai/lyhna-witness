@@ -1,0 +1,30 @@
+{
+  "name": "lyhna-desktop",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Lyhna Desktop — local-by-default AI Work Receipt app (v1 in progress). Wraps the lyhna-witness engine + the @lyhna/mcp adapter as a local app. Run your agents. Walk away. Come back to receipts.",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
+    "test": "vitest run",
+    "start": "npm run build && npm run build:electron && electron ."
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "electron": "^33.0.2",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2"
+  }
+}
