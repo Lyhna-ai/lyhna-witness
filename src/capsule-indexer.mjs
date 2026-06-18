@@ -225,14 +225,27 @@ function indexFolder(folder, names, opts) {
   return null; // not a capsule — ignored by the inbox
 }
 
-// Deterministic ordering: most relevant first. An entry whose capsule recorded a parseable timestamp
-// sorts ahead of one without (newest INSTANT first); ties and timestampless/unparseable entries fall
-// back to folder name. Timestamps are compared as instants (Date.parse → epoch ms) so an ISO string with
-// a non-`Z` offset (e.g. "…+02:00") orders correctly against a `Z` time — lexicographic comparison would
-// not. No clock is read — Date.parse only parses the string the capsule itself recorded.
+// Parse a capsule timestamp to an absolute instant (epoch ms), but ONLY when it is unambiguous across
+// machines: a pure ISO date (`YYYY-MM-DD`, spec-defined as UTC) or a date-time carrying an explicit zone
+// (`…Z` or `…±hh:mm` / `…±hhmm`). A zone-LESS date-time (e.g. "2026-06-18T00:30:00") is rejected (→ NaN),
+// because `Date.parse` would interpret it in the host time zone and the same library could then sort
+// differently on different machines — violating determinism. Reads no clock; only parses the string.
+function instantOf(ts) {
+  if (typeof ts !== "string" || ts.length === 0) return NaN;
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(ts);
+  const zonedDateTime = /[Tt].*(?:[Zz]|[+-]\d{2}:?\d{2})$/.test(ts);
+  if (!dateOnly && !zonedDateTime) return NaN;
+  const n = Date.parse(ts);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+// Deterministic ordering: most relevant first. An entry whose capsule recorded an unambiguous timestamp
+// sorts ahead of one without (newest INSTANT first); ties and timestampless/zone-less/unparseable entries
+// fall back to folder name. Comparing instants (not strings) makes a non-`Z` offset (e.g. "…+02:00")
+// order correctly against a `Z` time; the explicit-zone requirement keeps the order machine-independent.
 function compareEntries(a, b) {
-  const ai = a.timestamp ? Date.parse(a.timestamp) : NaN;
-  const bi = b.timestamp ? Date.parse(b.timestamp) : NaN;
+  const ai = instantOf(a.timestamp);
+  const bi = instantOf(b.timestamp);
   const av = Number.isFinite(ai);
   const bv = Number.isFinite(bi);
   if (av && bv) {

@@ -297,3 +297,35 @@ test("an unparseable timestamp falls back to folder-name order, not a crash", ()
   assert.deepEqual(idx.entries.map((e) => e.folderName), ["good", "a-bad", "z-bad"]);
   assert.equal(byName(idx.entries, "z-bad").timestamp, "not-a-date");
 });
+
+test("zone-less date-times are not treated as instants (machine-independent order)", () => {
+  const root = freshRoot();
+  const cap = (name, ts) => ({
+    "capsule.json": {
+      schema: CAPSULE_SCHEMA,
+      name,
+      objective: "o",
+      verdict: { safe_to_continue: true, summary: { total_steps: 0, supported: 0, mismatches: 0, unsupported: 0, do_not_send: 0 } },
+      artifacts: [{ path: "capsule.json" }],
+      timestamp: ts
+    }
+  });
+  // A zone-less date-time would be host-TZ-dependent under Date.parse → reject it as a sort instant.
+  // The zoned "z-zoned" entry sorts first (it's a real instant); the zone-less one falls back by name.
+  capsuleFolder(root, "a-zoneless", cap("a-zoneless", "2026-06-18T00:30:00"));
+  capsuleFolder(root, "z-zoned", cap("z-zoned", "2026-06-18T00:00:00Z"));
+  const run = () => indexReceiptLibrary(root).entries.map((e) => e.folderName);
+  const expected = ["z-zoned", "a-zoneless"];
+  assert.deepEqual(run(), expected);
+  // Order must not depend on the host time zone.
+  const savedTZ = process.env.TZ;
+  try {
+    process.env.TZ = "Asia/Tokyo";
+    assert.deepEqual(run(), expected, "stable under TZ=Asia/Tokyo");
+    process.env.TZ = "America/Los_Angeles";
+    assert.deepEqual(run(), expected, "stable under TZ=America/Los_Angeles");
+  } finally {
+    if (savedTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = savedTZ;
+  }
+});
