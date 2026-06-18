@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { parseInboxIndex } from "../core/inboxIndex.js";
 import { toInboxView, type InboxView, type InboxRow } from "../core/inboxView.js";
 import { buildReceiptDetail, type ReceiptDetail, type DetailStep, type DetailArtifact } from "../core/receiptDetail.js";
+import { isSampleFolder } from "../core/sample.js";
 
 // Lyhna Desktop — app frame + Receipt Inbox + Receipt detail (Slices 1–3).
 //
@@ -88,11 +89,26 @@ function InboxScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [sampleNote, setSampleNote] = useState<string | null>(null);
 
   const hasShell = typeof window.lyhna !== "undefined";
   // Monotonic request token: if the user switches folders / toggles partials mid-load, only the latest
   // request is allowed to commit state — a slower earlier load can't clobber the newer view.
   const reqRef = useRef(0);
+  // Mirror of the active library path, so async callbacks (e.g. sample render) can tell whether the user
+  // switched libraries while they were awaiting, and bail instead of loading the wrong folder.
+  // Mirrors of the active path / partial filter so async callbacks (e.g. the sample render) can tell
+  // whether the user moved on while they were awaiting. These are updated SYNCHRONOUSLY in the handlers
+  // below (a passive effect would only sync after commit, leaving a window where an IPC could resolve
+  // against a stale ref); the effects are a backstop for any other transition.
+  const pathRef = useRef<string | null>(null);
+  useEffect(() => {
+    pathRef.current = path;
+  }, [path]);
+  const partialRef = useRef(includePartial);
+  useEffect(() => {
+    partialRef.current = includePartial;
+  }, [includePartial]);
 
   const load = useCallback(async (root: string, ip: boolean) => {
     if (!window.lyhna) {
@@ -123,6 +139,8 @@ function InboxScreen(): JSX.Element {
     const p = await window.lyhna?.selectLibrary();
     if (p) {
       setSelected(null);
+      setSampleNote(null);
+      pathRef.current = p; // sync immediately so an in-flight sample render sees the switch
       setPath(p);
       void load(p, includePartial);
     }
@@ -132,13 +150,37 @@ function InboxScreen(): JSX.Element {
     const p = await window.lyhna?.exampleLibraryPath();
     if (p) {
       setSelected(null);
+      setSampleNote(null);
+      pathRef.current = p; // sync immediately so an in-flight sample render sees the switch
       setPath(p);
       void load(p, includePartial);
     }
   }, [load, includePartial]);
 
+  const createSample = useCallback(async () => {
+    const target = path;
+    if (!window.lyhna || !target) return;
+    setSampleNote(null);
+    setError(null);
+    const res = await window.lyhna.createSampleReceipt(target);
+    // If the user switched libraries while the CLI ran, drop this result — don't load the old folder's
+    // receipts under the newer library path.
+    if (pathRef.current !== target) return;
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setSampleNote(
+      `Created a sample receipt at ${res.folder} — rendered from the bundled demo input by the real engine. ` +
+        `Sample data, not a live witnessed run.`
+    );
+    // Read the CURRENT partial filter (it may have been toggled while the CLI ran).
+    void load(target, partialRef.current);
+  }, [path, load]);
+
   const togglePartial = useCallback(() => {
     const next = !includePartial;
+    partialRef.current = next; // sync immediately so an in-flight sample refresh uses the new filter
     setIncludePartial(next);
     if (path) void load(path, next);
   }, [includePartial, path, load]);
@@ -165,6 +207,11 @@ function InboxScreen(): JSX.Element {
                 Refresh
               </button>
             )}
+            {path && (
+              <button type="button" className="btn-ghost" onClick={createSample} disabled={loading}>
+                Create sample receipt
+              </button>
+            )}
             <label className="check">
               <input type="checkbox" checked={includePartial} onChange={togglePartial} /> Include partial
             </label>
@@ -172,6 +219,8 @@ function InboxScreen(): JSX.Element {
         </div>
 
         {path && <p className="lib-path mono">{path}</p>}
+
+        {sampleNote && <p className="sample-banner">🧪 {sampleNote}</p>}
 
         {!hasShell && (
           <div className="empty">
@@ -244,6 +293,7 @@ function ReceiptRow({ row, onOpen }: { row: InboxRow; onOpen: (folder: string) =
       <button type="button" className="row" onClick={() => onOpen(row.folder)}>
         <div className="row-top">
           <span className="row-title">{row.title}</span>
+          {isSampleFolder(row.folder) && <span className="tag tag-sample">sample</span>}
           {row.kindTag && <span className={"tag tag-" + row.kindTag}>{row.kindTag}</span>}
           <span className={"verdict tone-" + row.verdictTone}>{row.verdictLabel}</span>
         </div>
@@ -313,6 +363,12 @@ function ReceiptDetailScreen({ folder, onBack }: { folder: string; onBack: () =>
       <button type="button" className="btn-ghost back" onClick={onBack}>
         ← Back to inbox
       </button>
+
+      {isSampleFolder(folder) && (
+        <p className="sample-banner">
+          🧪 Sample receipt — rendered from the bundled demo input, not a live witnessed run.
+        </p>
+      )}
 
       {loading && <p className="status">Opening receipt…</p>}
       {error && (

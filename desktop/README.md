@@ -45,7 +45,11 @@ This is the **v1 build in progress**, staged inside `lyhna-witness/desktop/` (se
   present/missing, and structural warnings. The GUI renders engine fields — it never re-judges or
   re-labels. Transport (`electron/receiptSource.ts`) reads the folder; shaping is pure in
   `core/receiptDetail.ts` (unit-tested).
-- **Next slices:** sample-receipt flow, install snippets, exports/open-folder, adapter status, packaging.
+- **Slice 4 (sample receipt):** a **Create sample receipt** action runs the real witness CLI on the
+  bundled demo input, writing a real capsule (`lyhna-sample-receipt/`) into the selected library so the
+  inbox + detail can be tried end to end. Clearly labeled **sample data, not a live witnessed run** (no
+  faked routed tool call). Transport: `electron/sampleSource.ts` (node-only).
+- **Next slices:** install snippets, exports/open-folder, adapter status, packaging.
 
 The desktop **app is not a public download yet.** Don’t imply one exists.
 

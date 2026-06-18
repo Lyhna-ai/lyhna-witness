@@ -12,6 +12,7 @@ export interface ReceiptFilesRaw {
   presentNames: string[];
 }
 export type LoadReceiptResult = { ok: true; files: ReceiptFilesRaw } | { ok: false; error: string };
+export type CreateSampleResult = { ok: true; folder: string } | { ok: false; error: string };
 
 const api = {
   getVersion: (): Promise<string> => ipcRenderer.invoke("lyhna:getVersion"),
@@ -19,7 +20,9 @@ const api = {
   exampleLibraryPath: (): Promise<string> => ipcRenderer.invoke("lyhna:exampleLibraryPath"),
   loadInbox: (root: string, includePartial: boolean): Promise<LoadInboxResult> =>
     ipcRenderer.invoke("lyhna:loadInbox", root, includePartial),
-  loadReceipt: (folder: string): Promise<LoadReceiptResult> => ipcRenderer.invoke("lyhna:loadReceipt", folder)
+  loadReceipt: (folder: string): Promise<LoadReceiptResult> => ipcRenderer.invoke("lyhna:loadReceipt", folder),
+  createSampleReceipt: (libraryRoot: string): Promise<CreateSampleResult> =>
+    ipcRenderer.invoke("lyhna:createSampleReceipt", libraryRoot)
 };
 
 contextBridge.exposeInMainWorld("lyhna", api);

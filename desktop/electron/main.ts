@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { runInbox } from "./inboxSource.js";
 import { readReceipt, type ReceiptFilesRaw } from "./receiptSource.js";
+import { renderSample } from "./sampleSource.js";
 
 const here = dirname(fileURLToPath(import.meta.url)); // <repo>/desktop/dist-electron
 
@@ -18,6 +19,9 @@ const here = dirname(fileURLToPath(import.meta.url)); // <repo>/desktop/dist-ele
 const repoRoot = join(here, "..", "..");
 const engineCli = process.env.LYHNA_ENGINE_CLI ?? join(repoRoot, "src", "inbox-cli.mjs");
 const exampleLibrary = process.env.LYHNA_EXAMPLE_LIBRARY ?? join(repoRoot, "examples");
+// The witness renderer CLI + the bundled demo input, for the "Create sample receipt" flow.
+const renderCli = process.env.LYHNA_RENDER_CLI ?? join(repoRoot, "src", "cli.mjs");
+const sampleInput = process.env.LYHNA_SAMPLE_INPUT ?? join(repoRoot, "demo", "live-loop-witness-input.json");
 
 type LoadInboxResult = { ok: true; stdout: string } | { ok: false; error: string };
 
@@ -81,6 +85,25 @@ ipcMain.handle(
   async (_e, folder: string): Promise<{ ok: true; files: ReceiptFilesRaw } | { ok: false; error: string }> => {
     try {
       return { ok: true, files: await readReceipt(folder) };
+    } catch (e) {
+      return { ok: false, error: (e as Error).message };
+    }
+  }
+);
+
+// Render the bundled SAMPLE input into the user's library (real engine, demo input — not a live run).
+ipcMain.handle(
+  "lyhna:createSampleReceipt",
+  async (_e, libraryRoot: string): Promise<{ ok: true; folder: string } | { ok: false; error: string }> => {
+    if (typeof libraryRoot !== "string" || libraryRoot.length === 0) {
+      return { ok: false, error: "Select a receipt library folder first." };
+    }
+    try {
+      const r = await renderSample(renderCli, sampleInput, libraryRoot);
+      if (r.code !== 0) {
+        return { ok: false, error: r.stderr.trim() || `sample render exited with code ${r.code}` };
+      }
+      return { ok: true, folder: r.folder };
     } catch (e) {
       return { ok: false, error: (e as Error).message };
     }
