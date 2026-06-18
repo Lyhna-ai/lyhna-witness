@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { parseInboxIndex } from "../core/inboxIndex.js";
 import { toInboxView, type InboxView, type InboxRow } from "../core/inboxView.js";
 
@@ -87,15 +87,20 @@ function InboxScreen(): JSX.Element {
   const [loading, setLoading] = useState(false);
 
   const hasShell = typeof window.lyhna !== "undefined";
+  // Monotonic request token: if the user switches folders / toggles partials mid-load, only the latest
+  // request is allowed to commit state — a slower earlier load can't clobber the newer view.
+  const reqRef = useRef(0);
 
   const load = useCallback(async (root: string, ip: boolean) => {
     if (!window.lyhna) {
       setError("Run inside the Lyhna Desktop app to read a receipt library.");
       return;
     }
+    const reqId = ++reqRef.current;
     setLoading(true);
     setError(null);
     const res = await window.lyhna.loadInbox(root, ip);
+    if (reqRef.current !== reqId) return; // superseded by a newer load — drop this stale result
     if (!res.ok) {
       setError(res.error);
       setView(null);

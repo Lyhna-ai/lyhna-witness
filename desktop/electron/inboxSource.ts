@@ -35,15 +35,24 @@ export function runInbox(
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" }
     });
-    let stdout = "";
-    let stderr = "";
+    // Collect raw chunks and decode ONCE at close. Decoding each chunk independently would emit U+FFFD
+    // replacement chars whenever a multibyte UTF-8 sequence (e.g. a non-ASCII char in an objective,
+    // folder name, or warning) straddles a chunk boundary — silently corrupting the engine output.
+    const outChunks: Buffer[] = [];
+    const errChunks: Buffer[] = [];
     child.stdout.on("data", (d: Buffer) => {
-      stdout += d.toString();
+      outChunks.push(d);
     });
     child.stderr.on("data", (d: Buffer) => {
-      stderr += d.toString();
+      errChunks.push(d);
     });
     child.on("error", reject);
-    child.on("close", (code) => resolve({ code: code ?? -1, stdout, stderr }));
+    child.on("close", (code) =>
+      resolve({
+        code: code ?? -1,
+        stdout: Buffer.concat(outChunks).toString("utf8"),
+        stderr: Buffer.concat(errChunks).toString("utf8")
+      })
+    );
   });
 }
