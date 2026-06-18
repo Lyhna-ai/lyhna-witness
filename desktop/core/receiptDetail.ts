@@ -216,15 +216,28 @@ export function buildReceiptDetail(files: ReceiptFiles): ReceiptDetail {
     if (!a.present) warnings.push(`Declared artifact missing on disk: ${a.path}`);
   }
 
-  const steps: DetailStep[] = Array.isArray(handoff?.steps)
-    ? handoff.steps.map((s, i) => ({
-        index: typeof s.index === "number" ? s.index : i,
-        claimedText: stepClaimedText(s),
-        witnessedText: stepWitnessedText(s),
-        labels: Array.isArray(s.labels) ? s.labels : [],
-        note: strOrNull(s.human_note)
-      }))
-    : [];
+  // Coerce each step defensively: a parseable-but-malformed receipt (e.g. a partially written
+  // handoff.json with `steps: [null]`) must degrade to a warning, never crash the detail view.
+  const rawSteps: unknown[] = Array.isArray(handoff?.steps) ? (handoff.steps as unknown[]) : [];
+  const steps: DetailStep[] = [];
+  let droppedSteps = 0;
+  rawSteps.forEach((raw, i) => {
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+      droppedSteps++;
+      return;
+    }
+    const s = raw as HandoffStep;
+    steps.push({
+      index: typeof s.index === "number" ? s.index : i,
+      claimedText: stepClaimedText(s),
+      witnessedText: stepWitnessedText(s),
+      labels: Array.isArray(s.labels) ? s.labels.filter((l): l is string => typeof l === "string") : [],
+      note: strOrNull(s.human_note)
+    });
+  });
+  if (droppedSteps > 0) {
+    warnings.push(`${droppedSteps} step${droppedSteps === 1 ? "" : "s"} in handoff.json could not be read and were skipped.`);
+  }
 
   return {
     title: strOrNull(capsule?.name) ?? baseName(files.folder),

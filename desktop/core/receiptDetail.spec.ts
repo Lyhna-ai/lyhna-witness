@@ -125,6 +125,21 @@ describe("buildReceiptDetail", () => {
     expect(d.warnings.some((w) => /degraded view/.test(w))).toBe(true);
   });
 
+  test("malformed handoff steps are skipped with a warning, not a throw", () => {
+    const handoffJsonBadSteps = JSON.stringify({
+      steps: [
+        null,
+        "not-a-step",
+        { index: 0, claimed: { system: "fs", action: "write" }, witnessed: null, labels: ["UNSUPPORTED", null] }
+      ]
+    });
+    const d = buildReceiptDetail({ ...baseFiles, capsuleJson: null, handoffJson: handoffJsonBadSteps });
+    expect(d.steps).toHaveLength(1); // the two malformed entries are dropped
+    expect(d.steps[0].claimedText).toBe("fs.write");
+    expect(d.steps[0].labels).toEqual(["UNSUPPORTED"]); // non-string label coerced out
+    expect(d.warnings.some((w) => /2 steps in handoff\.json could not be read/.test(w))).toBe(true);
+  });
+
   test("malformed capsule.json is recorded as a warning, not a throw", () => {
     const d = buildReceiptDetail({ ...baseFiles, capsuleJson: "{ not json" });
     expect(d.hasCapsule).toBe(false);
