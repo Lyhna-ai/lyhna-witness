@@ -1,13 +1,18 @@
 # Lyhna Desktop — MVP Plan
 
-> **Status (2026-06-18):** direction + first primitives. The desktop **app does not exist yet** — it is
-> the packaging direction for the receipt layer that already works today (the MCP adapter and the witness
-> CLI). This document plans the build. Shipped so far:
-> - **Lane 1 — local capsule indexer** (`src/capsule-indexer.mjs`): the read model — proves the receipt
->   inbox can be a deterministic index over the capsule folders the engine already produces.
-> - **Lane 2 — headless inbox CLI** (`src/inbox-cli.mjs`, `npm run inbox`): the local inbox primitive —
->   lists the capsules in a receipt-library folder (human or `--json`), with no GUI. This is the exact
->   data layer the desktop inbox will sit on.
+> **Status (2026-06-18):** **Lyhna Desktop v1 (in-repo) is feature-complete.** Engine-side primitives plus
+> a runnable Electron + Vite/React app live under `desktop/`. Shipped:
+> - **Lane 1 — local capsule indexer** (`src/capsule-indexer.mjs`): the read model over capsule folders.
+> - **Lane 2 — headless inbox CLI** (`src/inbox-cli.mjs`, `npm run inbox`): the local inbox primitive.
+> - **Desktop app (`desktop/`)** — Slice 1 scaffold (Electron + Vite/React + tested zero-dep core) ·
+>   Slice 2 real receipt inbox (folder picker → engine CLI → rows) · Slice 3 receipt detail (HANDOFF.md +
+>   claimed-vs-witnessed + artifacts) · Slice 4 sample-receipt flow (labeled sample) · Slice 5 install
+>   snippets (Claude Code/Codex/Cursor/Hermes/generic) · Slice 6 exports/open-folder · Slice 7 honest
+>   adapter status · Slice 8 packaging config (electron-builder) + docs. See `desktop/README.md`.
+> - **Still deferred (honest):** a real standalone installer (needs the engine **bundled** into the app —
+>   today it locates the sibling engine via repo layout / `LYHNA_ENGINE_*` env), live adapter
+>   start/stop+detection, receipt-signing UI, a Settings pane, extraction to a standalone `lyhna-desktop`
+>   repo, and on-display visual QA. No prebuilt download, billing, signup, telemetry, or cloud sync.
 >
 > Honesty boundaries that bind every screen and every claim below:
 > - Lyhna Desktop is **packaging direction**, not a shipped download.
