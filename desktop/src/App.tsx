@@ -3,6 +3,7 @@ import { parseInboxIndex } from "../core/inboxIndex.js";
 import { toInboxView, type InboxView, type InboxRow } from "../core/inboxView.js";
 import { buildReceiptDetail, type ReceiptDetail, type DetailStep, type DetailArtifact } from "../core/receiptDetail.js";
 import { isSampleFolder } from "../core/sample.js";
+import { AGENT_TARGETS, snippetFor, INSTALL_NOTES } from "../core/installSnippets.js";
 
 // Lyhna Desktop — app frame + Receipt Inbox + Receipt detail (Slices 1–3).
 //
@@ -62,7 +63,7 @@ export function App(): JSX.Element {
 
       <main className="main">
         {screen === "inbox" && <InboxScreen />}
-        {screen === "install" && <PlaceholderScreen title="Install" what="copy-paste connect snippets for your agents" />}
+        {screen === "install" && <InstallScreen />}
         {screen === "adapter" && <PlaceholderScreen title="Adapter" what="honest local adapter status" />}
         {screen === "settings" && <PlaceholderScreen title="Settings" what="receipt library path and adapter settings" />}
       </main>
@@ -480,6 +481,70 @@ function ArtifactItem({ artifact }: { artifact: DetailArtifact }): JSX.Element {
         {artifact.present ? "present" : "missing"}
       </span>
     </li>
+  );
+}
+
+function InstallScreen(): JSX.Element {
+  const [agentId, setAgentId] = useState<string>(AGENT_TARGETS[0].id);
+  const [copied, setCopied] = useState(false);
+  const agent = AGENT_TARGETS.find((a) => a.id === agentId) ?? AGENT_TARGETS[0];
+  const snippet = snippetFor(agent.format);
+
+  const copy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(snippet);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  }, [snippet]);
+
+  return (
+    <section className="screen">
+      <Header />
+      <div className="panel">
+        <h2 className="panel-title">Connect your agent through the Lyhna MCP adapter</h2>
+        <p className="hero-sub" style={{ margin: "0 0 8px" }}>
+          Wrap an MCP server you already use with <span className="mono">@lyhna/mcp</span> so your agent’s
+          tool calls route through Lyhna and earn a receipt. Your agent keeps your keys, models, and tools.
+        </p>
+
+        <div className="tabs">
+          {AGENT_TARGETS.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              className={"tab" + (a.id === agentId ? " is-active" : "")}
+              onClick={() => {
+                setAgentId(a.id);
+                setCopied(false);
+              }}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="config-hint">{agent.configHint}</p>
+
+        <div className="snippet-wrap">
+          <button type="button" className="btn-ghost copy-btn" onClick={copy}>
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <pre className="md snippet">{snippet}</pre>
+        </div>
+      </div>
+
+      <div className="panel">
+        <h3 className="panel-title">What this does — and what it doesn’t</h3>
+        <ul className="bill">
+          {INSTALL_NOTES.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }
 

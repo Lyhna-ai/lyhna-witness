@@ -173,3 +173,15 @@ body {
 }
 
 .tag-sample { color: var(--accent); border-color: #2c3a52; background: #1a2230; }
+
+/* Install screen */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.tab { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: pointer; }
+.tab:hover { background: var(--panel-2); color: var(--ink); }
+.tab.is-active { background: var(--accent); color: #0b0e14; border-color: var(--accent); font-weight: 600; }
+.config-hint { color: var(--ink-soft); font-size: 13px; margin: 0 0 10px; }
+.snippet-wrap { position: relative; }
+.copy-btn { position: absolute; top: 8px; right: 8px; z-index: 1; }
+.snippet { margin: 0; max-height: 360px; }
+.bill { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; }
+.bill li { color: var(--ink-soft); line-height: 1.5; }
