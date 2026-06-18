@@ -37,8 +37,11 @@ tool boundary, compares it to what the agent *claimed*, and emits a deterministi
 never claims delivery ("the email was sent"), business/legal/quality correctness, client behavior, "live"
 witnessing, or anything outside the observed tool path. Held *tighter* than any marketing copy.
 
-**Lyhna does not run or orchestrate agents.** It witnesses calls **routed through it**; anything not routed
-through Lyhna is marked unwitnessed, never assumed.
+**Lyhna does not run or orchestrate agents.** It witnesses only the calls **routed through it**, and it
+does **not** detect unrouted work. The boundary is precise: a *captured claim* with no matching observed
+call is flagged unsupported/unwitnessed — but an action an agent performs entirely outside Lyhna, with no
+claim submitted, is simply invisible to it. Lyhna asserts only what crossed the boundary it sees; it never
+assumes the rest, and never implies universal detection of work that didn't route through it.
 
 ## 2. The two repos (unchanged)
 
