@@ -253,10 +253,26 @@ shell: Tauri + Vite/React in a **separate** `lyhna-desktop` repo, with `lyhna-wi
 (`--include-partial` / `--limit` / `--help`); invalid root exits nonzero, malformed capsule → unreadable
 warning entry. The usable, CI-tested local inbox primitive the GUI will render over. Still no GUI.
 
-**Deferred / next lanes (NOT V1 blockers):** the actual **Lyhna Desktop app** (local app + receipt inbox
-backend that lists real local receipts) — the site previews it but it isn't built; a real buy-once
-purchase path when numbers are approved; proxy README repositioning onto "witness"; live Zapier/Gmail
-demos; concurrency-safe claim↔turn correlation (opt-in sequential is fine for V1).
+**Lyhna Desktop app — v1 in-repo, feature-complete (2026-06-18):** a runnable Electron + Vite/React +
+TypeScript app under `desktop/` (own `package.json`/`node_modules`; engine `src/` stays zero-dep). All
+product logic is in a framework-agnostic, vitest-tested `desktop/core/`; the Electron main is a thin shell
+that shells out to the engine CLIs (never re-implements receipt/capsule semantics). Slices merged: scaffold
+(#52) · real inbox (#53) · receipt detail (#54) · sample-receipt flow (#55) · install snippets (#56) ·
+exports/open-folder (#57) · adapter status (#58) · packaging config (electron-builder) + docs. Honesty held
+throughout (no fake "Connected", samples labeled, signed-mode egress disclosed, "review before continuing"
+not "blocked"). **Deferred:** standalone installer (needs the engine **bundled** — today it locates the
+sibling engine via repo layout / `LYHNA_ENGINE_*` env), live adapter start/stop+detection, signing UI,
+Settings pane, extraction to a `lyhna-desktop` repo, on-display visual QA. No prebuilt download / billing /
+signup / telemetry. Shell choice: Electron now (Tauri blocked by missing system webkit here), kept
+shell-agnostic for a later swap. See `desktop/README.md` + `DESKTOP-MVP-PLAN.md`.
+
+**Deferred / next lanes (NOT V1 blockers):** the **Lyhna Desktop** app now exists in-repo and is
+feature-complete for the local loop (see the desktop note above); what remains for it is a real
+**standalone installer** (the engine must be bundled into the app — today it locates the sibling engine via
+repo layout / `LYHNA_ENGINE_*` env), live adapter start/stop+detection, a signing UI, a Settings pane, and
+extraction to a standalone `lyhna-desktop` repo. Unrelated deferrals: a real buy-once purchase path when
+numbers are approved; live Zapier/Gmail demos; concurrency-safe claim↔turn correlation (opt-in sequential
+is fine for V1).
 
 ---
 

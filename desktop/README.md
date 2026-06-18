@@ -61,9 +61,13 @@ This is the **v1 build in progress**, staged inside `lyhna-witness/desktop/` (se
   doesn't manage/observe the MCP adapter yet, so it **never shows a fake "Connected"**. It explains the
   four states (legend) and reports only the library-derived signal it can truly tell (no library / waiting
   / receipts present), plus a "check a receipt library" action and a pointer to Install.
-- **Next slice:** packaging pass.
+- **Slice 8 (packaging pass):** local run/build docs (below), an `electron-builder` config + `pack`/`dist`
+  scripts, and the honest distributable caveat. **v1 of the in-repo desktop app is feature-complete** for
+  the local loop: select a library → inbox → receipt detail → create a sample → install snippets →
+  open-folder → adapter status.
 
-The desktop **app is not a public download yet.** Don’t imply one exists.
+The desktop **app is not a public download yet.** Don’t imply one exists — and see *Build & package* for
+the one real blocker (bundling the engine) before a standalone installer is meaningful.
 
 ## Architecture decisions
 
@@ -106,6 +110,31 @@ npm start
 > **Headless note.** `npm start` opens a real OS window and needs a display; it can’t run in a headless
 > CI/sandbox. In such environments, `npm install`, `npm run typecheck`, `npm run build`, and `npm test`
 > are the verification path, and the window launch is done on a machine with a display.
+
+## Build & package
+
+```sh
+npm run pack    # electron-builder --dir : an unpacked app directory under release/ (quick check)
+npm run dist    # electron-builder        : OS installers under release/ (AppImage / dmg / nsis)
+```
+
+These run on a developer machine with the Electron binary present (CI here installs with
+`ELECTRON_SKIP_BINARY_DOWNLOAD=1`, so packaging is **not** run in CI). Build per target OS.
+
+> **Honest blocker before a standalone installer is meaningful:** today the app locates the
+> `lyhna-witness` **engine** (the `inbox-cli.mjs` / `cli.mjs` renderers and the bundled demo input) via the
+> in-repo layout (`../..`) or the `LYHNA_ENGINE_CLI` / `LYHNA_RENDER_CLI` / `LYHNA_SAMPLE_INPUT` /
+> `LYHNA_EXAMPLE_LIBRARY` env overrides. The engine is **not yet bundled into the packaged app**, so an
+> `electron-builder` artifact won’t find it on a machine without the repo. Bundling/locating the engine is
+> the prerequisite for a real distributable — which is exactly why there is **no prebuilt download** yet.
+> No billing/signup/auto-update is wired.
+
+**CI & QA.** A desktop CI workflow (`.github/workflows/desktop.yml`) runs `npm ci` + `typecheck` +
+`vitest` + `vite build` + the Electron `tsc` compile on every push/PR (Node 20; Electron binary download
+skipped). Run **manually** during development, not in CI: the end-to-end transport runs
+(inbox / receipt / sample against the real engine), the full `electron-builder` dist, and — on a machine
+with a display — pixel/interaction QA (window launch, folder dialogs, the OS file manager from
+*Open folder*).
 
 ## Layout
 
