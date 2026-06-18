@@ -1,0 +1,44 @@
+name: desktop
+
+# CI for the Lyhna Desktop subproject (desktop/). Runs the headless checks on every push and PR:
+# typecheck (renderer + core + Electron), the vitest unit suite, the Vite renderer build, and the
+# Electron main/preload tsc compile. The Electron binary is NOT needed for these, so its download is
+# skipped. A full electron-builder dist + the on-display window/visual QA are run on the target OS, not
+# here. This is separate from the engine's `ci.yml` (which gates src/ determinism).
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  desktop:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install (from lockfile)
+        run: npm ci
+
+      - name: Typecheck (renderer + core + Electron)
+        run: npm run typecheck
+
+      - name: Unit tests (vitest)
+        run: npm test
+
+      - name: Build renderer (Vite)
+        run: npm run build
+
+      - name: Compile Electron main/preload
+        run: npm run build:electron

@@ -129,11 +129,12 @@ These run on a developer machine with the Electron binary present (CI here insta
 > the prerequisite for a real distributable — which is exactly why there is **no prebuilt download** yet.
 > No billing/signup/auto-update is wired.
 
-**Visual QA:** the headless build/CI environment has no display, so pixel/interaction QA (window launch,
-folder dialogs, the OS file manager from *Open folder*) is done on a machine with a display — not captured
-here. What *is* verified headlessly every change: `typecheck`, `vitest`, `vite build`, and the Electron
-`tsc` compile, plus end-to-end runs of the node-side transports (inbox/receipt/sample) against the real
-engine.
+**CI & QA.** A desktop CI workflow (`.github/workflows/desktop.yml`) runs `npm ci` + `typecheck` +
+`vitest` + `vite build` + the Electron `tsc` compile on every push/PR (Node 20; Electron binary download
+skipped). Run **manually** during development, not in CI: the end-to-end transport runs
+(inbox / receipt / sample against the real engine), the full `electron-builder` dist, and — on a machine
+with a display — pixel/interaction QA (window launch, folder dialogs, the OS file manager from
+*Open folder*).
 
 ## Layout
 
