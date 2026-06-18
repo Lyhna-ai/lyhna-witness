@@ -225,17 +225,21 @@ function indexFolder(folder, names, opts) {
   return null; // not a capsule — ignored by the inbox
 }
 
-// Deterministic ordering: most relevant first. An entry with an embedded capsule timestamp sorts ahead
-// of one without (newest timestamp first); ties and timestampless entries fall back to folder name. No
-// clock is read — only the timestamp the capsule itself recorded.
+// Deterministic ordering: most relevant first. An entry whose capsule recorded a parseable timestamp
+// sorts ahead of one without (newest INSTANT first); ties and timestampless/unparseable entries fall
+// back to folder name. Timestamps are compared as instants (Date.parse → epoch ms) so an ISO string with
+// a non-`Z` offset (e.g. "…+02:00") orders correctly against a `Z` time — lexicographic comparison would
+// not. No clock is read — Date.parse only parses the string the capsule itself recorded.
 function compareEntries(a, b) {
-  const at = a.timestamp;
-  const bt = b.timestamp;
-  if (at && bt) {
-    if (at !== bt) return at < bt ? 1 : -1; // newer (greater ISO string) first
-  } else if (at && !bt) {
+  const ai = a.timestamp ? Date.parse(a.timestamp) : NaN;
+  const bi = b.timestamp ? Date.parse(b.timestamp) : NaN;
+  const av = Number.isFinite(ai);
+  const bv = Number.isFinite(bi);
+  if (av && bv) {
+    if (ai !== bi) return bi - ai; // newer (larger instant) first
+  } else if (av && !bv) {
     return -1;
-  } else if (!at && bt) {
+  } else if (!av && bv) {
     return 1;
   }
   if (a.folderName !== b.folderName) return a.folderName < b.folderName ? -1 : 1;

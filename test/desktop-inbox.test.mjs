@@ -256,3 +256,44 @@ test("ordering is newest-first by capsule timestamp, then by folder name", () =>
   // timestamped newest→oldest first, then the timestampless ones alphabetically.
   assert.deepEqual(names, ["newer", "older", "a-no-ts", "b-no-ts"]);
 });
+
+test("timestamps are ordered as instants, not lexicographically (handles offsets)", () => {
+  const root = freshRoot();
+  const cap = (name, ts) => ({
+    "capsule.json": {
+      schema: CAPSULE_SCHEMA,
+      name,
+      objective: "o",
+      verdict: { safe_to_continue: true, summary: { total_steps: 0, supported: 0, mismatches: 0, unsupported: 0, do_not_send: 0 } },
+      artifacts: [{ path: "capsule.json" }],
+      timestamp: ts
+    }
+  });
+  // 00:30+02:00 is the EARLIER instant (22:30Z) but sorts AFTER 23:00Z lexicographically.
+  capsuleFolder(root, "offset-earlier", cap("offset-earlier", "2026-06-18T00:30:00+02:00"));
+  capsuleFolder(root, "utc-later", cap("utc-later", "2026-06-17T23:00:00Z"));
+  const names = indexReceiptLibrary(root).entries.map((e) => e.folderName);
+  // newest instant first: 23:00Z (= the later instant) before 22:30Z.
+  assert.deepEqual(names, ["utc-later", "offset-earlier"]);
+});
+
+test("an unparseable timestamp falls back to folder-name order, not a crash", () => {
+  const root = freshRoot();
+  const cap = (name, ts) => ({
+    "capsule.json": {
+      schema: CAPSULE_SCHEMA,
+      name,
+      objective: "o",
+      verdict: { safe_to_continue: true, summary: { total_steps: 0, supported: 0, mismatches: 0, unsupported: 0, do_not_send: 0 } },
+      artifacts: [{ path: "capsule.json" }],
+      timestamp: ts
+    }
+  });
+  capsuleFolder(root, "good", cap("good", "2026-06-18T00:00:00Z"));
+  capsuleFolder(root, "z-bad", cap("z-bad", "not-a-date"));
+  capsuleFolder(root, "a-bad", cap("a-bad", "also-bad"));
+  const idx = indexReceiptLibrary(root);
+  // parseable instant first, then the unparseable ones by folder name. Raw timestamp string preserved.
+  assert.deepEqual(idx.entries.map((e) => e.folderName), ["good", "a-bad", "z-bad"]);
+  assert.equal(byName(idx.entries, "z-bad").timestamp, "not-a-date");
+});
