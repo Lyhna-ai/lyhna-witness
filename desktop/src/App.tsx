@@ -96,12 +96,14 @@ function InboxScreen(): JSX.Element {
   const reqRef = useRef(0);
   // Mirror of the active library path, so async callbacks (e.g. sample render) can tell whether the user
   // switched libraries while they were awaiting, and bail instead of loading the wrong folder.
+  // Mirrors of the active path / partial filter so async callbacks (e.g. the sample render) can tell
+  // whether the user moved on while they were awaiting. These are updated SYNCHRONOUSLY in the handlers
+  // below (a passive effect would only sync after commit, leaving a window where an IPC could resolve
+  // against a stale ref); the effects are a backstop for any other transition.
   const pathRef = useRef<string | null>(null);
   useEffect(() => {
     pathRef.current = path;
   }, [path]);
-  // Mirror the partial filter too, so an async refresh reads the CURRENT checkbox state, not the value
-  // captured when the action started.
   const partialRef = useRef(includePartial);
   useEffect(() => {
     partialRef.current = includePartial;
@@ -137,6 +139,7 @@ function InboxScreen(): JSX.Element {
     if (p) {
       setSelected(null);
       setSampleNote(null);
+      pathRef.current = p; // sync immediately so an in-flight sample render sees the switch
       setPath(p);
       void load(p, includePartial);
     }
@@ -147,6 +150,7 @@ function InboxScreen(): JSX.Element {
     if (p) {
       setSelected(null);
       setSampleNote(null);
+      pathRef.current = p; // sync immediately so an in-flight sample render sees the switch
       setPath(p);
       void load(p, includePartial);
     }
@@ -175,6 +179,7 @@ function InboxScreen(): JSX.Element {
 
   const togglePartial = useCallback(() => {
     const next = !includePartial;
+    partialRef.current = next; // sync immediately so an in-flight sample refresh uses the new filter
     setIncludePartial(next);
     if (path) void load(path, next);
   }, [includePartial, path, load]);
