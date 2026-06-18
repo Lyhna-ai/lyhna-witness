@@ -100,6 +100,12 @@ function InboxScreen(): JSX.Element {
   useEffect(() => {
     pathRef.current = path;
   }, [path]);
+  // Mirror the partial filter too, so an async refresh reads the CURRENT checkbox state, not the value
+  // captured when the action started.
+  const partialRef = useRef(includePartial);
+  useEffect(() => {
+    partialRef.current = includePartial;
+  }, [includePartial]);
 
   const load = useCallback(async (root: string, ip: boolean) => {
     if (!window.lyhna) {
@@ -163,8 +169,9 @@ function InboxScreen(): JSX.Element {
       `Created a sample receipt at ${res.folder} — rendered from the bundled demo input by the real engine. ` +
         `Sample data, not a live witnessed run.`
     );
-    void load(target, includePartial);
-  }, [path, includePartial, load]);
+    // Read the CURRENT partial filter (it may have been toggled while the CLI ran).
+    void load(target, partialRef.current);
+  }, [path, load]);
 
   const togglePartial = useCallback(() => {
     const next = !includePartial;
