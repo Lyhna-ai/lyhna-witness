@@ -11,7 +11,7 @@ headline.) Pages (shared header/footer nav across all five):
   product/ownership/BYO sentences (buy once · use with all your agents · unlimited local receipts · your
   receipts stay yours; your agents use your keys, models, and tools, Lyhna gives you the receipts). "What
   one run produces" shows the capsule bundle (readable receipt · machine receipt · capsule index ·
-  continuation prompt · OKF · PAM-shaped memory · proof pack), each tagged with its trust boundary; then
+  continuation prompt · OKF · PAM-shaped memory · proof refs), each tagged with its trust boundary; then
   "How Lyhna Desktop works" (local adapter → agents route through Lyhna → receipts in your inbox → export
   when you want), the three verdict states, witness-not-orchestrator, the honesty ceiling as the
   differentiator, and carrier-vs-witness.
