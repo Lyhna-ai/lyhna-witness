@@ -238,6 +238,12 @@ into every item so a consumer inherits the honesty ceiling instead of stripping 
 consumer of Lyhna, not Lyhna. (PAM wording stays "PAM-shaped projection / `lyhna-pam/v0`" until matched
 against a formal PAM schema.)
 
+**Desktop MVP — lane 1 (2026-06-18):** first proof that the desktop **receipt inbox** can be a local file
+index over the capsule folders the engine already produces — `src/capsule-indexer.mjs` +
+`test/desktop-inbox.test.mjs` + `DESKTOP-MVP-PLAN.md`. Read-only, zero-dep, deterministic; no GUI, no
+Tauri/Electron, no backend. The desktop app itself is still unbuilt (packaging direction). Recommended
+shell: Tauri + Vite/React in a **separate** `lyhna-desktop` repo, with `lyhna-witness` as the engine.
+
 **Deferred / next lanes (NOT V1 blockers):** the actual **Lyhna Desktop app** (local app + receipt inbox
 backend that lists real local receipts) — the site previews it but it isn't built; a real buy-once
 purchase path when numbers are approved; proxy README repositioning onto "witness"; live Zapier/Gmail
@@ -326,7 +332,10 @@ second engineer; don't merge around it.
   `src/witnessed-event.mjs` — maps proxy events → labeler input. `src/okf.mjs` — OKF (knowledge) export.
   `src/pam.mjs` — PAM (memory) projection. `src/capsule.mjs` — the capsule index (CAPSULE.md +
   capsule.json). `src/contract.mjs` — the claim-to-action receipt contract (spine). `src/cli.mjs` —
-  the `lyhna-witness` CLI.
+  the `lyhna-witness` CLI. `src/capsule-indexer.mjs` — **Lyhna Desktop read model**: a pure,
+  deterministic local indexer over capsule folders (`indexReceiptLibrary` + `summarizeCapsuleManifest` /
+  `summarizeHandoff`); reads what `capsule.json`/`handoff.json` say, never fabricates. See
+  `DESKTOP-MVP-PLAN.md`.
 - `demo/*.mjs` — regenerate `examples/*`. `examples/live-loop/` — the canonical receipt.
   `examples/agent-team/` — the parent+subagent capsule (spine attribution incl. an unwitnessed branch;
   `npm run demo:agent-team`).
