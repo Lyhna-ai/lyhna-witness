@@ -3,32 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lyhna — Install: connect Lyhna to your agent</title>
+  <title>Lyhna — Install: connect your agent through the Lyhna MCP adapter</title>
   <meta
     name="description"
-    content="Add Lyhna to your agent's tool path: wrap an MCP server with the Lyhna proxy, run one witnessed tool call, and render your first AI Work Receipt. Guided setup during the private beta — honest about what works today."
+    content="Connect your agent through the Lyhna MCP adapter: wrap an MCP server you already use, route one witnessed tool call, and render your first AI Work Receipt — locally, with your own keys, models, and tools. Honest about what works today."
   />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="site-header">
-    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">AI Work Receipts</span></a>
+    <a class="wordmark" href="index.html">Lyhna<span class="wordmark-sub">Desktop · AI Work Receipts</span></a>
     <nav class="nav">
       <a href="index.html#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html" aria-current="page">Install</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Receipt inbox</a>
       <a href="pricing.html">Pricing</a>
     </nav>
   </header>
 
   <main class="page page-wide">
     <section class="home-hero">
-      <p class="eyebrow">Install · private beta</p>
-      <h1>Connect Lyhna to your agent.</h1>
+      <p class="eyebrow">Install · connect your agent</p>
+      <h1>Connect your agent through the Lyhna MCP adapter.</h1>
       <p class="subhead">
         Lyhna rides in the tool path your agent already uses, witnesses the calls, and renders the AI
-        Work Receipt. Here's how to wire it up — and exactly what works today.
+        Work Receipt — locally, with your own keys, models, and tools. Here's how to wire it up, and
+        exactly what works today.
       </p>
       <div class="cta-row">
         <a class="btn btn-primary" href="demo.html">Run the demo first</a>
@@ -38,52 +39,56 @@
 
     <section class="block">
       <p class="beta-banner">
-        <strong>Private beta — guided setup.</strong> The proxy installs from npm today; the receipt
-        renderer still runs from a source clone, and signed receipts need a beta key. There's no
-        one-command install and no plugin-store listing yet — this page is honest about each step.
+        <strong>What's real today.</strong> The Lyhna MCP adapter, the receipt renderer, and the capsule
+        exports already exist in this repo — you can connect an agent and render receipts right now. The
+        adapter installs from npm; the renderer runs from a source clone. <strong>Lyhna Desktop</strong> is
+        the product direction: it packages this receipt layer into a local app with a receipt inbox. The
+        desktop app isn't a download yet, and there's no one-command install or plugin-store listing — this
+        page is honest about each step.
       </p>
     </section>
 
     <!-- INSTALL BY AGENT -->
     <section class="block">
       <h2>Install by agent</h2>
-      <p class="lede">Paste this into your MCP-capable agent (Claude Code, Cursor, Codex…). It shows you a receipt now, connects Lyhna so your calls are witnessed, and points to the guided flow for your first claimed-vs-witnessed capsule. It's a multi-step beta setup — your agent will stop and ask you for anything it can't do itself.</p>
+      <p class="lede">Paste this into your MCP-capable agent (Claude Code, Cursor, Codex…). It shows you a receipt now, connects your agent through the Lyhna MCP adapter so your calls are witnessed, and points to the guided flow for your first claimed-vs-witnessed capsule. It's a multi-step setup — your agent will stop and ask you for anything it can't do itself.</p>
       <div class="prompt-wrap">
         <button id="copy-prompt" class="btn btn-secondary copy-prompt-btn" type="button">Copy prompt</button>
         <span id="copy-prompt-status" class="copy-status" aria-live="polite"></span>
         <pre id="agent-prompt" class="cmd mono prompt-block">Help me set up Lyhna so I can see an AI Work Receipt for my agent's work. Lyhna is an MCP
-proxy that witnesses the tool calls routed through it. This is a guided, multi-step beta
-setup: do what you can in my terminal, and STOP to ask me for anything you can't (a client
-restart, a beta key). Never fake a result or claim a step worked if it didn't.
+adapter that witnesses the tool calls routed through it, locally, using my own keys and tools.
+This is a guided, multi-step setup: do what you can in my terminal, and STOP to ask me for
+anything you can't (a client restart, a signing key). Never fake a result or claim a step
+worked if it didn't.
 
 STEP 1 — Show me a real receipt right now (no setup, works offline):
    git clone https://github.com/Lyhna-ai/lyhna-witness &amp;&amp; cd lyhna-witness
    node src/cli.mjs demo/live-loop-witness-input.json ./receipt --okf --pam
    Open ./receipt/CAPSULE.md and walk me through the verdict — that's the capsule shape.
 
-STEP 2 — Quick-connect so MY agent's calls are witnessed (stdio):
+STEP 2 — Connect MY agent through the adapter so its calls are witnessed (stdio):
    Add a server to my MCP client config (.mcp.json) that wraps an MCP server I already use.
    command = "npx", args = ["-y","@lyhna/mcp","stdio"], and point it at my server with
    LYHNA_PROXY_UPSTREAM_COMMAND / LYHNA_PROXY_UPSTREAM_ARGS_JSON, plus LYHNA_PROXY_LOOP_ID and
-   LYHNA_PROXY_GOAL so the calls form a sealed loop (without those two the proxy runs with the loop
+   LYHNA_PROXY_GOAL so the calls form a sealed loop (without those two the adapter runs with the loop
    disabled). LYHNA_PROXY_BIND_MODE=demo needs no key and makes no Lyhna-hosted call. Then tell me to
    reload my MCP client. Now my calls to that server route through Lyhna and earn a sealed receipt chain.
    (This connects and witnesses. It does NOT by itself produce the rendered
    claimed-vs-witnessed capsule — that's Step 3.)
 
 STEP 3 — My first claimed-vs-witnessed capsule (guided, standing service):
-   Comparing what I CLAIMED to what was WITNESSED needs the proxy's standing service: claim
+   Comparing what I CLAIMED to what was WITNESSED needs the adapter's standing service: claim
    capture (LYHNA_PROXY_CLAIM_CAPTURE=1) plus a control loop you open and close. Follow the
-   proxy's QUICKSTART "Path B": start the standing proxy, open a loop, record a claim
+   adapter's QUICKSTART "Path B": start the standing adapter, open a loop, record a claim
    (record_claim) and make a tool call, close/seal the loop, then export-pack to get a
    witness-input.json. Render it with:
        node src/cli.mjs &lt;witness-input.json&gt; ./receipt --okf --pam
-   Use a beta LYHNA_API_KEY for signed receipts; demo mode works unsigned with no key. Tell
+   Use a signing key (LYHNA_API_KEY) for signed receipts; demo mode works unsigned with no key. Tell
    me exactly which of these you need me to do.</pre>
       </div>
       <p class="install-foot-note">
         Two surfaces, on purpose: quick-connect (Step 2) witnesses your calls; the rendered
-        claimed-vs-witnessed capsule (Step 3) is the proxy's standing-service flow — the guided
+        claimed-vs-witnessed capsule (Step 3) is the adapter's standing-service flow — the guided
         <a href="https://github.com/Lyhna-ai/lyhna-mcp-proxy/blob/master/docs/QUICKSTART.md">QUICKSTART
         “Path B”</a>. Lyhna only witnesses calls routed through it; anything else isn't on the receipt.
       </p>
@@ -93,11 +98,13 @@ STEP 3 — My first claimed-vs-witnessed capsule (guided, standing service):
     <section class="block">
       <h2>What actually works today</h2>
       <ul class="bill-rules">
-        <li class="bill-yes"><strong>The proxy is on npm.</strong> <span class="mono">npx -y @lyhna/mcp</span> wraps an MCP server you already use. No rewrite, no new platform.</li>
-        <li class="bill-yes"><strong>Demo mode needs no key.</strong> <span class="mono">LYHNA_PROXY_BIND_MODE=demo</span> decides locally and sends nothing <em>to Lyhna</em> — the proxy makes no hosted call (your upstream tools still do their own network I/O). Same flow, same artifacts; receipts are deliberately <em>unsigned</em>.</li>
-        <li class="bill-no"><strong>Signed receipts need a beta key.</strong> A <span class="mono">LYHNA_API_KEY</span> connects to Lyhna's hosted witness service, which is invite-only during the private beta.</li>
-        <li class="bill-no"><strong>The receipt renderer isn't on npm yet.</strong> The witness CLI (<span class="mono">node src/cli.mjs</span>) runs from a source clone for now — packaging it is part of what the beta is for.</li>
-        <li class="bill-no"><strong>No plugin store, no one-command install.</strong> Setup is the guided sequence above. We won't pretend otherwise.</li>
+        <li class="bill-yes"><strong>The adapter is on npm.</strong> <span class="mono">npx -y @lyhna/mcp</span> wraps an MCP server you already use. No rewrite, no new platform — your agents keep your keys, models, and tools.</li>
+        <li class="bill-yes"><strong>Local by default.</strong> <span class="mono">LYHNA_PROXY_BIND_MODE=demo</span> decides locally and sends nothing <em>to Lyhna</em> — the adapter makes no hosted call (your upstream tools still do their own network I/O). Same flow, same artifacts; receipts are deliberately <em>unsigned</em>.</li>
+        <li class="bill-yes"><strong>Receipts and capsules are real.</strong> The witness CLI renders the readable receipt, the Work Receipt Capsule, and the OKF / PAM-shaped exports from a witnessed run.</li>
+        <li class="bill-no"><strong>The receipt renderer isn't on npm yet.</strong> The witness CLI (<span class="mono">node src/cli.mjs</span>) runs from a source clone for now — packaging it into Lyhna Desktop is the product direction.</li>
+        <li class="bill-no"><strong>Signed receipts are an optional add-on.</strong> A <span class="mono">LYHNA_API_KEY</span> connects to a hosted signing/verification service for cryptographic proof refs. Local unsigned receipts need no account and no hosted call.</li>
+        <li class="bill-no"><strong>No desktop download, no plugin store, no one-command install yet.</strong> Setup is the guided sequence above. We won't pretend otherwise.</li>
+        <li class="bill-no"><strong>Cloud-hosted agents may need a bridge.</strong> An agent that can't route its tool calls through a local adapter would need a remote/tunnel bridge — that's later, not today.</li>
       </ul>
     </section>
 
@@ -120,30 +127,33 @@ STEP 3 — My first claimed-vs-witnessed capsule (guided, standing service):
         </li>
         <li class="state state-bad">
           <span class="chip chip-bad">🔴 Not connected · outside the witness path</span>
-          <p>The agent is calling tools that don't route through Lyhna. Those calls aren't witnessed — only what's routed through the proxy appears on a receipt.</p>
+          <p>The agent is calling tools that don't route through Lyhna. Those calls aren't witnessed — only what's routed through the adapter appears on a receipt.</p>
         </li>
       </ul>
     </section>
 
     <section class="block">
-      <h2>Getting access</h2>
+      <h2>Where this is going</h2>
       <p>
-        Installs open in waves during the private beta. The fastest way in is to see the proof for
-        yourself first: run the demo, copy the receipt, and audit it with your own AI. When your access
-        opens, the same loop runs against your real tool calls — with signed receipts.
+        The fastest way to judge Lyhna is to see the proof yourself: run the demo, copy the receipt, and
+        audit it with your own AI. The same loop runs against your real tool calls today through the MCP
+        adapter. <strong>Lyhna Desktop</strong> packages that into a local app — start the adapter, route
+        your agents, and watch receipts land in a local inbox you own.
       </p>
       <div class="cta-row">
         <a class="btn btn-primary" href="demo.html">Run the demo</a>
+        <a class="btn btn-secondary" href="dashboard.html">See the receipt inbox</a>
       </div>
       <p class="install-foot-note">
-        Prices and limits aren't published yet — they open with the beta (see the
-        <a href="pricing.html">pricing model</a>). Until then there's nothing to buy and no card to enter.
+        Lyhna Desktop is <strong>buy once, use with all your agents</strong> — see the
+        <a href="pricing.html">ownership model</a>. No numbers are published yet, and there's nothing to buy
+        on this page.
       </p>
     </section>
   </main>
 
   <footer class="home-foot">
-    <p class="foot-beta">Private beta opening soon.</p>
+    <p class="foot-beta">Lyhna Desktop — a local receipt layer for the agents you already run.</p>
     <p class="foot-ceiling">
       Lyhna asserts action-level witnessed truth only — what crossed the tool boundary vs. what the agent
       claimed. It does not verify outcomes, delivery, correctness, or anything outside the observed
@@ -153,7 +163,7 @@ STEP 3 — My first claimed-vs-witnessed capsule (guided, standing service):
       <a href="index.html#capsule">The capsule</a>
       <a href="demo.html">Demo</a>
       <a href="install.html">Install</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html">Receipt inbox</a>
       <a href="pricing.html">Pricing</a>
     </nav>
   </footer>

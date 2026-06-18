@@ -31,8 +31,15 @@ npm run demo # the Hermes/Zapier "claimed Google, used Zapier" demo
 
 ### Connect it to your agent
 
-The capture comes from the sibling [`lyhna-mcp-proxy`](https://github.com/Lyhna-ai/lyhna-mcp-proxy),
-which **is** on npm (`npx -y @lyhna/mcp`). There are two surfaces, and they do different things:
+> **Product direction — Lyhna Desktop.** The buyer-facing packaging is **Lyhna Desktop**: a local app that
+> starts and controls the Lyhna MCP adapter, lands receipts in a local receipt inbox, and lets you export
+> the capsule when you want — *buy once, use with all your agents, unlimited local receipts, your receipts
+> stay yours*. Your agents keep using your own keys, models, and tools. The desktop app is **not** a
+> download yet; what's runnable today is the MCP adapter + witness CLI described below.
+
+The capture comes from the sibling [`lyhna-mcp-proxy`](https://github.com/Lyhna-ai/lyhna-mcp-proxy) — the
+Lyhna MCP adapter — which **is** on npm (`npx -y @lyhna/mcp`). There are two surfaces, and they do
+different things:
 
 - **Quick-connect (stdio).** Wrap an MCP server you already use by adding a server to your MCP client's
   `.mcp.json` — set `command` to `npx` and `args` to `["-y", "@lyhna/mcp", "stdio"]` (not the whole
