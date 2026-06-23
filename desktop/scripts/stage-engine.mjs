@@ -11,7 +11,7 @@
 // copy is sufficient — no submodule or npm publish is needed to bundle it.
 
 import { cpSync, rmSync, mkdirSync, existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url)); // desktop/scripts
@@ -50,8 +50,10 @@ export function stageEngine() {
   };
 }
 
-// Run directly: `node scripts/stage-engine.mjs`
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run directly: `node scripts/stage-engine.mjs`. Compare resolved native paths, not a hand-built
+// `file://` URL — on Windows import.meta.url is `file:///C:/…` while process.argv[1] is `C:\…`, so a
+// string compare would be false and the staging would silently no-op (breaking pack/dist there).
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { engineDir } = stageEngine();
   console.log(`stage-engine: staged engine → ${engineDir}`);
 }
