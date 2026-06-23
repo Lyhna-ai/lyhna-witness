@@ -1,10 +1,15 @@
-# Lyhna — Desktop pivot handoff
+# Lyhna — Desktop handoff (state of play)
 
-> **Purpose.** Bring any agent or person up to speed on where Lyhna is **after the Desktop pivot**, so
-> nobody works from a stale model. If you only read one thing before touching Lyhna Desktop work, read
-> this, then [`LLM-CONTEXT.md`](./LLM-CONTEXT.md) and [`DESKTOP-MVP-PLAN.md`](./DESKTOP-MVP-PLAN.md).
+> **Purpose.** Bring any agent or person up to speed on where Lyhna stands so nobody works from a stale
+> model. Read this first, then [`desktop/PRD-NEXT.md`](./desktop/PRD-NEXT.md) (what to build next),
+> [`LLM-CONTEXT.md`](./LLM-CONTEXT.md), and [`DESKTOP-MVP-PLAN.md`](./DESKTOP-MVP-PLAN.md).
 >
-> **Snapshot:** `lyhna-witness main @ 862d8fb` (2026-06-18), suite green (170 `node --test`).
+> **Snapshot:** `lyhna-witness main @ 7c89cd7` (2026-06-18). Engine suite green (**170** `node --test`);
+> desktop suite green (**57** `vitest`, gated by `.github/workflows/desktop.yml`).
+>
+> **One line:** Lyhna Desktop **v1 is built in-repo** under `desktop/` (Electron + Vite/React + a tested
+> zero-dep core) and runs from source; it is **not yet a shipped/downloadable product** — the next phase
+> makes it one. See *§5 Where we stand* and the PRD.
 
 ---
 
@@ -17,12 +22,11 @@
 Mental model:
 
 > **local desktop app → starts/controls the local MCP adapter → agents route their tool calls through it
-> → receipts land in a local receipt inbox → you export the capsule when you want.**
+> → receipts land in a local receipt inbox → you open/export the capsule when you want.**
 
 Nothing about the thesis, the honesty ceiling, the receipt, the Work Receipt Capsule, the OKF/PAM exports,
-or the proof spine was reduced or replaced. We changed **who it's for and how it's delivered**, not what it
-is. If anyone thinks we're building a minimal product *separate from* `lyhna-witness`, that's wrong — Lyhna
-Desktop **is** `lyhna-witness` (+ the `@lyhna/mcp` adapter), wrapped as a local app.
+or the proof spine was reduced or replaced. Lyhna Desktop **is** `lyhna-witness` (+ the `@lyhna/mcp`
+adapter), wrapped as a local app.
 
 ## 1. What Lyhna is (unchanged thesis)
 
@@ -34,154 +38,146 @@ tool boundary, compares it to what the agent *claimed*, and emits a deterministi
 - 🔴 **UNSUPPORTED / DO_NOT_SEND** — agent claimed something the witness never saw.
 
 **Honesty ceiling (the moat, non-negotiable):** Lyhna asserts *action-level witnessed truth only*. It
-never claims delivery ("the email was sent"), business/legal/quality correctness, client behavior, "live"
-witnessing, or anything outside the observed tool path. Held *tighter* than any marketing copy.
+never claims delivery, business/legal/quality correctness, client behavior, "live" witnessing, or anything
+outside the observed tool path. Held *tighter* than any marketing copy.
 
-**Lyhna does not run or orchestrate agents.** It witnesses only the calls **routed through it**, and it
-does **not** detect unrouted work. The boundary is precise: a *captured claim* with no matching observed
-call is flagged unsupported/unwitnessed — but an action an agent performs entirely outside Lyhna, with no
-claim submitted, is simply invisible to it. Lyhna asserts only what crossed the boundary it sees; it never
-assumes the rest, and never implies universal detection of work that didn't route through it.
+**Lyhna does not run or orchestrate agents.** It witnesses only the calls **routed through it** and does
+**not** detect unrouted work: a captured claim with no matching observed call is flagged
+unsupported/unwitnessed, but an action performed entirely outside Lyhna (no claim submitted) is simply
+invisible — never assumed. In the UI, a not-safe run reads **"review before continuing,"** never "blocked."
 
 ## 2. The two repos (unchanged)
 
 | Repo | What it is | State |
 | --- | --- | --- |
-| **`lyhna-mcp-proxy`** (TypeScript, base `master`) | The **MCP adapter** in the tool-call path. Witnesses real tool calls, captures agent claims, exports `witness-input.json`. On npm as `@lyhna/mcp` (`npx -y @lyhna/mcp`). | Exists, works, published. |
-| **`lyhna-witness`** (zero-dep ESM, Node ≥20, base `main`) | The **deterministic engine**: labeler + receipt generator + CLI + OKF/PAM exports + capsule index + the `web/` site + the Desktop indexer & inbox CLI. | Exists, works. `main @ 862d8fb`, 170 tests green. |
+| **`lyhna-mcp-proxy`** (TypeScript, base `master`) | The **MCP adapter** in the tool-call path. On npm as `@lyhna/mcp`. | Exists, works, published. |
+| **`lyhna-witness`** (zero-dep ESM, Node ≥20, base `main`) | The **deterministic engine** (labeler + receipt generator + CLI + OKF/PAM + capsule index + inbox indexer/CLI) + the `web/` site + **the desktop app under `desktop/`**. | `main @ 7c89cd7`. |
 
 The adapter **produces** `witness-input.json`; the witness **renders** it into the receipt/capsule. Lyhna
-Desktop wraps **both**.
+Desktop wraps **both**. The proxy's `LLM-CONTEXT.md` points here for product framing (PR proxy#32).
 
-## 3. What one witnessed run produces — the Work Receipt Capsule (unchanged)
+## 3. What one witnessed run produces — the Work Receipt Capsule
 
-A capsule folder:
+A capsule folder: `CAPSULE.md` + `capsule.json` (self-describing index) · `HANDOFF.md` (readable receipt) ·
+`handoff.json` (machine) · `next-ai-prompt.md` (continuation) · optional `okf/` (knowledge) · optional
+`pam/` (memory). Proof **references** live *inside* those artifacts when a signing key is attached — there
+is **no separate "proof pack" file**. Wording: **"PAM-shaped"** (never "PAM-compatible"), **"OKF-style"**;
+the **Work Receipt** is the front-door deliverable.
 
-- `CAPSULE.md` + `capsule.json` — self-describing index (table of contents + trust boundaries + honesty ceiling).
-- `HANDOFF.md` — the readable AI Work Receipt.
-- `handoff.json` — the same receipt as machine data.
-- `next-ai-prompt.md` — safe continuation handoff.
-- `okf/` — OKF-style knowledge bundle (optional, `--okf`).
-- `pam/` — PAM-shaped memory bundle (optional, `--pam`).
-- Proof **references** live *inside* those artifacts when a signing key is attached. There is **no separate
-  "proof pack" file** — do not advertise one.
+## 4. Positioning (website, reframed PR #48)
 
-Wording rules: **"PAM-shaped"** (never "PAM-compatible"), **"OKF-style"**, the **Work Receipt** is the
-front-door deliverable.
-
-## 4. The pivot — what changed (PR #48, `63e6e41`)
-
-Reframed the public surfaces from a **hosted / metered / private-beta SaaS** story to **Lyhna Desktop:
-local-first, buy-once.**
-
-**Positioning:**
 - Front door: **"Run your agents. Walk away. Come back to receipts."**
-- Product: *Lyhna Desktop gives people running agents readable AI Work Receipts, backed by witnessed evidence.*
 - Ownership: **Buy once · use with all your agents · unlimited local receipts · your receipts stay yours.**
-- BYO: **Your agents use your keys, models, and tools. Lyhna gives you the receipts.** (Lyhna doesn't pay
-  for model usage, host the work by default, or orchestrate agents.)
-- Buyer: independent agent operators; local/private-AI and Ollama/local-model users; Claude Code / Codex /
-  Cursor power users; consultants/agencies; small businesses that don't want another hosted cloud system.
-
-**Buyer-surface language rules:**
-- Say **"local by default"** — never **"local-only"** (cloud-hosted agents may need a remote/tunnel bridge later).
-- **Killed:** "metered by witnessed action" / free tier / private-beta-as-the-main-frame /
-  hosted-witness-service-as-default / plugin store / one-command install. Plus the standing kill-list —
-  gate / authority / governance / judgment-ledger / binding / SDK — **even in negative phrasing** (use
-  "paywalls"/"limits").
+- BYO: **Your agents use your keys, models, and tools. Lyhna gives you the receipts.**
+- **"local by default"** — never **"local-only"** (cloud-hosted agents may need a remote/tunnel bridge later).
+- **Kill-list (buyer surfaces), even in negative phrasing:** metered/witnessed-action pricing · free tier ·
+  private-beta-as-the-frame · hosted-witness-service-as-default · plugin store · one-command install ·
+  gate / authority / governance / judgment-ledger / binding / SDK. Prefer "paywalls"/"limits".
 - **Signed-mode boundary stays explicit:** demo/local mode decides locally and sends nothing to Lyhna;
-  **signed mode (`LYHNA_API_KEY`) routes each tool call through Lyhna's hosted witness service to decide,
-  so routed args leave the machine.** Signed is an optional add-on, not the default.
+  signed mode (`LYHNA_API_KEY`) routes each tool call through Lyhna's hosted service to decide, so routed
+  args leave the machine. Signed is an optional add-on, not the default.
+- **Live site:** https://lyhna-ai.github.io/lyhna-witness/ (deploys from `main` via
+  `.github/workflows/pages.yml`). Pages: `/` · `/demo.html` · `/install.html` · `/dashboard.html`
+  (receipt-inbox preview, labeled *preview, not live telemetry*) · `/pricing.html`.
 
-**Honesty about the app itself:** Lyhna Desktop is **packaging direction, not a shipped download.** The MCP
-adapter, witness CLI, and capsule exports exist today; the desktop app does **not** exist yet. Never imply
-a download, and never imply that connecting auto-witnesses everything an agent does.
+## 5. Where we stand — what is BUILT (all merged on `main`)
 
-The website (`web/`, 5 pages — homepage / demo / install / **receipt inbox** preview / pricing) was fully
-reframed to this. The old "dashboard" is the **receipt inbox** preview, clearly labeled *preview, not live
-telemetry*.
+**Engine-side primitives**
+- **Capsule indexer** (PR #49) — `src/capsule-indexer.mjs`: pure, deterministic read model over capsule
+  folders (`indexReceiptLibrary` + `summarizeCapsuleManifest`/`summarizeHandoff`; schema
+  `lyhna-inbox/v0`). Never fabricates; malformed → `unreadable` entry; degraded `handoff.json`-only mode;
+  Windows-path tolerant. Tests: `test/desktop-inbox.test.mjs`.
+- **Headless inbox CLI** (PR #50) — `src/inbox-cli.mjs` (`npm run inbox`): text or `--json`,
+  `--include-partial`, `--limit`, `--help`; invalid root → nonzero exit. Tests: `test/inbox-cli.test.mjs`.
 
-## 5. What we've BUILT toward Desktop (merged on `main` — the part stale agents miss)
+**The desktop app — `desktop/` (Electron + Vite/React + TypeScript; ALL product logic in a vitest-tested,
+zero-dep `desktop/core/`; the Electron main is a thin shell that shells out to the engine CLIs and never
+re-implements receipt/capsule semantics)**
+- **#52 scaffold** — app frame (sidebar nav, hero), tested inbox view model.
+- **#53 real inbox** — pick a library (or "Open bundled examples") → runs the engine inbox CLI → renders
+  real rows (verdict, counts, agents, spine ids, warnings). Stale-load guarded.
+- **#54 receipt detail** — click a row → readable `HANDOFF.md` (main surface) + per-step
+  claimed-vs-witnessed labels (engine fields verbatim, incl. wrapper routing & returned-state) + declared
+  artifacts present/missing. Tolerant of malformed/array/partial inputs (degrades, never crashes).
+- **#55 sample-receipt flow** — "Create sample receipt" renders the real witness CLI on the bundled demo
+  input into a fresh `lyhna-sample-receipt[-N]/` (atomic, non-destructive), labeled **sample** in inbox +
+  detail (`core/sample.ts`).
+- **#56 install snippets** — per-agent connect snippets (Claude Code / Codex-TOML / Cursor / Hermes /
+  generic) + honest notes (two-surface, signed-mode egress, witness-scope, no-one-command).
+- **#57 exports / open folder** — Open folder (OS file manager via `shell.openPath`) + Copy path on the
+  detail view. Read-only; never mutates.
+- **#58 adapter status** — honest panel: **never a fake "Connected"**; explains the four states + reports
+  only the library-derived signal (no-library / waiting / receipts-present, never counting `unreadable`).
+- **#59 packaging pass** — `electron-builder` config + `pack`/`dist` scripts + the **desktop CI workflow**
+  (`.github/workflows/desktop.yml`: typecheck + vitest + vite build + electron tsc on every push/PR).
 
-**Lane 1 — local capsule indexer (PR #49, `01be99a`):** [`src/capsule-indexer.mjs`](./src/capsule-indexer.mjs)
-The **read model** for the desktop inbox. Pure, deterministic, zero-dep. Exports:
-`indexReceiptLibrary(root, { includePartial })`, `summarizeCapsuleManifest`, `summarizeHandoff`,
-`folderBaseName` (+ `INDEXER_SCHEMA = "lyhna-inbox/v0"`). Scans the immediate child folders of a receipt
-library and summarizes each capsule (folder/name, objective, `safe_to_continue`, the five verdict counts,
-`parent_loop_id`, `receipt_id`, `agents`, declared artifacts, missing-on-disk files, warnings). **Never
-fabricates absent fields;** malformed `capsule.json` → `unreadable` entry (no crash); `handoff.json`-only
-folders are a clearly-marked degraded "partial" mode; deterministic ordering (capsule timestamp parsed as
-an **instant**, and only when it carries an explicit zone — else folder name; **no clock is read**);
-Windows-path tolerant. Tests: [`test/desktop-inbox.test.mjs`](./test/desktop-inbox.test.mjs).
+**Verified end to end, headlessly:** the node-side transports spawn the real engine CLI against
+`examples/` and the inbox lists the results; sample render writes a real capsule that the inbox indexes.
 
-**Lane 2 — headless inbox CLI (PR #50, `862d8fb`):** [`src/inbox-cli.mjs`](./src/inbox-cli.mjs) (+ `npm run inbox`)
-The usable **local inbox primitive**, before any GUI:
+**Run it (machine with a display):** `cd desktop && npm install && npm start`. Headless verification path:
+`npm ci && npm run typecheck && npm test && npm run build && npm run build:electron`. See
+`desktop/README.md`.
 
-```bash
-node src/inbox-cli.mjs <receipt-library-root>     # human-readable inbox
-npm run inbox -- examples
-node src/inbox-cli.mjs examples --json             # deterministic JSON, no timestamps
-node src/inbox-cli.mjs examples --include-partial   # include handoff-only (degraded) folders
-node src/inbox-cli.mjs examples --limit 10
-node src/inbox-cli.mjs --help
+## 6. Where things live (map)
+
+```
+lyhna-witness/
+  src/capsule-indexer.mjs       engine: inbox read model (lyhna-inbox/v0)
+  src/inbox-cli.mjs             engine: headless inbox CLI  (npm run inbox)
+  src/cli.mjs                   engine: witness renderer    (renders a capsule)
+  demo/live-loop-witness-input.json   bundled sample input (Create-sample uses this)
+  examples/{live-loop,agent-team}/    canonical capsules everything tests against
+  web/                          the reframed marketing site (deploys to Pages)
+  desktop/
+    core/                       pure, vitest-tested view models (inbox/detail/sample/install/adapter)
+    electron/                   thin shell: main + preload + node-only transports (inbox/receipt/sample)
+    src/                        Vite + React renderer (App.tsx + styles.css)
+    README.md                   run / build / package + honest caveats
+  HANDOFF-DESKTOP.md (this)     state of play
+  desktop/PRD-NEXT.md           what to build next (the PRD)
+  DESKTOP-MVP-PLAN.md           original plan (§1–10 are pre-implementation; status block is current)
+  LLM-CONTEXT.md                dated single-page map
 ```
 
-Deterministic, no ANSI color, reads only summarized capsule fields, invalid root → nonzero exit, no
-invented live adapter status. **This is the exact data contract the GUI will render over** (consume
-`--json`, or import the indexer directly). Tests: [`test/inbox-cli.test.mjs`](./test/inbox-cli.test.mjs).
+**Engine path resolution (important for packaging):** the Electron main resolves the engine from the
+in-repo layout and allows env overrides — `LYHNA_ENGINE_CLI`, `LYHNA_RENDER_CLI`, `LYHNA_SAMPLE_INPUT`,
+`LYHNA_EXAMPLE_LIBRARY` (see `desktop/electron/main.ts`). A packaged app must bundle/locate the engine
+(this is the #1 next-phase task — see the PRD).
 
-**Earlier website lanes (merged):** PR #43–#47 made the site capsule-first, added the dashboard/inbox
-preview, and wrote the honest two-surface install; PR #48 then pivoted all of it to Desktop.
+## 7. What is NOT built yet (the next phase — do not overclaim)
 
-## 6. The build plan
+- ❌ A **standalone installer / download.** The packaged app can't find the engine yet — it locates the
+  sibling `lyhna-witness` engine via repo layout / `LYHNA_ENGINE_*` env. **Bundling the engine is the #1
+  blocker.** No prebuilt download exists.
+- ❌ **Live adapter management** (start/stop `@lyhna/mcp`, real verified "Connected"). Today: honest
+  guidance + library-derived signal only.
+- ❌ **Settings pane** (persist library path / engine & adapter paths / signed-mode key). Today the
+  library is picked each session.
+- ❌ **Receipt-signing UI**, inbox auto-refresh/`--watch`, packaging code-signing/notarization.
+- ❌ Extraction to a standalone **`lyhna-desktop` repo** (staged in-repo for now).
+- ❌ On-display **visual QA** (the sandbox has no display).
+- ❌ Backend / signup / billing / telemetry / cloud sync — none, by design.
 
-[`DESKTOP-MVP-PLAN.md`](./DESKTOP-MVP-PLAN.md) is the source of truth for the app build. It covers reusable
-engine code · missing pieces · **recommended shell: Tauri + Vite/React** · **repo placement: a separate
-`lyhna-desktop` repo with `lyhna-witness` as the deterministic engine** (no GUI deps in `src/`) · local
-data flow · minimal screens (Home/status, Install snippets, Receipt inbox, Receipt detail, Exports,
-Settings) · local storage + indexing rules (default Windows folder
-`%USERPROFILE%\Documents\Lyhna\Receipts\`) · honest test-connection design (no fake telemetry; the four
-states Connected / Waiting / Test receipt created / Outside witness path) · what-not-to-build-yet · next
-lanes.
+## 8. How we ship (every change)
 
-## 7. What is NOT built yet (do not overclaim)
+One logical PR → mark ready → comment `@codex review`. **Merge only when:** all CI checks `success`
+(engine `test` **and** `desktop`) + `mergeable_state` clean + Codex "no major issues" on the *current head*
++ zero unresolved review threads → **squash-merge** → reset the dev branch to base. Keep the engine's
+determinism drift gates green (regenerate `examples/*` + `web/data/handoff.js` via the `demo*` scripts only
+if you touch the labeler/generator/receipts). Use a **reviewer subagent for any UX/copy** before the PR.
+GitHub via `mcp__github__*` only. Dev branch this session: `claude/loving-ride-obywtq`.
 
-- ❌ The desktop **app** (Tauri shell, GUI) — not started; lives in a future `lyhna-desktop` repo.
-- ❌ Backend, signup, billing, telemetry, cloud sync, marketplace/one-click install — none, by design.
-- ❌ A real "download Lyhna Desktop" — the app isn't a download.
-- ❌ `--watch` for the inbox CLI — deferred (event/time-driven; stays out of the deterministic core).
-- ❌ Live adapter status in the CLI — intentionally not invented.
+## 9. Reading order for a catching-up agent
 
-## 8. Next lanes (in order)
-
-1. **Lane 3a (optional, small):** `--watch` for the inbox CLI — re-index/re-print on folder change
-   (`fs.watch`, zero-dep). Ship only if it stays tiny and well-tested.
-2. **Lane 3b:** the **desktop shell** in a new `lyhna-desktop` repo — Tauri + Vite/React over the
-   indexer/`--json`, starting with Home/status + Receipt inbox + Receipt detail.
-
-## 9. How we ship (every change)
-
-One logical PR → mark ready → comment `@codex review`. **Merge only when:** all CI checks `success` +
-`mergeable_state` clean + Codex "no major issues" on the *current head* + zero unresolved review threads →
-**squash-merge** → reset the dev branch to base. Keep the determinism drift gates and byte-for-byte tests
-green; regenerate `examples/*` + `web/data/handoff.js` via the `demo*` scripts only when you touch the
-labeler/generator/receipts.
-
-## 10. Reading order for a catching-up agent
-
-1. This file.
-2. [`LLM-CONTEXT.md`](./LLM-CONTEXT.md) — the dated single-page map (already updated for both Desktop lanes).
-3. [`THESIS.md`](./THESIS.md) — canonical thesis + honesty ceiling.
-4. [`AGENTS.md`](./AGENTS.md) — repo invariants.
-5. [`DESKTOP-MVP-PLAN.md`](./DESKTOP-MVP-PLAN.md) — the Desktop build plan.
-6. [`src/capsule-indexer.mjs`](./src/capsule-indexer.mjs) + [`src/inbox-cli.mjs`](./src/inbox-cli.mjs)
-   (what's built) and [`src/capsule.mjs`](./src/capsule.mjs) (capsule shape).
-7. `examples/live-loop/` and `examples/agent-team/` — the canonical capsules everything tests against.
+1. This file. 2. [`desktop/PRD-NEXT.md`](./desktop/PRD-NEXT.md) (next work). 3. [`LLM-CONTEXT.md`](./LLM-CONTEXT.md).
+4. [`THESIS.md`](./THESIS.md) + [`AGENTS.md`](./AGENTS.md) (invariants). 5. `desktop/README.md` +
+`desktop/core/*` (what's built). 6. `src/capsule-indexer.mjs` + `src/inbox-cli.mjs` + `src/capsule.mjs`.
+7. `examples/live-loop/` and `examples/agent-team/`.
 
 ---
 
-**TL;DR:** We did **not** shrink Lyhna. We took the full `lyhna-witness` engine + the `@lyhna/mcp` adapter
-and started packaging them as **Lyhna Desktop** — a local, buy-once receipt app. The website is already
-reframed (PR #48). Two engine-side desktop primitives are merged: the **capsule indexer** (PR #49) and the
-**headless inbox CLI** (PR #50). `main @ 862d8fb`, 170 tests green. The GUI itself isn't built yet — that's
-the next lane, in a separate `lyhna-desktop` repo, rendering over the inbox data contract we just built.
+**TL;DR:** Lyhna Desktop **v1 is built in-repo** (`desktop/`, Electron + React over the deterministic
+engine) and runs from source — the full local loop works: select a library → inbox → receipt detail →
+create a sample → install snippets → open folder → adapter status, honesty ceiling held throughout. It is
+**not a download yet.** The next phase (see the PRD) turns it into a shippable product, starting with
+**bundling the engine** so a packaged app runs without the repo. `main @ 7c89cd7`.
