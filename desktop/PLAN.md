@@ -55,8 +55,29 @@ engine in **`extraResources`**, which land under `process.resourcesPath` *outsid
 
 Packaged layout → `…/resources/engine/{src,demo,examples}/…`.
 
-### 3b. Pure prod-vs-dev resolver in `desktop/core/`
-New `desktop/core/enginePaths.ts` (pure, **no `electron` import**):
+### 3a-bis. Bundled examples must be writable (read-only install dirs)
+`resources/engine/examples` lives under the install dir, which is **read-only/admin-owned** on real
+packaged installs (AppImage mount, `/Applications`, `Program Files`). But the renderer makes the
+"Open bundled examples" path the *active library*, and "Create sample receipt" writes into the active
+library — so opening examples then creating a sample would fail on a real install (the `linux-unpacked`
+`--dir` build wouldn't catch it because that dir is writable). **Fix:** when packaged, the
+`lyhna:exampleLibraryPath` handler materializes the bundled examples into a writable per-user copy
+(`app.getPath("userData")/bundled-examples`, idempotent: copy only if absent) and returns *that* path.
+The renderer is unchanged; inbox reads, sample creation, and detail then all work because the active
+library is writable. In dev (not packaged) it returns the repo `examples/` dir as today. The copy helper
+(`electron/exampleLibrary.ts`) is pure over its path args and vitest-tested; the DONE gate chmods the
+packaged examples resource to read-only to actually exercise the install case.
+
+### 3b. Pure prod-vs-dev resolver — in `desktop/electron/` (not `core/`)
+> **Plan change (Codex P1):** the PRD suggested `core/`, but `tsconfig.electron.json` has
+> `rootDir: "electron"` / `include: ["electron"]`, so a `../core/…` import from `electron/main.ts` is
+> outside `rootDir` and fails the Electron typecheck; widening `rootDir` would also change the emitted
+> `dist-electron` layout (breaking `main`/preload paths). The resolver is **transport plumbing** (where the
+> engine binary + data live), not trust/receipt semantics, so its correct home is `electron/` alongside the
+> existing electron-free, vitest-tested transports (`inboxSource`/`sampleSource`/`receiptSource`). It stays
+> pure and unit-tested — satisfying the acceptance intent without crossing the compile boundary.
+
+New `desktop/electron/enginePaths.ts` (pure, **no `electron` import**):
 
 ```ts
 resolveEnginePaths({ isPackaged, resourcesPath, repoRoot, env }) =>
@@ -71,9 +92,12 @@ working (Settings pane, advanced users) and the dev-from-source path unchanged.
 `repoRoot = join(here,"..","..")`, `process.env`. No other behavior changes.
 
 ### 3c. Tests
-- **Unit (`core/enginePaths.spec.ts`, vitest, runs in CI):** inject combinations and assert the chosen
+- **Unit (`electron/enginePaths.spec.ts`, vitest, runs in CI):** inject combinations and assert the chosen
   path for each of the four entries — (i) dev (not packaged) → repo layout; (ii) packaged → `resourcesPath/
   engine/…`; (iii) each env override wins in both modes. This is the required prod-vs-dev resolver test.
+- **Unit (`electron/exampleLibrary.spec.ts`, vitest):** packaged → copies bundled examples into the
+  writable userData path and returns it; idempotent (no clobber if already present); dev → returns the
+  repo examples dir unchanged.
 - **Build-time smoke (`scripts/smoke-engine.mjs`, plain `node`, runs in CI):** stage the engine, then
   spawn the **staged** `inbox-cli.mjs` over the **staged** `examples/` (`--json`) and assert exit 0 +
   parseable `lyhna-inbox/v0` + ≥1 entry; spawn the **staged** `cli.mjs` on the **staged** demo input into
@@ -89,6 +113,8 @@ and `LYHNA_ENGINE_CLI` / `LYHNA_RENDER_CLI` / `LYHNA_SAMPLE_INPUT` / `LYHNA_EXAM
 1. `npm run pack` → `release/linux-unpacked/`.
 2. Copy `linux-unpacked` to a temp dir **outside the repo**; clean `HOME`; `PATH` scrubbed of any `node`;
    all `LYHNA_ENGINE_*` unset.
+   To exercise the **read-only install** case (3a-bis) the packaged `resources/engine/examples` dir is
+   chmod'd read-only before the run, so a failure to redirect sample creation to userData would surface.
 3. **(a) Real GUI boot** under `xvfb-run`: launch the packaged binary, confirm it boots and the renderer
    loads with no crash (proves it runs standalone with no repo/node).
 4. **(b) Packaged-engine end-to-end** using the **packaged Electron binary as Node**
@@ -113,8 +139,9 @@ pasted into the PR.
   published download).
 
 ## 6. Files touched
-- `desktop/electron/main.ts` — call resolver (thin).
-- `desktop/core/enginePaths.ts` + `desktop/core/enginePaths.spec.ts` — new, pure + tested.
+- `desktop/electron/main.ts` — call resolver + materialize examples to userData when packaged (thin).
+- `desktop/electron/enginePaths.ts` + `desktop/electron/enginePaths.spec.ts` — new, pure + tested.
+- `desktop/electron/exampleLibrary.ts` + `desktop/electron/exampleLibrary.spec.ts` — new, pure + tested.
 - `desktop/scripts/stage-engine.mjs`, `desktop/scripts/smoke-engine.mjs` — new.
 - `desktop/package.json` — `extraResources`, `stage`/`smoke` scripts, `pack`/`dist` stage first.
 - `desktop/.gitignore` — ignore `build/`.
