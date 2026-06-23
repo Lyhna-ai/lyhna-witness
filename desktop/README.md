@@ -66,8 +66,11 @@ This is the **v1 build in progress**, staged inside `lyhna-witness/desktop/` (se
   the local loop: select a library → inbox → receipt detail → create a sample → install snippets →
   open-folder → adapter status.
 
-The desktop **app is not a public download yet.** Don’t imply one exists — and see *Build & package* for
-the one real blocker (bundling the engine) before a standalone installer is meaningful.
+- **Engine bundling (Epic A):** the witness engine + its data are now shipped **inside** the packaged app,
+  so a built artifact runs **without the repo and without a system Node** (verified — see *Build & package*).
+
+The desktop **app is not a public download yet.** Don’t imply one exists — engine bundling is done; the
+remaining gap before a *trusted* installer is code-signing/notarization (owner-provided certs).
 
 ## Architecture decisions
 
@@ -114,20 +117,46 @@ npm start
 ## Build & package
 
 ```sh
-npm run pack    # electron-builder --dir : an unpacked app directory under release/ (quick check)
-npm run dist    # electron-builder        : OS installers under release/ (AppImage / dmg / nsis)
+npm run stage:engine  # copy the engine (../src, ../demo, ../examples) into build/engine/ (gitignored)
+npm run pack          # stage:engine → electron-builder --dir : unpacked app dir under release/ (quick check)
+npm run dist          # stage:engine → electron-builder        : OS installers under release/ (AppImage/dmg/nsis)
+npm run smoke         # run the bundled engine against a bundled example (fails on any unresolved module)
 ```
 
 These run on a developer machine with the Electron binary present (CI here installs with
-`ELECTRON_SKIP_BINARY_DOWNLOAD=1`, so packaging is **not** run in CI). Build per target OS.
+`ELECTRON_SKIP_BINARY_DOWNLOAD=1`, so the full packaging is **not** run in CI — but `npm run smoke` is).
+Build per target OS.
 
-> **Honest blocker before a standalone installer is meaningful:** today the app locates the
-> `lyhna-witness` **engine** (the `inbox-cli.mjs` / `cli.mjs` renderers and the bundled demo input) via the
-> in-repo layout (`../..`) or the `LYHNA_ENGINE_CLI` / `LYHNA_RENDER_CLI` / `LYHNA_SAMPLE_INPUT` /
-> `LYHNA_EXAMPLE_LIBRARY` env overrides. The engine is **not yet bundled into the packaged app**, so an
-> `electron-builder` artifact won’t find it on a machine without the repo. Bundling/locating the engine is
-> the prerequisite for a real distributable — which is exactly why there is **no prebuilt download** yet.
-> No billing/signup/auto-update is wired.
+### How the engine is bundled (Epic A — resolved)
+
+The packaged app ships the **engine inside it**, so a built artifact runs with no repo present and no
+system Node:
+
+- **Bundle:** `npm run stage:engine` copies the engine import closure + its data (`../src`, `../demo`,
+  `../examples`) into `build/engine/` (gitignored — single source of truth, no committed duplication).
+  `pack`/`dist` run it first; electron-builder ships `build/engine` as `extraResources` → `resources/engine`
+  in the artifact, **outside** the asar so the spawned `.mjs` resolve as real files. The engine is
+  zero-dependency and does no repo-relative reads, so a plain copy suffices (no submodule / npm publish).
+- **Resolve:** `electron/enginePaths.ts` (pure, unit-tested) picks each path by
+  `LYHNA_ENGINE_CLI` / `LYHNA_RENDER_CLI` / `LYHNA_SAMPLE_INPUT` / `LYHNA_EXAMPLE_LIBRARY` override →
+  packaged `resourcesPath/engine` → dev repo layout. Dev-from-source is unchanged; the env overrides still
+  work (advanced users / a future Settings pane).
+- **Run runtime:** the transports spawn `process.execPath` with `ELECTRON_RUN_AS_NODE=1`, i.e. the Electron
+  binary as Node — so **no system `node` is required**.
+- **Writable examples:** on a real install the bundled examples sit under a read-only install dir, so when
+  packaged the app materializes them into a writable per-user `userData` copy (`electron/exampleLibrary.ts`)
+  — the open-examples → create-sample → detail loop writes there, never into the read-only resources.
+- **Preload:** emitted as CommonJS (`preload.cjs`). An ESM `.js` preload silently fails to load under
+  Electron (which needs the `.mjs` extension for ESM), which previously left `window.lyhna` undefined.
+
+**Verified:** `npm run pack`, then the unpacked artifact was copied outside the repo and run on a profile
+with **no repo, no system Node on PATH, and `LYHNA_ENGINE_*` unset** — the packaged GUI opened the bundled
+examples, rendered a sample receipt, and opened a receipt's detail (driven through the real window), and the
+engine transports ran end-to-end on the Electron-as-Node runtime.
+
+> **Remaining gap before a *trusted* installer:** code-signing/notarization (Apple/Windows certs, owner
+> provided). Engine bundling is done; **no prebuilt download** is published, and no billing/signup/
+> auto-update is wired.
 
 **CI & QA.** A desktop CI workflow (`.github/workflows/desktop.yml`) runs `npm ci` + `typecheck` +
 `vitest` + `vite build` + the Electron `tsc` compile on every push/PR (Node 20; Electron binary download

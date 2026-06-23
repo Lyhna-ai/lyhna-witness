@@ -266,6 +266,22 @@ Settings pane, extraction to a `lyhna-desktop` repo, on-display visual QA. No pr
 signup / telemetry. Shell choice: Electron now (Tauri blocked by missing system webkit here), kept
 shell-agnostic for a later swap. See `desktop/README.md` + `DESKTOP-MVP-PLAN.md`.
 
+**Desktop Epic A — engine bundled, packaged app runs standalone (2026-06-23):** the witness engine + its
+data (`src/` import closure, `demo/`, `examples/`) are now shipped **inside** the packaged app via
+electron-builder `extraResources` (outside the asar, staged by `desktop/scripts/stage-engine.mjs` from the
+repo — gitignored, no committed duplication). A pure prod-vs-dev resolver (`desktop/electron/enginePaths.ts`)
+picks paths by `LYHNA_ENGINE_*` override → packaged `resourcesPath/engine` → dev repo layout; bundled
+examples are materialized into a writable `userData` copy when packaged so the open-examples → create-sample
+→ detail loop works on read-only installs (`desktop/electron/exampleLibrary.ts`). Both are unit-tested; a
+build-time smoke check (`desktop/scripts/smoke-engine.mjs`, wired into `desktop.yml`) runs the bundled
+engine against a bundled example. Also fixed a latent packaging bug: the Electron **preload** was emitted as
+an ESM `.js` (failing to load under `"type":"module"`, so `window.lyhna` was never exposed) — now compiled
+as CommonJS `preload.cjs`. Verified by running `npm run pack` and exercising the artifact on a profile with
+**no repo, no system Node on PATH, and `LYHNA_ENGINE_*` unset**: the packaged GUI opened bundled examples,
+rendered a sample receipt, and opened detail. Engine `src/` untouched (determinism intact). **Still no
+prebuilt download** — code-signing/notarization (owner certs) is the remaining gap before a trusted
+installer, not engine bundling.
+
 **Deferred / next lanes (NOT V1 blockers):** the **Lyhna Desktop** app now exists in-repo and is
 feature-complete for the local loop (see the desktop note above); what remains for it is a real
 **standalone installer** (the engine must be bundled into the app — today it locates the sibling engine via

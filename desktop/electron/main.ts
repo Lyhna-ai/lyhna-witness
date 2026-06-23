@@ -40,7 +40,10 @@ function createWindow(): void {
     title: "Lyhna Desktop",
     backgroundColor: "#0f1115",
     webPreferences: {
-      preload: join(here, "preload.js"),
+      // Preload is emitted as CommonJS (preload.cjs). An ESM `.js` preload silently fails to load under
+      // Electron's preload loader (which requires the .mjs extension for ESM), leaving window.lyhna
+      // undefined — so the renderer couldn't reach the IPC bridge. CommonJS loads reliably here.
+      preload: join(here, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false
