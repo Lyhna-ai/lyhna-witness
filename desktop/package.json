@@ -11,14 +11,17 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
     "test": "vitest run",
+    "stage:engine": "node scripts/stage-engine.mjs",
+    "smoke": "node scripts/smoke-engine.mjs",
     "start": "npm run build && npm run build:electron && electron .",
-    "pack": "npm run build && npm run build:electron && electron-builder --dir",
-    "dist": "npm run build && npm run build:electron && electron-builder"
+    "pack": "npm run stage:engine && npm run build && npm run build:electron && electron-builder --dir",
+    "dist": "npm run stage:engine && npm run build && npm run build:electron && electron-builder"
   },
   "build": {
     "appId": "ai.lyhna.desktop",
     "productName": "Lyhna Desktop",
     "files": ["dist/**", "dist-electron/**", "package.json"],
+    "extraResources": [{ "from": "build/engine", "to": "engine" }],
     "directories": { "output": "release" },
     "linux": { "target": ["AppImage"], "category": "Utility" },
     "mac": { "target": ["dmg"] },

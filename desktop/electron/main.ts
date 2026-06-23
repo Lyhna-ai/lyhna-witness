@@ -11,17 +11,23 @@ import { dirname, join } from "node:path";
 import { runInbox } from "./inboxSource.js";
 import { readReceipt, type ReceiptFilesRaw } from "./receiptSource.js";
 import { renderSample } from "./sampleSource.js";
+import { resolveEnginePaths } from "./enginePaths.js";
+import { resolveExampleLibrary } from "./exampleLibrary.js";
 
-const here = dirname(fileURLToPath(import.meta.url)); // <repo>/desktop/dist-electron
+const here = dirname(fileURLToPath(import.meta.url)); // dev: <repo>/desktop/dist-electron
 
-// Where the deterministic engine lives. In the staged-in-repo layout the engine sits two levels up from
-// the compiled main (dist-electron → desktop → repo). Overridable for packaging / a future Settings pane.
+// Where the deterministic engine + its data live. Resolved for three shapes (see enginePaths.ts):
+//   - dev from source: the staged-in-repo layout two levels up from the compiled main
+//     (dist-electron → desktop → repo);
+//   - packaged app: the bundled engine copied into extraResources at <resourcesPath>/engine;
+//   - explicit LYHNA_ENGINE_* env overrides, which always win (advanced users / a future Settings pane).
 const repoRoot = join(here, "..", "..");
-const engineCli = process.env.LYHNA_ENGINE_CLI ?? join(repoRoot, "src", "inbox-cli.mjs");
-const exampleLibrary = process.env.LYHNA_EXAMPLE_LIBRARY ?? join(repoRoot, "examples");
-// The witness renderer CLI + the bundled demo input, for the "Create sample receipt" flow.
-const renderCli = process.env.LYHNA_RENDER_CLI ?? join(repoRoot, "src", "cli.mjs");
-const sampleInput = process.env.LYHNA_SAMPLE_INPUT ?? join(repoRoot, "demo", "live-loop-witness-input.json");
+const { engineCli, renderCli, sampleInput, exampleLibrary } = resolveEnginePaths({
+  isPackaged: app.isPackaged,
+  resourcesPath: process.resourcesPath,
+  repoRoot,
+  env: process.env
+});
 
 type LoadInboxResult = { ok: true; stdout: string } | { ok: false; error: string };
 
@@ -34,7 +40,10 @@ function createWindow(): void {
     title: "Lyhna Desktop",
     backgroundColor: "#0f1115",
     webPreferences: {
-      preload: join(here, "preload.js"),
+      // Preload is emitted as CommonJS (preload.cjs). An ESM `.js` preload silently fails to load under
+      // Electron's preload loader (which requires the .mjs extension for ESM), leaving window.lyhna
+      // undefined — so the renderer couldn't reach the IPC bridge. CommonJS loads reliably here.
+      preload: join(here, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false
@@ -60,8 +69,16 @@ ipcMain.handle("lyhna:selectLibrary", async (): Promise<string | null> => {
   return r.canceled || r.filePaths.length === 0 ? null : r.filePaths[0];
 });
 
-// The repo's bundled example capsules — real, committed receipts to try the inbox against.
-ipcMain.handle("lyhna:exampleLibraryPath", (): string => exampleLibrary);
+// The bundled example capsules — real, committed receipts to try the inbox against. When packaged, the
+// examples sit under the read-only install dir; since the UI makes this the active library (and lets the
+// user render a sample into it), materialize a writable per-user copy under userData and return that.
+ipcMain.handle("lyhna:exampleLibraryPath", (): string =>
+  resolveExampleLibrary({
+    isPackaged: app.isPackaged,
+    exampleLibrary,
+    userDataDir: app.getPath("userData")
+  })
+);
 
 // Run the engine inbox CLI over a folder; return its raw JSON stdout (the renderer parses it via core).
 ipcMain.handle(
