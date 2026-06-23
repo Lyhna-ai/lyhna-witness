@@ -37,6 +37,11 @@ jobs:
       - name: Unit tests (vitest)
         run: npm test
 
+      - name: Engine bundling smoke check
+        # Stages the engine the way packaging does and runs the bundled engine against a bundled example,
+        # failing if any engine module won't resolve. Uses the runner's node (Electron binary not needed).
+        run: npm run smoke
+
       - name: Build renderer (Vite)
         run: npm run build
 
