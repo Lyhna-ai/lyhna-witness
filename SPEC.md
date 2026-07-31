@@ -81,7 +81,8 @@ of each field is owned here.
   "subject": {
     "repository": "owner/repo",
     "head": "exact-commit-sha",
-    "base": "required-exact-base-for-diff-scoped-review",
+    "review_scope": "whole_commit|pull_request_diff|branch_diff|worktree_diff",
+    "base": "exact-base-for-diff-scope-or-null",
     "snapshot": {
       "kind": "commit|worktree",
       "digest": "optional-sha256-of-inspected-worktree-snapshot",
@@ -100,6 +101,8 @@ of each field is owned here.
 
 Rules:
 
+- `schema` is required and must equal `lyhna-event/v1` before the event enters the reducer. A missing
+  or unsupported discriminator is surfaced as incompatible input and is never interpreted under v1.
 - `event_id`, `session_id`, `sequence`, `source`, `actor`, and `kind` are required.
 - `source.adapter`, `source.host`, `actor.kind`, and `actor.id` are required non-empty fields. A
   container with no identity inside it is invalid; adapters do not infer missing attribution later.
@@ -107,19 +110,30 @@ Rules:
 - Every review lifecycle event requires `subject.review_ref`. `review_requested` creates that stable
   identity and every later lifecycle event names it explicitly; repository/head proximity never chooses
   which review an event updates.
+- Every review lifecycle event requires `subject.review_scope`. The allowed values are `whole_commit`,
+  `pull_request_diff`, `branch_diff`, and `worktree_diff`; adapters do not infer scope from trigger names.
 - A diff-scoped review requires `subject.base`, and its currentness key includes that exact base. This
-  includes pull-request, branch-comparison, and local-diff review even when the head does not move.
+  means `pull_request_diff`, `branch_diff`, and `worktree_diff`. `whole_commit` has no base and records
+  null or omits it; validation can therefore distinguish that valid absence from a malformed diff review.
 - A local review of uncommitted material requires `subject.snapshot.digest`.
 - A worktree snapshot represents final inspected bytes, not Git's overlapping staged/unstaged views.
   Each included path appears exactly once as its final inspected worktree state:
-  `{ path, state: "present|deleted", mode, content_digest }`. Paths are normalized repository-relative
-  POSIX strings and sorted by Unicode code point; duplicates are invalid. `mode` and `content_digest` are
-  null only for `deleted`. The snapshot digest is SHA-256 over canonical JSON containing the repository,
-  recorded head, applicable base, and this ordered entry list. The associated coverage manifest names
-  exclusions and unreadable entries. Raw file contents are not embedded in the event envelope.
-- Review currentness is keyed by repository + head + applicable base + snapshot digest. Any applicable
-  base change or included final-byte change supersedes the earlier review even when Git HEAD does not
-  move.
+  `{ path, state: "present|deleted", mode, content_digest }`. Paths are NFC-normalized,
+  repository-relative POSIX strings with no `.` or `..` segments, sorted by Unicode code point;
+  duplicates are invalid. For `present`, `mode` is a six-character Git octal mode string and
+  `content_digest` is `sha256:<64-lowercase-hex>` over the exact raw bytes inspected, with no text,
+  newline, or platform normalization (a symlink hashes its raw link-target bytes). Both are null for
+  `deleted`.
+- The snapshot preimage is exactly
+  `{ "base": <sha-or-null>, "entries": <ordered-array>, "head": <sha>, "repository": <owner/repo>, "review_scope": <scope> }`,
+  serialized as UTF-8 with the RFC 8785 JSON Canonicalization Scheme (JCS). The snapshot digest is
+  `sha256:<64-lowercase-hex>` over those serialized bytes. This standard, not an adapter-native JSON
+  encoder, defines escaping, object-key order, and number/string representation. The associated coverage
+  manifest names exclusions and unreadable entries. Raw file contents are not embedded in the event
+  envelope.
+- Review currentness is keyed by repository + review scope + head + applicable base + snapshot digest.
+  Any scope change, applicable base change, or included final-byte change supersedes the earlier review
+  even when Git HEAD does not move.
 - The reducer never creates a clock value. `observed_at` is copied only when a host supplied it.
 - Ordering is by the adapter's explicit stable sequence. A timestamp is display data, not the primary
   ordering key.
@@ -232,7 +246,8 @@ Minimum review object:
   "subject": {
     "repository": "owner/repo",
     "head": "sha",
-    "base": "required-exact-sha-for-diff-scoped-review",
+    "review_scope": "whole_commit|pull_request_diff|branch_diff|worktree_diff",
+    "base": "required-exact-sha-for-diff-scoped-review-or-null",
     "snapshot": { "kind": "commit|worktree", "digest": "required-for-dirty-worktree" }
   },
   "trigger": { "kind": "checkpoint|manual|pr_ready|pr_comment|final_gate", "ref": "host-ref" },
@@ -414,6 +429,12 @@ The first runtime implementation must include at least these adversarial fixture
 10. **Snapshot duplicate laundering:** one path has both staged and unstaged Git states. The snapshot
     contains one entry for the final inspected bytes, and adapters given equivalent bytes produce the
     same digest regardless of Git status enumeration order.
+11. **Scope laundering:** a diff review omits `review_scope` or declares a diff scope without an exact
+    base. Validation rejects it; a declared `whole_commit` review may validly omit the base.
+12. **Encoding laundering:** two adapters serialize the fixed snapshot vector with different native
+    JSON formatting. Only the RFC 8785 UTF-8 preimage yields the pinned snapshot digest.
+13. **Schema laundering:** an event omits `schema` or names an unsupported envelope version. It is
+    surfaced as incompatible input and never folded under `lyhna-event/v1` semantics.
 
 Full gates:
 
