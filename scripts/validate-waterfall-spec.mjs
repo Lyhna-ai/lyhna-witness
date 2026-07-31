@@ -34,6 +34,8 @@ const REQUIRED_RULES = Object.freeze([
   ["feedback acknowledgement", /review_acknowledged/],
   ["superseded review", /review_superseded/],
   ["agent report resource", /lyhna:\/\/reviews\/\{review_id\}/],
+  ["codex sources pane", /Codex Desktop Sources is the live third pane\./],
+  ["codex pinned summary", /toggleable pinned summary stays visible beside the active conversation/],
   ["codex adapter", /Codex adapter/],
   ["mcp adapter", /Generic MCP adapter/],
   ["claude adapter", /Claude Code adapter/],

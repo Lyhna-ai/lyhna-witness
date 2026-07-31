@@ -275,8 +275,13 @@ Agent delivery:
 Human delivery:
 
 - The same report reference appears in the receipt inbox and any host-native review view.
-- In Codex, PR feedback can appear in the PR sidebar/review pane. Project Sources may hold a durable
-  report or index, but the shared contract does not assume Sources is a live-updating feed.
+- Codex Desktop Sources is the live third pane. Its toggleable pinned summary stays visible beside the active conversation while the human and agent continue talking.
+- The Codex adapter's primary delivery target is therefore the existing Sources surface: attach the
+  current report resource to the task, show its open/superseded state in the pinned summary, and retain
+  the PR sidebar/review pane as the exact-head code-review view.
+- A report becomes `review_delivered` to that task only after Codex accepts and displays the Source or
+  report card. It becomes `review_acknowledged` only after an explicit open/read signal; mere presence in
+  the pinned summary is not acknowledgement.
 - In Buzz, a signed Nostr `review_available` event can carry the report reference while a Canvas view
   presents the open-review index as the persistent third panel.
 - A host surface is a projection. The `.lyhna` review object and its digests remain the portable record.
@@ -337,7 +342,7 @@ when supported; otherwise they are explicitly reported as unavailable to this bu
 | 0 - contract | This spec plus an executable structural validator | Validator red-before/green-after; full Witness suite green |
 | 1 - shared review spine | Canonical event/review schemas, review reducer, coverage manifest, adversarial fixtures | Pure deterministic tests; mutation proves each forbidden transition fails |
 | 2 - versioned lineage | Reducer registry and version-aware re-verification | Old/current packet fixtures; unavailable version fails honestly |
-| 3 - Codex delivery | Shared report resource, hook notice, acknowledgement, current-head supersession | Local review and PR fixtures; no auto-fix claim |
+| 3 - Codex delivery | Shared report resource, Sources insertion, pinned-summary state, hook notice, acknowledgement, current-head supersession | Live task shows the report in Sources while conversation continues; local review and PR fixtures; no auto-fix claim |
 | 4 - MCP/Claude conformance | Thin capture/delivery adapters over shared reducers | Cross-adapter canonical stream parity |
 | 5 - Buzz room surface | Nostr review notices plus persistent Canvas/open-review view | Signed authorship kept separate from action evidence; room chaos fixtures |
 
@@ -399,8 +404,8 @@ Required loop signals:
 - No reducer or receipt code moved out of the Codex adapter yet.
 - No changes to the open Codex adapter repair PR.
 - No Codex hook installation or automatic report acknowledgement.
-- No native Codex third-pane extension; existing PR review and Sources surfaces are used only where the
-  host actually supports them.
+- No automated Codex Sources insertion or pinned-summary refresh yet. The live third-pane surface exists;
+  this slice defines it as the Codex adapter's primary human delivery target.
 - No Buzz/Nostr events, Canvas UI, Claude Code hooks, or MCP resource server.
 - No automatic application of reviewer findings.
 - No claim of universal truth, correctness, certification, delivery, or real-world outcome verification.
