@@ -86,7 +86,8 @@ of each field is owned here.
     "snapshot": {
       "kind": "commit|worktree",
       "digest": "optional-sha256-of-inspected-worktree-snapshot",
-      "coverage_ref": "coverage-manifest-id"
+      "coverage_ref": "coverage-manifest-id",
+      "coverage_digest": "sha256-of-sealed-coverage-manifest"
     },
     "turn_ref": "optional-turn-id",
     "call_ref": "optional-call-id",
@@ -103,9 +104,19 @@ Rules:
 
 - `schema` is required and must equal `lyhna-event/v1` before the event enters the reducer. A missing
   or unsupported discriminator is surfaced as incompatible input and is never interpreted under v1.
-- `event_id`, `session_id`, `sequence`, `source`, `actor`, and `kind` are required.
+- The complete `lyhna-event/v1` envelope is type- and enum-validated before folding; validating only
+  the discriminator or field presence is invalid. `event_id` and `session_id` are non-empty strings;
+  `sequence` is a non-negative safe integer; `source` and `actor` are objects; `actor.kind` is exactly
+  `agent`, `human`, `system`, or `evaluator`; `kind` is exactly one of the lifecycle kinds listed in the
+  canonical envelope; and `payload` is a JSON object, not null or an array. `subject`, when present, is
+  an object; its present references are non-empty strings; `observed_at`, when present, is a host-supplied
+  string; and `raw_digest`, when present, is `sha256:<64-lowercase-hex>`. Unknown enum values, wrong JSON
+  types, non-finite/fractional/negative sequences, and malformed conditional review fields are incompatible
+  input and never reach either reducer.
+- `event_id`, `session_id`, `sequence`, `source`, `actor`, `kind`, and `payload` are required.
 - `source.adapter`, `source.host`, `actor.kind`, and `actor.id` are required non-empty fields. A
-  container with no identity inside it is invalid; adapters do not infer missing attribution later.
+  container with no identity inside it is invalid; all four values are strings and adapters do not
+  infer missing attribution later. Optional `source.source_ref` is a non-empty string when present.
 - Every review lifecycle event requires `subject.repository` and `subject.head`.
 - Every review lifecycle event requires `subject.review_ref`. `review_requested` creates that stable
   identity and every later lifecycle event names it explicitly; repository/head proximity never chooses
@@ -115,7 +126,17 @@ Rules:
 - A diff-scoped review requires `subject.base`, and its currentness key includes that exact base. This
   means `pull_request_diff`, `branch_diff`, and `worktree_diff`. `whole_commit` has no base and records
   null or omits it; validation can therefore distinguish that valid absence from a malformed diff review.
-- A local review of uncommitted material requires `subject.snapshot.digest`.
+- From `review_started` onward, a local review of uncommitted material requires
+  `subject.snapshot.digest`.
+- From `review_started` onward, every review lifecycle event requires
+  `subject.snapshot.coverage_digest`. A `review_requested` event may be provisional because capture has
+  not happened yet, but it cannot satisfy a current-review gate. Once capture starts, later lifecycle
+  events name the same byte and coverage digests through their explicit `review_ref`; a different digest
+  is a different effective review scope and supersedes the earlier report.
+- `subject.repository`, `subject.head`, `subject.base`, and all `*_ref` values are non-empty strings
+  when present. `subject.snapshot`, when present, is an object: `kind` is exactly `commit` or `worktree`;
+  `digest` and `coverage_digest`, when present, match `sha256:<64-lowercase-hex>`; and `coverage_ref` is
+  a non-empty string. The conditional presence rules above are part of v1 validation, not reducer defaults.
 - A worktree snapshot represents final inspected bytes, not Git's overlapping staged/unstaged views.
   Each included path appears exactly once as its final inspected worktree state:
   `{ path, state: "present|deleted", mode, content_digest }`. Paths are NFC-normalized,
@@ -124,16 +145,28 @@ Rules:
   `content_digest` is `sha256:<64-lowercase-hex>` over the exact raw bytes inspected, with no text,
   newline, or platform normalization (a symlink hashes its raw link-target bytes). Both are null for
   `deleted`.
+- The coverage-manifest preimage is exactly
+  `{ "capture_failures": <ordered-array>, "excluded": <ordered-array>, "observed_surfaces": <ordered-array>, "unavailable_surfaces": <ordered-array>, "unreadable": <ordered-array> }`.
+  `observed_surfaces` contains non-empty NFC strings. `unavailable_surfaces` and `capture_failures`
+  contain exactly `{ "surface": <non-empty-NFC-string>, "reason_code": <non-empty-NFC-string> }`;
+  `excluded` and `unreadable` contain exactly
+  `{ "path": <normalized-repository-relative-path>, "reason_code": <non-empty-NFC-string> }`.
+  No free-form diagnostic or file content enters this identity. String arrays are sorted by Unicode code
+  point. Object arrays are sorted by `(surface, reason_code)` or `(path, reason_code)`, respectively,
+  comparing each NFC string by Unicode code point; duplicate strings or tuples are invalid. The preimage
+  is RFC 8785 JCS serialized UTF-8 and its `coverage_digest` is `sha256:<64-lowercase-hex>` over those
+  bytes. `coverage_ref` resolves to a manifest whose recomputed digest must equal the sealed digest; an
+  absent or mismatched manifest cannot satisfy a current-review gate.
 - The snapshot preimage is exactly
-  `{ "base": <sha-or-null>, "entries": <ordered-array>, "head": <sha>, "repository": <owner/repo>, "review_scope": <scope> }`,
+  `{ "base": <sha-or-null>, "coverage_digest": <sealed-coverage-digest>, "entries": <ordered-array>, "head": <sha>, "repository": <owner/repo>, "review_scope": <scope> }`,
   serialized as UTF-8 with the RFC 8785 JSON Canonicalization Scheme (JCS). The snapshot digest is
   `sha256:<64-lowercase-hex>` over those serialized bytes. This standard, not an adapter-native JSON
-  encoder, defines escaping, object-key order, and number/string representation. The associated coverage
-  manifest names exclusions and unreadable entries. Raw file contents are not embedded in the event
-  envelope.
-- Review currentness is keyed by repository + review scope + head + applicable base + snapshot digest.
-  Any scope change, applicable base change, or included final-byte change supersedes the earlier review
-  even when Git HEAD does not move.
+  encoder, defines escaping, object-key order, and number/string representation. Raw file contents are
+  not embedded in the event envelope.
+- Review currentness is keyed by repository + review scope + head + applicable base + snapshot digest
+  + coverage digest. Any scope change, applicable base change, included final-byte change, exclusion,
+  unreadable path, unavailable surface, or capture failure supersedes the earlier review even when Git
+  HEAD does not move.
 - The reducer never creates a clock value. `observed_at` is copied only when a host supplied it.
 - Ordering is by the adapter's explicit stable sequence. A timestamp is display data, not the primary
   ordering key.
@@ -248,7 +281,11 @@ Minimum review object:
     "head": "sha",
     "review_scope": "whole_commit|pull_request_diff|branch_diff|worktree_diff",
     "base": "required-exact-sha-for-diff-scoped-review-or-null",
-    "snapshot": { "kind": "commit|worktree", "digest": "required-for-dirty-worktree" }
+    "snapshot": {
+      "kind": "commit|worktree",
+      "digest": "required-for-dirty-worktree",
+      "coverage_digest": "required-from-review-started-onward"
+    }
   },
   "trigger": { "kind": "checkpoint|manual|pr_ready|pr_comment|final_gate", "ref": "host-ref" },
   "evaluator": { "provider": "host", "id": "attributed-id" },
@@ -435,6 +472,14 @@ The first runtime implementation must include at least these adversarial fixture
     JSON formatting. Only the RFC 8785 UTF-8 preimage yields the pinned snapshot digest.
 13. **Schema laundering:** an event omits `schema` or names an unsupported envelope version. It is
     surfaced as incompatible input and never folded under `lyhna-event/v1` semantics.
+14. **Coverage laundering:** a report on snapshot S excludes or cannot read path A, then another report
+    has the same repository, scope, head, base, and included bytes but a different coverage manifest.
+    The first report cannot remain current; a missing or mismatched sealed manifest also cannot satisfy
+    the current-review gate. Equivalent fixed manifest vectors from different adapters must produce the
+    same pinned coverage digest.
+15. **Envelope laundering:** an event uses an unknown event kind or actor kind, a fractional/negative
+    sequence, a null/array payload, or a wrong-typed conditional review field. Validation rejects it as
+    incompatible input before either reducer can assign semantics.
 
 Full gates:
 
