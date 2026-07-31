@@ -81,6 +81,11 @@ of each field is owned here.
   "subject": {
     "repository": "owner/repo",
     "head": "exact-commit-sha",
+    "snapshot": {
+      "kind": "commit|worktree",
+      "digest": "optional-sha256-of-inspected-worktree-snapshot",
+      "coverage_ref": "coverage-manifest-id"
+    },
     "turn_ref": "optional-turn-id",
     "call_ref": "optional-call-id",
     "claim_ref": "optional-claim-id",
@@ -95,6 +100,14 @@ of each field is owned here.
 Rules:
 
 - `event_id`, `session_id`, `sequence`, `source`, `actor`, and `kind` are required.
+- Every review lifecycle event requires `subject.repository` and `subject.head`.
+- A local review of uncommitted material requires `subject.snapshot.digest`.
+- A worktree snapshot digest is computed from a canonical, path-sorted list of the inspected staged,
+  unstaged, and included untracked entries as `{ path, mode, content_digest }`, bound to the recorded
+  head. The associated coverage manifest names exclusions and unreadable entries. Raw file contents are
+  not embedded in the event envelope.
+- Review currentness is keyed by repository + head + snapshot digest. Any included file-content change
+  supersedes the earlier local review even when Git HEAD does not move.
 - The reducer never creates a clock value. `observed_at` is copied only when a host supplied it.
 - Ordering is by the adapter's explicit stable sequence. A timestamp is display data, not the primary
   ordering key.
@@ -159,6 +172,10 @@ to be running. Adapters may cache derived views, but those caches are not the so
 A review is a first-class, head-bound object, not a chat message and not proof that code is correct.
 Every code review is bound to an exact repository head.
 
+For a clean committed review, repository + exact head identifies the inspected subject. For a local
+review that includes uncommitted files, the exact head is the base and `snapshot.digest` identifies the
+actual inspected bytes. A local report without that digest cannot be current for a dirty worktree.
+
 The canonical lifecycle events are:
 
 | Event | Meaning |
@@ -183,6 +200,8 @@ Additional rules:
 - A repair commit does not close a finding by existence alone.
 - A changed head makes the earlier report historical. It may still be useful, but it is not current-head
   review.
+- A changed dirty-worktree snapshot digest has the same effect even when the repository head is
+  unchanged.
 - Findings remain attributed to their evaluator and severity vocabulary. Lyhna does not convert them
   into its own fact claims.
 - The report records exact head, base where applicable, inspected paths, executed checks, exclusions,
@@ -195,7 +214,12 @@ Minimum review object:
 {
   "schema": "lyhna-review/v1",
   "review_id": "stable-id",
-  "subject": { "repository": "owner/repo", "head": "sha", "base": "optional-sha" },
+  "subject": {
+    "repository": "owner/repo",
+    "head": "sha",
+    "base": "optional-sha",
+    "snapshot": { "kind": "commit|worktree", "digest": "required-for-dirty-worktree" }
+  },
   "trigger": { "kind": "checkpoint|manual|pr_ready|pr_comment|final_gate", "ref": "host-ref" },
   "evaluator": { "provider": "host", "id": "attributed-id" },
   "status": "requested|running|reported|available|delivered|acknowledged|repairing|superseded|closed",
@@ -355,13 +379,15 @@ The first runtime implementation must include at least these adversarial fixture
 
 1. **Claim laundering:** two identical agent claims, one citing the other. Neither claim becomes evidence
    or enters `settled` as supported work.
-2. **Delivery laundering:** `review_reported` without `review_available` or `review_acknowledged`. The fold
+2. **Dirty-worktree laundering:** a local report on snapshot A followed by changed uncommitted bytes at
+   the same Git head. Snapshot A must be superseded for the current worktree.
+3. **Delivery laundering:** `review_reported` without `review_available` or `review_acknowledged`. The fold
    must not say the agent or human saw the review.
-3. **Head laundering:** a clean review on head A followed by head B. Head B must show no current review;
+4. **Head laundering:** a clean review on head A followed by head B. Head B must show no current review;
    the A review is `review_superseded`.
-4. **Adapter laundering:** an adapter supplies a precomputed `SUPPORTED` label. The shared reducer ignores
+5. **Adapter laundering:** an adapter supplies a precomputed `SUPPORTED` label. The shared reducer ignores
    or rejects it and derives the label from canonical evidence.
-5. **History laundering:** a packet names an unavailable reducer version. Verification returns
+6. **History laundering:** a packet names an unavailable reducer version. Verification returns
    `UNVERIFIABLE_WITH_THIS_BUILD`, not valid and not corrupt.
 
 Full gates:

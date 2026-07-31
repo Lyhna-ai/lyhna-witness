@@ -25,6 +25,8 @@ const REQUIRED_RULES = Object.freeze([
   ["agent claims are not evidence", /An agent-authored event is never evidence for an action claim\./],
   ["review opinions are attributed", /A reviewer finding is attributed evaluator opinion, not witnessed fact\./],
   ["exact-head binding", /Every code review is bound to an exact repository head\./],
+  ["review subject required", /Every review lifecycle event requires `subject\.repository` and `subject\.head`\./],
+  ["dirty worktree identity", /A local review of uncommitted material requires `subject\.snapshot\.digest`\./],
   ["delivery distinction", /review posted != review delivered != review opened != finding addressed != new head reviewed/],
   ["shared reducer", /Only the shared Witness reducer may assign Lyhna truth labels or review lifecycle state\./],
   ["thin adapters", /Adapters capture host events, translate them into the canonical envelope, and deliver shared outputs; they do not redefine truth\./],
