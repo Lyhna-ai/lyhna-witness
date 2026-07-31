@@ -81,6 +81,7 @@ of each field is owned here.
   "subject": {
     "repository": "owner/repo",
     "head": "exact-commit-sha",
+    "base": "required-exact-base-for-diff-scoped-review",
     "snapshot": {
       "kind": "commit|worktree",
       "digest": "optional-sha256-of-inspected-worktree-snapshot",
@@ -89,7 +90,7 @@ of each field is owned here.
     "turn_ref": "optional-turn-id",
     "call_ref": "optional-call-id",
     "claim_ref": "optional-claim-id",
-    "review_ref": "optional-review-id"
+    "review_ref": "required-review-id-for-review-lifecycle-events"
   },
   "payload": {},
   "observed_at": "optional-host-supplied-value",
@@ -100,14 +101,25 @@ of each field is owned here.
 Rules:
 
 - `event_id`, `session_id`, `sequence`, `source`, `actor`, and `kind` are required.
+- `source.adapter`, `source.host`, `actor.kind`, and `actor.id` are required non-empty fields. A
+  container with no identity inside it is invalid; adapters do not infer missing attribution later.
 - Every review lifecycle event requires `subject.repository` and `subject.head`.
+- Every review lifecycle event requires `subject.review_ref`. `review_requested` creates that stable
+  identity and every later lifecycle event names it explicitly; repository/head proximity never chooses
+  which review an event updates.
+- A diff-scoped review requires `subject.base`, and its currentness key includes that exact base. This
+  includes pull-request, branch-comparison, and local-diff review even when the head does not move.
 - A local review of uncommitted material requires `subject.snapshot.digest`.
-- A worktree snapshot digest is computed from a canonical, path-sorted list of the inspected staged,
-  unstaged, and included untracked entries as `{ path, mode, content_digest }`, bound to the recorded
-  head. The associated coverage manifest names exclusions and unreadable entries. Raw file contents are
-  not embedded in the event envelope.
-- Review currentness is keyed by repository + head + snapshot digest. Any included file-content change
-  supersedes the earlier local review even when Git HEAD does not move.
+- A worktree snapshot represents final inspected bytes, not Git's overlapping staged/unstaged views.
+  Each included path appears exactly once as its final inspected worktree state:
+  `{ path, state: "present|deleted", mode, content_digest }`. Paths are normalized repository-relative
+  POSIX strings and sorted by Unicode code point; duplicates are invalid. `mode` and `content_digest` are
+  null only for `deleted`. The snapshot digest is SHA-256 over canonical JSON containing the repository,
+  recorded head, applicable base, and this ordered entry list. The associated coverage manifest names
+  exclusions and unreadable entries. Raw file contents are not embedded in the event envelope.
+- Review currentness is keyed by repository + head + applicable base + snapshot digest. Any applicable
+  base change or included final-byte change supersedes the earlier review even when Git HEAD does not
+  move.
 - The reducer never creates a clock value. `observed_at` is copied only when a host supplied it.
 - Ordering is by the adapter's explicit stable sequence. A timestamp is display data, not the primary
   ordering key.
@@ -172,9 +184,11 @@ to be running. Adapters may cache derived views, but those caches are not the so
 A review is a first-class, head-bound object, not a chat message and not proof that code is correct.
 Every code review is bound to an exact repository head.
 
-For a clean committed review, repository + exact head identifies the inspected subject. For a local
-review that includes uncommitted files, the exact head is the base and `snapshot.digest` identifies the
-actual inspected bytes. A local report without that digest cannot be current for a dirty worktree.
+For a clean whole-commit review, repository + exact head identifies the inspected subject. A diff-scoped
+review also records the exact base because changing that base changes the inspected diff without moving
+the head. For a local review that includes uncommitted files, `snapshot.digest` identifies the final
+inspected worktree bytes on top of that recorded head/base. A local report without that digest cannot be
+current for a dirty worktree.
 
 The canonical lifecycle events are:
 
@@ -200,6 +214,7 @@ Additional rules:
 - A repair commit does not close a finding by existence alone.
 - A changed head makes the earlier report historical. It may still be useful, but it is not current-head
   review.
+- A changed base supersedes an earlier diff-scoped review even when the head is unchanged.
 - A changed dirty-worktree snapshot digest has the same effect even when the repository head is
   unchanged.
 - Findings remain attributed to their evaluator and severity vocabulary. Lyhna does not convert them
@@ -217,7 +232,7 @@ Minimum review object:
   "subject": {
     "repository": "owner/repo",
     "head": "sha",
-    "base": "optional-sha",
+    "base": "required-exact-sha-for-diff-scoped-review",
     "snapshot": { "kind": "commit|worktree", "digest": "required-for-dirty-worktree" }
   },
   "trigger": { "kind": "checkpoint|manual|pr_ready|pr_comment|final_gate", "ref": "host-ref" },
@@ -389,6 +404,16 @@ The first runtime implementation must include at least these adversarial fixture
    or rejects it and derives the label from canonical evidence.
 6. **History laundering:** a packet names an unavailable reducer version. Verification returns
    `UNVERIFIABLE_WITH_THIS_BUILD`, not valid and not corrupt.
+7. **Identity laundering:** an event supplies empty `source` or `actor` containers. Validation rejects
+   it before the reducer can treat unattributed input as witnessed or evaluator-authored evidence.
+8. **Review collision:** two reviews share repository, head, base, and snapshot but have distinct
+   `review_ref` values. Delivery, acknowledgement, supersession, and closure update only the explicitly
+   referenced review.
+9. **Base laundering:** a diff review is reported on base A/head H, then the base changes to B while H
+   stays fixed. The A review becomes superseded and cannot satisfy a current-review gate for B..H.
+10. **Snapshot duplicate laundering:** one path has both staged and unstaged Git states. The snapshot
+    contains one entry for the final inspected bytes, and adapters given equivalent bytes produce the
+    same digest regardless of Git status enumeration order.
 
 Full gates:
 
