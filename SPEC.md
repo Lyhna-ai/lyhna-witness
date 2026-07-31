@@ -137,6 +137,55 @@ Rules:
   when present. `subject.snapshot`, when present, is an object: `kind` is exactly `commit` or `worktree`;
   `digest` and `coverage_digest`, when present, match `sha256:<64-lowercase-hex>`; and `coverage_ref` is
   a non-empty string. The conditional presence rules above are part of v1 validation, not reducer defaults.
+- Each event kind is validated against its kind-specific subject and payload schema before folding.
+  A generic object-shaped payload is not sufficient. The table below defines the minimum semantic
+  inputs for every v1 transition; an adapter may preserve extension fields as inert data, but neither
+  reducer may derive state from an extension that is absent from this contract.
+
+  | Event kind | Required subject fields | Required payload fields |
+  |---|---|---|
+  | `claim_recorded` | `claim_ref` | exactly one of `statement` or `statement_digest`; `evidence_refs` |
+  | `tool_requested` | `turn_ref`, `call_ref` | `tool_name`, `capture_status`; `arguments_digest` when retained |
+  | `tool_returned` | `call_ref` | `request_event_ref`, `capture_status`; `result_digest` when retained |
+  | `tool_blocked` | `call_ref` | `request_event_ref`, `reason_code` |
+  | `artifact_observed` | at least one of `turn_ref` or `call_ref` | `artifact_ref`, `artifact_digest` |
+  | `review_requested` | common review subject | `trigger` |
+  | `review_started` | common review subject | `evaluator` |
+  | `review_reported` | common review subject | `report_ref`, `report_digest`, `finding_refs` |
+  | `review_available` | common review subject | `report_ref`, `report_digest` |
+  | `review_delivered` | common review subject | `report_ref`, `audience`, `channel`, `delivery_ref` |
+  | `review_acknowledged` | common review subject | `report_ref`, `delivery_ref` |
+  | `repair_started` | common review subject | `finding_refs` |
+  | `review_superseded` | common review subject | `reason_code`, `superseded_by` |
+  | `review_closed` | common review subject | `closing_review_ref`, `finding_dispositions` |
+  | `coverage_reported` | `snapshot.coverage_ref`, `snapshot.coverage_digest` | `coverage_ref`, `coverage_digest` |
+
+  The common review subject is `repository`, `head`, `review_ref`, and `review_scope`, plus the
+  conditional `base` and `snapshot` fields already required above. Kind-specific values are validated
+  as follows:
+
+  - All required `*_ref`, `*_name`, `channel`, `reason_code`, provider, and identity values are non-empty
+    strings. Digest fields match `sha256:<64-lowercase-hex>`.
+  - `statement` is a non-empty string; `statement_digest` matches the digest format. `evidence_refs` and
+    `finding_refs` are arrays of unique non-empty strings in adapter sequence order. `evidence_refs` and
+    `review_reported.finding_refs` may be empty; `repair_started.finding_refs` must not be.
+  - `capture_status` is exactly `retained` or `not_retained`. A retained tool request or result requires
+    its named digest; `not_retained` forbids fabricating one. The return or block event's
+    `request_event_ref` must resolve to a preceding `tool_requested` event with the same `call_ref`.
+  - `trigger` is exactly `{ kind, ref }`, where `kind` is `checkpoint`, `manual`, `pr_ready`, `pr_comment`,
+    or `final_gate`, and `ref` is non-empty. `evaluator` is exactly `{ provider, id }` with non-empty
+    strings and must agree with the attributed evaluator actor.
+  - `audience` is exactly `{ kind, id }`, where `kind` is `agent` or `human`; `delivery_ref` identifies one accepted host
+    delivery. `review_acknowledged` must name a preceding delivery for the same review and its actor must
+    match that delivery's audience. Presence in a host view alone does not synthesize acknowledgement.
+  - `superseded_by` is exactly `{ head, review_ref }` with at least one non-null, non-empty value and
+    identifies the changed subject or replacement review. `finding_dispositions` is an array of unique
+    `{ finding_ref, status }` objects, where status is `addressed`, `accepted_risk`, `dismissed`, or
+    `superseded`; it may be empty only when the closing report has no findings. `closing_review_ref`
+    names the current exact-head review/gate that authorized closure, never the repair commit by itself.
+  - `coverage_reported.payload.coverage_ref` and `coverage_digest` must equal the subject snapshot values;
+    the referenced manifest must resolve and recompute as specified below. A mismatch is incompatible
+    input, not a second coverage identity.
 - A worktree snapshot represents final inspected bytes, not Git's overlapping staged/unstaged views.
   Each included path appears exactly once as its final inspected worktree state:
   `{ path, state: "present|deleted", mode, content_digest }`. Paths are NFC-normalized,
@@ -480,6 +529,10 @@ The first runtime implementation must include at least these adversarial fixture
 15. **Envelope laundering:** an event uses an unknown event kind or actor kind, a fractional/negative
     sequence, a null/array payload, or a wrong-typed conditional review field. Validation rejects it as
     incompatible input before either reducer can assign semantics.
+16. **Kind-specific laundering:** an otherwise well-typed event omits a transition-bearing field: for
+    example, `review_delivered` has no audience/channel/report reference, `tool_returned` has no preceding
+    request reference, or `review_closed` has no closing review and finding dispositions. Validation
+    rejects every such event before folding; no reducer may fill the omission from proximity or defaults.
 
 Full gates:
 

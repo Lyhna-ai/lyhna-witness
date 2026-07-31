@@ -30,6 +30,11 @@ const REQUIRED_RULES = Object.freeze([
   ["complete v1 envelope validation", /The complete `lyhna-event\/v1` envelope is type- and enum-validated before folding/],
   ["event and actor enums", /`actor\.kind` is exactly[\s\S]*`kind` is exactly one of the lifecycle kinds/],
   ["sequence and payload types", /`sequence` is a non-negative safe integer[\s\S]*`payload` is a JSON object, not null or an array/],
+  ["kind-specific validation before folding", /Each event kind is validated against its kind-specific subject and payload schema before folding\./],
+  ["complete kind-specific schema table", /\| `claim_recorded` \|[\s\S]*\| `coverage_reported` \|/],
+  ["delivery payload identity", /`review_delivered`[\s\S]*`report_ref`, `audience`, `channel`, `delivery_ref`/],
+  ["tool result pairing", /`tool_returned`[\s\S]*`request_event_ref`, `capture_status`/],
+  ["closed-event disposition", /`review_closed`[\s\S]*`closing_review_ref`, `finding_dispositions`/],
   ["nested source and actor identity", /`source\.adapter`, `source\.host`, `actor\.kind`, and `actor\.id` are required non-empty fields\./],
   ["review reference required", /Every review lifecycle event requires `subject\.review_ref`\./],
   ["review scope required", /Every review lifecycle event requires `subject\.review_scope`\./],
@@ -60,6 +65,24 @@ const REQUIRED_RULES = Object.freeze([
   ["buzz adapter", /Buzz\/Nostr adapter/]
 ]);
 
+const REQUIRED_KIND_SCHEMA_ROWS = Object.freeze([
+  "| `claim_recorded` | `claim_ref` | exactly one of `statement` or `statement_digest`; `evidence_refs` |",
+  "| `tool_requested` | `turn_ref`, `call_ref` | `tool_name`, `capture_status`; `arguments_digest` when retained |",
+  "| `tool_returned` | `call_ref` | `request_event_ref`, `capture_status`; `result_digest` when retained |",
+  "| `tool_blocked` | `call_ref` | `request_event_ref`, `reason_code` |",
+  "| `artifact_observed` | at least one of `turn_ref` or `call_ref` | `artifact_ref`, `artifact_digest` |",
+  "| `review_requested` | common review subject | `trigger` |",
+  "| `review_started` | common review subject | `evaluator` |",
+  "| `review_reported` | common review subject | `report_ref`, `report_digest`, `finding_refs` |",
+  "| `review_available` | common review subject | `report_ref`, `report_digest` |",
+  "| `review_delivered` | common review subject | `report_ref`, `audience`, `channel`, `delivery_ref` |",
+  "| `review_acknowledged` | common review subject | `report_ref`, `delivery_ref` |",
+  "| `repair_started` | common review subject | `finding_refs` |",
+  "| `review_superseded` | common review subject | `reason_code`, `superseded_by` |",
+  "| `review_closed` | common review subject | `closing_review_ref`, `finding_dispositions` |",
+  "| `coverage_reported` | `snapshot.coverage_ref`, `snapshot.coverage_digest` | `coverage_ref`, `coverage_digest` |"
+]);
+
 export function validateWaterfallSpec(text) {
   const errors = [];
   for (const heading of REQUIRED_HEADINGS) {
@@ -67,6 +90,9 @@ export function validateWaterfallSpec(text) {
   }
   for (const [name, pattern] of REQUIRED_RULES) {
     if (!pattern.test(text)) errors.push(`missing rule: ${name}`);
+  }
+  for (const row of REQUIRED_KIND_SCHEMA_ROWS) {
+    if (!text.includes(row)) errors.push(`missing kind-specific schema: ${row.match(/`([^`]+)`/)?.[1] ?? row}`);
   }
   return errors;
 }

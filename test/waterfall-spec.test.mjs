@@ -20,6 +20,12 @@ test("the structural validator rejects removal of identity and currentness rules
     "The complete `lyhna-event/v1` envelope is type- and enum-validated before folding",
     "`sequence` is a non-negative safe integer",
     "`payload` is a JSON object, not null or an array",
+    "Each event kind is validated against its kind-specific subject and payload schema before folding.",
+    "| `claim_recorded` |",
+    "| `coverage_reported` |",
+    "`report_ref`, `audience`, `channel`, `delivery_ref`",
+    "`request_event_ref`, `capture_status`",
+    "`closing_review_ref`, `finding_dispositions`",
     "`source.adapter`, `source.host`, `actor.kind`, and `actor.id` are required non-empty fields.",
     "Every review lifecycle event requires `subject.review_ref`",
     "Every review lifecycle event requires `subject.review_scope`",
@@ -36,5 +42,34 @@ test("the structural validator rejects removal of identity and currentness rules
   ]) {
     const withoutRule = spec.replace(fragment, "");
     assert.notDeepEqual(validateWaterfallSpec(withoutRule), [], `removing ${fragment} must fail validation`);
+  }
+});
+
+test("the structural validator rejects removal of any kind-specific event schema", () => {
+  const spec = readFileSync(path.join(root, "SPEC.md"), "utf8");
+  for (const kind of [
+    "claim_recorded",
+    "tool_requested",
+    "tool_returned",
+    "tool_blocked",
+    "artifact_observed",
+    "review_requested",
+    "review_started",
+    "review_reported",
+    "review_available",
+    "review_delivered",
+    "review_acknowledged",
+    "repair_started",
+    "review_superseded",
+    "review_closed",
+    "coverage_reported"
+  ]) {
+    const row = spec.split("\n").find((line) => line.startsWith(`  | \`${kind}\` |`));
+    assert.ok(row, `fixture must find ${kind}`);
+    assert.notDeepEqual(
+      validateWaterfallSpec(spec.replace(`${row}\n`, "")),
+      [],
+      `removing ${kind} must fail validation`
+    );
   }
 });
