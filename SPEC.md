@@ -178,8 +178,13 @@ Rules:
   - `audience` is exactly `{ kind, id }`, where `kind` is `agent` or `human`; `delivery_ref` identifies one accepted host
     delivery. `review_acknowledged` must name a preceding delivery for the same review and its actor must
     match that delivery's audience. Presence in a host view alone does not synthesize acknowledgement.
-  - `superseded_by` is exactly `{ head, review_ref }` with at least one non-null, non-empty value and
-    identifies the changed subject or replacement review. `finding_dispositions` is an array of unique
+  - `superseded_by` is exactly `{ review_ref, subject }`. At least one value is non-null. A non-null
+    `review_ref` is a non-empty reference to the replacement review. A non-null `subject` is the
+    complete canonical currentness subject
+    `{ repository, head, review_scope, base, snapshot: { digest, coverage_digest } }`, including nulls
+    where the subject rules permit them; it records the changed base, snapshot, or coverage identity even
+    when the Git head is unchanged and no replacement review exists yet. When both values are present,
+    the replacement review must resolve to that subject. `finding_dispositions` is an array of unique
     `{ finding_ref, status }` objects, where status is `addressed`, `accepted_risk`, `dismissed`, or
     `superseded`; it may be empty only when the closing report has no findings. `closing_review_ref`
     names the current exact-head review/gate that authorized closure, never the repair commit by itself.
@@ -194,7 +199,7 @@ Rules:
     |---|---|
     | `review_requested` | none; creates `review_ref` for its declared subject |
     | `review_started` | preceding `review_requested` with the same `review_ref` and every already-declared subject/currentness field |
-    | `review_reported` | preceding `review_started` with the same `review_ref` and complete currentness key; creates immutable `report_ref`, `report_digest`, and `finding_refs` |
+    | `review_reported` | preceding `review_started` with the same `review_ref` and complete currentness key; its resolved canonical report resource creates immutable `report_ref`, `report_digest`, and `finding_refs` |
     | `review_available` | preceding `review_reported` with the same `review_ref`, `report_ref`, and `report_digest` |
     | `review_delivered` | preceding `review_available` with the same `review_ref`, `report_ref`, and `report_digest`; creates `delivery_ref` |
     | `review_acknowledged` | preceding `review_delivered` with the same `review_ref`, report identity, and `delivery_ref` |
@@ -210,13 +215,20 @@ Rules:
   - Every `repair_started.finding_refs` entry resolves to the immutable finding set of the preceding report for the same `review_ref`.
     The set may be a non-empty subset because repairs can start independently, but an unknown finding, a
     finding from another review/report, or a reference supplied only by ordinal proximity is rejected.
+  - The report-digest preimage is exactly the RFC 8785 JSON Canonicalization Scheme (JCS) UTF-8 encoding of the entire resolved `lyhna-review-report/v1` object at `report_ref`.
+    The object contains no `report_digest` field, so the preimage is not self-referential. The event's
+    `report_digest` is `sha256:<64-lowercase-hex>` over those bytes. `review_reported` is accepted only after `report_ref` resolves, its JCS bytes recompute to `report_digest`, its `review_ref` and complete canonical subject equal the event, and the ordered unique `finding_ref` projection from its `findings` array equals `finding_refs` exactly. A missing resource, digest mismatch, duplicate finding, missing or extra finding reference, or cross-review subject is incompatible input and cannot create a reported review.
   - `review_closed.finding_dispositions` covers exactly the target report's finding set: the set of
     `finding_ref` values is equal to `review_reported.finding_refs`, with no missing, extra, or duplicate
     entry. The close event repeats that target's `report_ref` and `report_digest`. Its `closing_subject` is exactly `{ repository, head, review_scope, base, snapshot: { digest, coverage_digest } }`, reusing the canonical
     subject nesting and the same null/base and digest rules as review currentness. `closing_review_ref` resolves to the stated current exact-head gate:
-    a preceding review for that exact closing subject which has reached `review_reported` or later and has
-    an empty finding set. If the repository's captured currentness key no longer equals `closing_subject`,
-    the close event is historical/superseded and cannot close the current work.
+    a preceding review for that exact closing subject which has reached `review_reported`,
+    `review_available`, `review_delivered`, or `review_acknowledged` and has an empty finding set.
+    `closing_review_ref` must still be the reducer-selected current, non-superseded review for
+    `closing_subject` at the close event's position; a review whose state is `review_superseded` never
+    authorizes closure merely because it once reached a reported-or-later state. If that gate is later
+    superseded, or if the repository's captured currentness key no longer equals `closing_subject`, the
+    prior close is historical/superseded and cannot close the current work.
 - A worktree snapshot represents final inspected bytes, not Git's overlapping staged/unstaged views.
   Each included path appears exactly once as its final inspected worktree state:
   `{ path, state: "present|deleted", mode, content_digest }`. Paths are NFC-normalized,
@@ -421,6 +433,34 @@ The report is stored once and exposed through stable references:
 .lyhna/reviews/<review_id>/REPORT.md
 ```
 
+`review.json` is the immutable report resource addressed by `report_ref`. Its exact top-level shape is:
+
+```json
+{
+  "schema": "lyhna-review-report/v1",
+  "review_ref": "stable-review-reference",
+  "subject": {
+    "repository": "owner/repo",
+    "head": "sha",
+    "review_scope": "whole_commit|pull_request_diff|branch_diff|worktree_diff",
+    "base": "exact-sha-or-null",
+    "snapshot": { "digest": "digest-or-null", "coverage_digest": "sealed-coverage-digest" }
+  },
+  "evaluator": { "provider": "host", "id": "attributed-id" },
+  "coverage_ref": "coverage-manifest-id",
+  "checks": [],
+  "findings": [],
+  "report_markdown_digest": "sha256-of-exact-REPORT.md-bytes"
+}
+```
+
+The object has exactly those top-level keys. `checks` is an ordered array of attributed check objects;
+`findings` is an ordered array of objects with a unique non-empty `finding_ref`. Their complete contents
+are part of the JCS preimage, so an adapter cannot change evaluator prose, check output references, or a
+finding while retaining the report identity. `report_markdown_digest` is the SHA-256 digest of the exact
+raw `REPORT.md` bytes and therefore binds the human/agent view to the canonical resource. The shared
+schema validator owns the nested check/finding shapes; adapters may not discard fields before hashing.
+
 Runtime receipt/review data is local and uncommitted by default. An installation may choose another
 data root. The logical resource remains stable:
 
@@ -573,6 +613,14 @@ The first runtime implementation must include at least these adversarial fixture
 19. **Closure-set laundering:** a close event omits one target finding, adds an unrelated finding, or
     names a stale closing gate. Validation rejects it; only exact disposition-set equality plus a
     resolvable current exact-head clean review can close the target report.
+20. **Report-preimage laundering:** an adapter repeats a caller-supplied report tuple while the resource
+    bytes, review subject, report digest or finding set differ. Resolution or recomputation fails and the
+    report never reaches `review_reported`.
+21. **Non-head supersession laundering:** a review's base, snapshot digest, or coverage digest changes at
+    the same head before a replacement review exists. `superseded_by.subject` preserves the changed
+    currentness identity, and the old review cannot satisfy the new subject's gate.
+22. **Superseded-closing-gate laundering:** a zero-finding review is reported and then superseded before
+    another report attempts to use it as `closing_review_ref`. The superseded review cannot authorize closure even when its subject tuple still compares equal.
 
 Full gates:
 
