@@ -467,6 +467,13 @@ are part of the JCS preimage, so an adapter cannot change evaluator prose, check
 finding while retaining the report identity. `report_markdown_digest` is exactly `sha256:<64-lowercase-hex>` over the exact raw `REPORT.md` bytes, with no newline, text, case, or platform normalization, and therefore binds the human/agent view to the canonical resource. Bare hexadecimal, uppercase hexadecimal, and other algorithm labels are incompatible input. The shared
 schema validator owns the nested check/finding shapes; adapters may not discard fields before hashing.
 
+Before `review_reported` is accepted, and again immediately before `review_available` or `review_delivered` is accepted, the sibling `REPORT.md` bytes at `report_ref` must resolve and recompute to `report_markdown_digest`.
+The validation boundary supplies the resolved bytes and result to the pure fold; the reducer itself does
+not perform a host lookup. A missing file, unreadable resource, or digest mismatch is incompatible input,
+does not advance the lifecycle event, and cannot expose a previously valid report after its Markdown
+bytes change. `review_available` and `review_delivered` therefore revalidate the canonical object and its
+human/agent projection rather than trusting the earlier caller-supplied digest tuple.
+
 Runtime receipt/review data is local and uncommitted by default. An installation may choose another
 data root. The logical resource remains stable:
 
@@ -634,6 +641,7 @@ The first runtime implementation must include at least these adversarial fixture
 24. **Markdown-digest encoding laundering:** adapters hash identical raw `REPORT.md` bytes but supply
     uppercase or bare hexadecimal representations. Validation rejects both; only the exact
     `sha256:<64-lowercase-hex>` representation enters the canonical report resource.
+25. **Markdown-bytes laundering:** a missing or altered `REPORT.md` is presented while `review.json` remains valid after reporting. Resolution or digest recomputation fails before availability or delivery, so the divergent human/agent view is never exposed as the recorded report.
 
 Full gates:
 
