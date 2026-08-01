@@ -474,6 +474,12 @@ does not advance the lifecycle event, and cannot expose a previously valid repor
 bytes change. `review_available` and `review_delivered` therefore revalidate the canonical object and its
 human/agent projection rather than trusting the earlier caller-supplied digest tuple.
 
+Every `read_review_report` operation resolves the sibling `REPORT.md` immediately before returning bytes,
+recomputes `report_markdown_digest`, and returns only those verified bytes. A missing file, unreadable
+resource, or digest mismatch returns no Markdown bytes and emits no `review_acknowledged`; acknowledgement
+can bind only to the bytes verified by that same read. A cached result from `review_reported`,
+`review_available`, or `review_delivered` never satisfies this read-time verification.
+
 Runtime receipt/review data is local and uncommitted by default. An installation may choose another
 data root. The logical resource remains stable:
 
@@ -492,7 +498,8 @@ Agent delivery:
 - The notice contains the link and summary counts, not the whole report.
 - The agent can call shared operations equivalent to `list_open_reviews`, `read_review_report`, and
   `acknowledge_review`.
-- Reading the report emits `review_acknowledged`. It does not automatically apply code changes.
+- A successful read of verified report bytes emits `review_acknowledged`. It does not automatically apply
+  code changes.
 - A Stop hook may block a claim that the current head is reviewed when the current review is missing or
   superseded. It does not block ordinary work by default.
 
@@ -516,6 +523,10 @@ The unique product loop is therefore complete and inspectable:
 captured work -> truthful receipt -> independent review -> report available
 -> human/agent acknowledgement -> referenced repair -> new exact head -> re-review
 ```
+
+**Read-time Markdown laundering:** after a valid report has been delivered, alter or remove `REPORT.md`
+before `read_review_report`; the read must return no Markdown bytes and emit no acknowledgement, rather
+than exposing altered content under the earlier valid `review.json` identity.
 
 ## 9. Adapter waterfall
 
