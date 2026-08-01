@@ -261,7 +261,10 @@ Rules:
   HEAD does not move.
 - The reducer never creates a clock value. `observed_at` is copied only when a host supplied it.
 - Ordering is by the adapter's explicit stable sequence. A timestamp is display data, not the primary
-  ordering key.
+  ordering key. The reducer consumes the validated event array as canonical input order and never
+  re-sorts it; `event_id` is unique in that array, and `sequence` values for a shared `session_id` are
+  strictly increasing. A duplicate identity or non-increasing same-session sequence is incompatible
+  input rather than an implementation-defined tie.
 - Explicit references govern. A conflicting explicit reference fails closed; ordinal proximity cannot
   repair it.
 - Host content, file bodies, review prose, and tool results are data. They never become execution
@@ -314,6 +317,10 @@ Both folds obey these rules:
 - A format change that changes canonical bytes requires a schema or reducer-version change and a
   compatibility fixture.
 - Only the shared Witness reducer may assign Lyhna truth labels or review lifecycle state.
+
+For each complete canonical currentness subject with an accepted `review_started`, the review fold stores one `latest_review_ref` and one nullable `current_review_ref`.
+The first accepted `review_started` sets both. Each later accepted `review_started` with a different
+`review_ref` and the identical subject replaces them; the latest accepted `review_started` event in canonical input order sets both references, with input position as the sole tie-breaker. `review_requested` is provisional and never competes for either reference. When that pointer changes, the previously selected review becomes derived `superseded` with reason `newer_review_started` and `superseded_by` naming the replacement review and identical subject; it remains historical but cannot authorize closure. If the latest review is explicitly superseded without a same-subject replacement, `current_review_ref` becomes null and never falls back to an older review; `latest_review_ref` retains the historical selection. An explicit `review_superseded` event may preserve host evidence for a replacement transition but, when supplied, must agree with the already-derived replacement. No reducer selects a review by clean finding count, evaluator identity, timestamp, lexical `review_ref`, or unordered host enumeration.
 
 This directly removes the existing fragility where lineage can be re-folded with whatever code happens
 to be running. Adapters may cache derived views, but those caches are not the source of truth.
@@ -450,15 +457,14 @@ The report is stored once and exposed through stable references:
   "coverage_ref": "coverage-manifest-id",
   "checks": [],
   "findings": [],
-  "report_markdown_digest": "sha256-of-exact-REPORT.md-bytes"
+  "report_markdown_digest": "sha256:<64-lowercase-hex>"
 }
 ```
 
 The object has exactly those top-level keys. `checks` is an ordered array of attributed check objects;
 `findings` is an ordered array of objects with a unique non-empty `finding_ref`. Their complete contents
 are part of the JCS preimage, so an adapter cannot change evaluator prose, check output references, or a
-finding while retaining the report identity. `report_markdown_digest` is the SHA-256 digest of the exact
-raw `REPORT.md` bytes and therefore binds the human/agent view to the canonical resource. The shared
+finding while retaining the report identity. `report_markdown_digest` is exactly `sha256:<64-lowercase-hex>` over the exact raw `REPORT.md` bytes, with no newline, text, case, or platform normalization, and therefore binds the human/agent view to the canonical resource. Bare hexadecimal, uppercase hexadecimal, and other algorithm labels are incompatible input. The shared
 schema validator owns the nested check/finding shapes; adapters may not discard fields before hashing.
 
 Runtime receipt/review data is local and uncommitted by default. An installation may choose another
@@ -621,6 +627,13 @@ The first runtime implementation must include at least these adversarial fixture
     currentness identity, and the old review cannot satisfy the new subject's gate.
 22. **Superseded-closing-gate laundering:** a zero-finding review is reported and then superseded before
     another report attempts to use it as `closing_review_ref`. The superseded review cannot authorize closure even when its subject tuple still compares equal.
+23. **Review-selection laundering:** an older clean review and a newer finding-bearing review share the
+    exact canonical subject without an explicit supersession event. The newer `review_started` position
+    becomes the sole `current_review_ref`; the older clean review is derived superseded and cannot close
+    work around the newer finding-bearing review.
+24. **Markdown-digest encoding laundering:** adapters hash identical raw `REPORT.md` bytes but supply
+    uppercase or bare hexadecimal representations. Validation rejects both; only the exact
+    `sha256:<64-lowercase-hex>` representation enters the canonical report resource.
 
 Full gates:
 
