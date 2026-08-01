@@ -153,11 +153,11 @@ Rules:
   | `review_started` | common review subject | `evaluator` |
   | `review_reported` | common review subject | `report_ref`, `report_digest`, `finding_refs` |
   | `review_available` | common review subject | `report_ref`, `report_digest` |
-  | `review_delivered` | common review subject | `report_ref`, `audience`, `channel`, `delivery_ref` |
-  | `review_acknowledged` | common review subject | `report_ref`, `delivery_ref` |
-  | `repair_started` | common review subject | `finding_refs` |
+  | `review_delivered` | common review subject | `report_ref`, `report_digest`, `audience`, `channel`, `delivery_ref` |
+  | `review_acknowledged` | common review subject | `report_ref`, `report_digest`, `delivery_ref` |
+  | `repair_started` | common review subject | `report_ref`, `report_digest`, `finding_refs` |
   | `review_superseded` | common review subject | `reason_code`, `superseded_by` |
-  | `review_closed` | common review subject | `closing_review_ref`, `finding_dispositions` |
+  | `review_closed` | common review subject | `report_ref`, `report_digest`, `closing_review_ref`, `closing_subject`, `finding_dispositions` |
   | `coverage_reported` | `snapshot.coverage_ref`, `snapshot.coverage_digest` | `coverage_ref`, `coverage_digest` |
 
   The common review subject is `repository`, `head`, `review_ref`, and `review_scope`, plus the
@@ -186,6 +186,37 @@ Rules:
   - `coverage_reported.payload.coverage_ref` and `coverage_digest` must equal the subject snapshot values;
     the referenced manifest must resolve and recompute as specified below. A mismatch is incompatible
     input, not a second coverage identity.
+  - Every review transition resolves its required predecessor by explicit reference before it mutates review state.
+    Repository/head proximity, sequence adjacency, or a shared `report_ref` without the same `review_ref`
+    never supplies a missing edge. The v1 predecessor graph is:
+
+    | Transition | Required predecessor and identity |
+    |---|---|
+    | `review_requested` | none; creates `review_ref` for its declared subject |
+    | `review_started` | preceding `review_requested` with the same `review_ref` and every already-declared subject/currentness field |
+    | `review_reported` | preceding `review_started` with the same `review_ref` and complete currentness key; creates immutable `report_ref`, `report_digest`, and `finding_refs` |
+    | `review_available` | preceding `review_reported` with the same `review_ref`, `report_ref`, and `report_digest` |
+    | `review_delivered` | preceding `review_available` with the same `review_ref`, `report_ref`, and `report_digest`; creates `delivery_ref` |
+    | `review_acknowledged` | preceding `review_delivered` with the same `review_ref`, report identity, and `delivery_ref` |
+    | `repair_started` | preceding `review_reported` for the same review and report identity; every named finding belongs to that report |
+    | `review_superseded` | an existing state for the same `review_ref`; `superseded_by` resolves to the changed subject or replacement review |
+    | `review_closed` | the target `review_reported` tuple plus a separately resolvable current exact-head closing gate |
+
+    A request may omit capture-only snapshot fields, but `review_started` binds them and must preserve every
+    subject field the request already declared. Later transitions repeat the complete currentness identity.
+    Specifically, `review_available` resolves to a preceding `review_reported` with the same report tuple;
+    `review_delivered` resolves to that `review_available`; and `review_acknowledged` resolves to that delivery.
+    A missing, conflicting, forward, or cross-review reference is incompatible input and cannot advance state.
+  - Every `repair_started.finding_refs` entry resolves to the immutable finding set of the preceding report for the same `review_ref`.
+    The set may be a non-empty subset because repairs can start independently, but an unknown finding, a
+    finding from another review/report, or a reference supplied only by ordinal proximity is rejected.
+  - `review_closed.finding_dispositions` covers exactly the target report's finding set: the set of
+    `finding_ref` values is equal to `review_reported.finding_refs`, with no missing, extra, or duplicate
+    entry. The close event repeats that target's `report_ref` and `report_digest`. Its `closing_subject` is exactly `{ repository, head, review_scope, base, snapshot: { digest, coverage_digest } }`, reusing the canonical
+    subject nesting and the same null/base and digest rules as review currentness. `closing_review_ref` resolves to the stated current exact-head gate:
+    a preceding review for that exact closing subject which has reached `review_reported` or later and has
+    an empty finding set. If the repository's captured currentness key no longer equals `closing_subject`,
+    the close event is historical/superseded and cannot close the current work.
 - A worktree snapshot represents final inspected bytes, not Git's overlapping staged/unstaged views.
   Each included path appears exactly once as its final inspected worktree state:
   `{ path, state: "present|deleted", mode, content_digest }`. Paths are NFC-normalized,
@@ -533,6 +564,15 @@ The first runtime implementation must include at least these adversarial fixture
     example, `review_delivered` has no audience/channel/report reference, `tool_returned` has no preceding
     request reference, or `review_closed` has no closing review and finding dispositions. Validation
     rejects every such event before folding; no reducer may fill the omission from proximity or defaults.
+17. **Report-transition laundering:** `review_delivered` appears before `review_available`, or an
+    availability/delivery/acknowledgement names a different report identity while reusing the same
+    `review_ref`. Validation rejects the event and the review state does not advance.
+18. **Repair-reference laundering:** `repair_started` names an unknown finding or a finding from an
+    unrelated review/report. Validation rejects it; a non-empty array alone never establishes that work
+    began on any reported finding.
+19. **Closure-set laundering:** a close event omits one target finding, adds an unrelated finding, or
+    names a stale closing gate. Validation rejects it; only exact disposition-set equality plus a
+    resolvable current exact-head clean review can close the target report.
 
 Full gates:
 
