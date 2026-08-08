@@ -65,7 +65,7 @@ correct," "this happened live"), it is an **overclaim** — do not ship it.
 | Repo | Language | Base branch | What it is |
 | --- | --- | --- | --- |
 | **`lyhna-mcp-proxy`** | TypeScript | `master` | Runtime MCP proxy in the tool-call path. Witnesses real tool calls, captures agent claims, and exports a `witness-input.json`. ~503 tests. |
-| **`lyhna-witness`** | zero-dep ESM JS (Node ≥20) | `main` | Product layer: deterministic labeler + handoff generator + CLI + OKF + PAM exports + Desktop + the `web/` demo. |
+| **`lyhna-witness`** | Engine: zero-dep ESM JS (Node ≥20); Desktop: TypeScript + Electron/Vite/React | `main` | Product layer: deterministic labeler + handoff generator + CLI + OKF + PAM exports + Desktop + the `web/` demo. |
 | **`lyhna-codex-adapter`** | zero-dep ESM JS (Node ≥20) | `main` | Codex-native plugin: lifecycle hooks, local ledger, inline claim compiler, continuation/receipt fold, and honest closeout. Current package line: `0.1.34`. |
 
 The proxy **produces** the general MCP witness input; the witness **renders** it into the user-readable
