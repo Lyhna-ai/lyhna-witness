@@ -419,6 +419,12 @@ runtime behavior by package format.
 - **Witness CI** regenerates all `demo*` scripts and checks `examples/` for drift. After changing the
   labeler/generator or any receipt, run the demos AND `node web/build-data.mjs`, then commit the output.
 - **Proxy CI** runs typecheck + build + test + cold-verify legs.
+- **Desktop CI** (`.github/workflows/desktop.yml`) is a separate health workflow for `desktop/`, run on
+  every push and PR: `npm ci`, typecheck (renderer + core + Electron main/preload), the vitest suite,
+  the bundled-engine smoke check (`desktop/scripts/smoke-engine.mjs`), and the Vite renderer + Electron
+  compile builds. It does not gate `src/` determinism — Witness CI does — but it is a required green
+  check before merge (§9.3). A full electron-builder dist and on-display visual QA run on the target OS,
+  not in CI.
 
 ---
 
@@ -427,7 +433,8 @@ runtime behavior by package format.
 1. Work on a fresh dev branch from the live base (`main` for witness/adapter; `master` for proxy).
 2. One logical change per PR. Open it, mark ready, comment **`@codex review`** (mark-ready alone often
    misses the trigger).
-3. **Merge gate — ALL must hold on the *current* head SHA:** every CI check `success` · `mergeable_state`
+3. **Merge gate — ALL must hold on the *current* head SHA:** every CI check `success` (**both** `ci.yml`
+   and `desktop.yml`) · `mergeable_state`
    clean · Codex bot "Didn't find any major issues" on that exact commit · **zero unresolved review
    threads**.
 4. If Codex flags P1/P2 and the fix is small + unambiguous + in-scope: fix, re-run tests, push,
