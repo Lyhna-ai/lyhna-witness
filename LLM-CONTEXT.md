@@ -489,7 +489,7 @@ second engineer; don't merge around it.
 
 **lyhna-codex-adapter**
 - `plugins/lyhna/src/store.mjs` — append-only run state, replay recovery, checkpoint artifacts, and
-  closeout enforcement. `plugins/lyhna/src/compiler.mjs` — coverage-scoped claim compilation.
+  closeout enforcement. `plugins/lyhna/src/claim-compiler.mjs` — coverage-scoped claim compilation.
 - `plugins/lyhna/src/util.mjs` — the single data-root resolver shared by both package representations.
 - `plugins/lyhna/.codex-plugin/plugin.json` + `.mcp.json` — current OpenAI loader representation.
 - `plugins/lyhna/plugin.json` + `mcp.json` — Agent Plugins v1 portable representation.
