@@ -104,7 +104,7 @@ STEP 3 — My first claimed-vs-witnessed capsule (guided, standing service):
         <li class="bill-no"><strong>The receipt renderer isn't on npm yet.</strong> The witness CLI (<span class="mono">node src/cli.mjs</span>) runs from a source clone for now — packaging it into Lyhna Desktop is the product direction.</li>
         <li class="bill-no"><strong>Signed receipts are an optional add-on — and they leave your machine.</strong> A <span class="mono">LYHNA_API_KEY</span> doesn't just add cryptographic proof refs: signed mode routes each tool call through Lyhna's <strong>hosted witness service</strong> to make its decision, so your routed tool arguments leave your machine. Local unsigned receipts (demo mode) decide locally, need no account, and send nothing to Lyhna — choose per how sensitive your tool arguments are.</li>
         <li class="bill-no"><strong>No desktop download, no plugin store, no one-command install yet.</strong> Setup is the guided sequence above. We won't pretend otherwise.</li>
-        <li class="bill-no"><strong>Cloud-hosted agents may need a bridge.</strong> An agent that can't route its tool calls through a local adapter would need a remote/tunnel bridge — that's later, not today.</li>
+        <li class="bill-no"><strong>Only routed tool calls earn receipts.</strong> If an agent can't route its tools through Lyhna, that work stays outside the witnessed path.</li>
       </ul>
     </section>
 

@@ -35,8 +35,9 @@ Self-contained, vanilla HTML/CSS/JS — no framework, no build step, relative li
 - **No fake install promises.** The one-command / "install from lyhna.com" flow and the **Lyhna Desktop
   download** do not exist yet; the install page says **connect through the MCP adapter** and frames the
   desktop app as packaging direction. Keep it honest until the install/download path is real.
-- **Say "local by default" / "MCP-compatible", never "local-only".** Cloud-hosted agents may need a
-  remote/tunnel bridge later — don't imply every hosted agent connects automatically.
+- **Say "local by default" / "MCP-compatible", never "local-only".** Buyer surfaces should say only routed
+  tool calls earn receipts — don't imply every hosted agent connects automatically, and don't sell future
+  routing plumbing before it exists.
 - Demo is a **demo scenario / replay**, not a "rigged" or "planted lie."
 - **Kill-list** on every buyer surface: gate · authority · execution authority · governance · judgment
   ledger · IJL · binding · SDK-first · "the layer below human judgment." The proof spine / determinism /

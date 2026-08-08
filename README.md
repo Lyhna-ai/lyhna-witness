@@ -53,7 +53,7 @@ different things:
   (open a loop → run with claim capture → close/seal → `export-pack`).
 - **Demo vs. signed — and the privacy boundary.** `LYHNA_PROXY_BIND_MODE=demo` needs no key, decides
   locally, and sends nothing **to Lyhna** — the proxy makes no hosted call (your upstream tools still do
-  their own normal network I/O). Receipts in demo mode are deliberately *unsigned*. A beta
+  their own normal network I/O). Receipts in demo mode are deliberately *unsigned*. A signed-mode
   `LYHNA_API_KEY` produces signed receipts but routes each tool call through Lyhna's **hosted** service to
   make its decision — so signed mode is not just an unsigned-vs-signed toggle; it sends your calls to the
   hosted witness service. Choose per how sensitive your tool arguments are (see the proxy's install/privacy notes).

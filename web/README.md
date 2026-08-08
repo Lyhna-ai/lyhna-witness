@@ -28,12 +28,12 @@ headline.) Pages (shared header/footer nav across all five):
   (QUICKSTART Path B), not stdio alone. To see a receipt with no setup, render the bundled sample with the
   witness CLI. States plainly what works today (adapter on npm; local-by-default demo mode; witness
   renderer from a source clone; signed receipts are an optional hosted add-on; no desktop download / plugin
-  store / one-command install; cloud-hosted agents may need a bridge) and the four setup states (Connected
+  store / one-command install; only routed tool calls earn receipts) and the four setup states (Connected
   / Waiting / Test receipt created / Outside the witness path).
 - **`pricing.html`** — the **ownership model** only (buy once · use with all your agents · unlimited local
   receipts · your receipts stay yours). Core receipt + every export are included (no artificial upsells);
-  hosted signing/verification, team sync, and a remote bridge are framed as optional future add-ons.
-  **No numbers** — they open later.
+  hosted signing/verification polish, team sync, and managed verification history are framed as future updates, not
+  core-product limits. **No numbers** — they come with the release path.
 - **`dashboard.html`** — a **static design preview** of the **Lyhna Desktop receipt inbox** (local device
   bar, summary stats, per-agent status / last witnessed call / receipts / unsupported / DO-NOT-SEND /
   test-receipt). Clearly labeled *preview, not live telemetry* — no desktop download, billing, or live

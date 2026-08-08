@@ -32,8 +32,8 @@ Walk away. Come back to receipts."* Ownership: **buy once · use with all your a
 receipts · your receipts stay yours.** BYO: *your agents use your keys, models, and tools; Lyhna gives
 you the receipts* (Lyhna doesn't pay for model usage, host the work by default, or orchestrate agents).
 **Honesty:** the desktop app is **not** a download yet — it's the packaging direction; what's runnable
-today is the MCP adapter + witness CLI. Say "local by default" / "MCP-compatible", never "local-only"
-(cloud-hosted agents may need a remote/tunnel bridge later). This **replaces** the earlier
+today is the MCP adapter + witness CLI. Say "local by default" / "MCP-compatible", never "local-only";
+buyer surfaces should say only routed tool calls earn receipts, not speculate about future routing plumbing. This **replaces** the earlier
 hosted/metered/private-beta framing — do not reintroduce "metered by witnessed action", a free tier, or
 private-beta-as-the-main-frame on buyer surfaces.
 
@@ -145,7 +145,7 @@ shared header/footer nav (**The capsule · Demo · Install · Receipt inbox · P
   renders the bundled sample with the witness CLI. States plainly what works today (adapter on npm;
   local-by-default demo mode sends nothing to Lyhna; **signed mode routes each tool call through Lyhna's
   hosted witness service to decide — args leave the machine**; witness renderer from a source clone; no
-  desktop download / plugin store / one-command install; cloud agents may need a bridge) + the four setup
+  desktop download / plugin store / one-command install; only routed tool calls earn receipts) + the four setup
   states. Lyhna Desktop framed as packaging direction, not a download.
 - **`dashboard.html`** — the **Lyhna Desktop receipt inbox**, as a **static design preview** (local device
   bar, summary stats, per-agent status / last witnessed call / receipts / unsupported / DO-NOT-SEND /
@@ -153,9 +153,9 @@ shared header/footer nav (**The capsule · Demo · Install · Receipt inbox · P
   inbox backend exists in-repo; it shows the intended experience built from real CLI receipt data.
 - **`pricing.html`** — the **ownership model** only: **buy once · use with all your agents · unlimited
   local receipts · your receipts stay yours.** Core receipt + every export included (no artificial
-  upsells); hosted signing/verification, team sync, and a remote bridge are optional future add-ons (the
-  signing add-on discloses the hosted-call boundary). **No pricing numbers.** Do **not** reintroduce the
-  old "metered by witnessed action" / free-tier story.
+  upsells); hosted signing/verification polish, team sync, and managed verification history are framed as future
+  updates, not core-product limits (signed mode always discloses the hosted-call boundary). **No pricing
+  numbers.** Do **not** reintroduce the old "metered by witnessed action" / free-tier story.
 
 - **The demo is a REPLAY, not live.** `demo.html` renders the committed `examples/live-loop/handoff.json`
   — the receipt that came through the real loop offline. Tools are **simulated** ("Demo tools. Real
@@ -213,7 +213,7 @@ receipts; the one real failure was that **OKF/PAM had no user-facing command** �
 `--okf`/`--pam` to the CLI. Verdict: **GO for a small private/invited beta** of the AI Work Receipt,
 conditioned on a small docs PR (proxy README → receipt path; cross-platform RUNNING.md) and honest buyer
 expectations. Open follow-ups: ordinal claim↔turn correlation; live-MCP real-traffic run; npm packaging
-for a public beta; optional `settled`-section attribution (audit N1).
+for a public release path; optional `settled`-section attribution (audit N1).
 
 **Website relaunch (2026-06-15):** the `web/` site became a multi-page **marketing site** on the receipt
 grammar (see §5): homepage (merged), install (merged), pricing-model page (numbers held), and a demo-page
