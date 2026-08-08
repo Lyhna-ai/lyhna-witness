@@ -1,14 +1,15 @@
 # AGENTS.md
 
 > 👉 **Start here: read [`LLM-CONTEXT.md`](./LLM-CONTEXT.md) first.** It's the dated, single-page map of
-> what Lyhna is, the two-repo architecture, the claim→witness→receipt loop, what the website does,
+> what Lyhna is, the three-repo architecture, the claim→witness→receipt loop, what the website does,
 > current state, and the honesty ceiling. [`THESIS.md`](./THESIS.md) is the canonical product thesis +
 > honesty ceiling. This file holds the witness repo's hard invariants.
 
 ## What this repo is
 
 `lyhna-witness` — the product layer: a **deterministic** labeler + handoff/receipt generator + CLI +
-OKF export + the `web/` demo. Zero runtime dependencies, ESM JavaScript, Node ≥20. It renders the
+OKF/PAM exports + the in-repo Desktop app + the `web/` demo. The engine has zero runtime dependencies,
+uses ESM JavaScript, and requires Node ≥20. It renders the
 `witness-input.json` that `lyhna-mcp-proxy` produces into the user-readable AI Work Receipt.
 
 ## Hard invariants (do not violate without project-owner sign-off)
@@ -33,7 +34,7 @@ OKF export + the `web/` demo. Zero runtime dependencies, ESM JavaScript, Node �
 ## Commands
 
 ```bash
-npm test                 # node --test — full suite (~70)
+npm test                 # node --test — full suite
 npm run demo             # regenerate examples/hermes-zapier  (also: demo:live, demo:real, demo:gmail)
 npm run demo:live-loop   # regenerate examples/live-loop (the canonical, loop-produced receipt)
 node web/build-data.mjs  # regenerate web/data/handoff.js from examples/live-loop/handoff.json
@@ -43,4 +44,4 @@ node web/build-data.mjs  # regenerate web/data/handoff.js from examples/live-loo
 
 One logical change per PR → mark ready → comment `@codex review`. Merge only when CI is green, the PR is
 mergeable, Codex says "no major issues" on the current head, and all review threads are resolved; then
-squash-merge. Full workflow in `LLM-CONTEXT.md` §8.
+squash-merge. Full workflow in `LLM-CONTEXT.md` §9.

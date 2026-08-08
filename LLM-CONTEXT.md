@@ -1,13 +1,13 @@
 # Lyhna — LLM Context Sheet
 
-> **Last updated: 2026-06-18.** Read this first at the start of any session in this project. It is the
+> **Last updated: 2026-08-07.** Read this first at the start of any session in this project. It is the
 > single source of truth for *what Lyhna is now*, how the pieces fit, what's live, and the rules for
 > changing things safely. If you change something material, update this file's date and the relevant
 > section in the same PR.
 >
-> **Catching up after the Desktop pivot?** Read [`HANDOFF-DESKTOP.md`](./HANDOFF-DESKTOP.md) — it explains
-> that Lyhna Desktop is the *full* witness engine + the `@lyhna/mcp` adapter packaged as a local app (not
-> a smaller product), and lists exactly what's been built (the capsule indexer + inbox CLI) vs. not.
+> **Catching up?** Read [`HANDOFF-DESKTOP.md`](./HANDOFF-DESKTOP.md) for the Desktop product line, then
+> read §6 and §7 below for the Codex-native claim compiler, the `0.1.34` Stop-liveness repair, and the
+> acceptance gate that must run after the move to Hetzner. Older handoffs are evidence, not current state.
 
 ---
 
@@ -25,14 +25,15 @@ Ollama/local-model users, Claude Code / Codex power users, consultants and agenc
 workflows for clients, and small businesses that want AI help without another hosted cloud system.
 (Agencies can still white-label the receipt to *their* clients.)
 
-**Product packaging — Lyhna Desktop (current buyer-facing direction, 2026-06-18):** a *local* receipt
-layer — a desktop app that starts/controls the local Lyhna MCP adapter, lands receipts in a local
+**Product packaging — Lyhna Desktop (current buyer-facing direction):** a *local-by-default* receipt
+layer — a desktop app that lands receipts in a local
 **receipt inbox**, and lets the user export the capsule when they choose. Promise: *"Run your agents.
 Walk away. Come back to receipts."* Ownership: **buy once · use with all your agents · unlimited local
 receipts · your receipts stay yours.** BYO: *your agents use your keys, models, and tools; Lyhna gives
 you the receipts* (Lyhna doesn't pay for model usage, host the work by default, or orchestrate agents).
-**Honesty:** the desktop app is **not** a download yet — it's the packaging direction; what's runnable
-today is the MCP adapter + witness CLI. Say "local by default" / "MCP-compatible", never "local-only";
+**Honesty:** the in-repo Electron app and bundled engine run today, but there is still no public,
+trusted, code-signed download. The app does not yet start or observe the adapter, so it cannot show a
+live "Connected" state. Say "local by default" / "MCP-compatible", never "local-only";
 buyer surfaces should say only routed tool calls earn receipts, not speculate about future routing plumbing. This **replaces** the earlier
 hosted/metered/private-beta framing — do not reintroduce "metered by witnessed action", a free tier, or
 private-beta-as-the-main-frame on buyer surfaces.
@@ -59,15 +60,18 @@ correct," "this happened live"), it is an **overclaim** — do not ship it.
 
 ---
 
-## 3. Architecture — two repos (GitHub org: `Lyhna-ai`)
+## 3. Architecture — three repos (GitHub org: `Lyhna-ai`)
 
 | Repo | Language | Base branch | What it is |
 | --- | --- | --- | --- |
 | **`lyhna-mcp-proxy`** | TypeScript | `master` | Runtime MCP proxy in the tool-call path. Witnesses real tool calls, captures agent claims, and exports a `witness-input.json`. ~503 tests. |
-| **`lyhna-witness`** | zero-dep ESM JS (Node ≥20) | `main` | Product layer: deterministic labeler + handoff generator + CLI + OKF + PAM exports + the `web/` demo. ~80 tests. |
+| **`lyhna-witness`** | Engine: zero-dep ESM JS (Node ≥20); Desktop: TypeScript + Electron/Vite/React | `main` | Product layer: deterministic labeler + handoff generator + CLI + OKF + PAM exports + Desktop + the `web/` demo. |
+| **`lyhna-codex-adapter`** | zero-dep ESM JS (Node ≥20) | `main` | Codex-native plugin: lifecycle hooks, local ledger, inline claim compiler, continuation/receipt fold, and honest closeout. Current package line: `0.1.34`. |
 
-The proxy **produces** the witness input; the witness **renders** it into the user-readable receipt. Neither
-imports the other's internals — the witness mirrors the proxy's event vocabulary (Integration Option A).
+The proxy **produces** the general MCP witness input; the witness **renders** it into the user-readable
+receipt. The Codex adapter is a separate native capture path: it records supported Codex lifecycle
+evidence and compiles its own coverage-scoped packet. These are different capture surfaces under one
+honesty ceiling; do not describe either as universal desktop truth.
 
 ---
 
@@ -183,7 +187,40 @@ shared header/footer nav (**The capsule · Demo · Install · Receipt inbox · P
 
 ---
 
-## 6. Current state (as of 2026-06-15)
+## 6. Current state (as of 2026-08-07)
+
+**Current line of witness:**
+
+- `lyhna-witness` main includes the in-repo Desktop through packaging, the bundled-engine smoke path,
+  and the #60 buyer-copy honesty correction. The public site is still a deterministic replay surface,
+  not a live witness.
+- `lyhna-codex-adapter` main and tag `v0.1.34` resolve to commit
+  `6faa65a2540b30cecf0af243df58ce889b958a18` (plugin tree
+  `7a2957885d6879d087901ecee7012f981d9eac59`) and contain Slice 1 plus the Stop-liveness and Agent
+  Plugins packaging follow-up. The package exposes both current representations over one implementation:
+  OpenAI loads `.codex-plugin/plugin.json` plus `.mcp.json`; Agent Plugins v1 clients load root
+  `plugin.json` plus `mcp.json`. Both resolve to the same skill, MCP server, hook implementation, and
+  data root. The portable representation is interoperability packaging, not proof that a non-Codex
+  host has exercised the complete Codex-hook flow.
+- The installable release asset is `lyhna-codex-adapter-0.1.34.zip` (129,958 bytes), published from the
+  commit above with SHA-256 `695d08cb3899a7a2ced05b82570f5e1378cec4a76b3e1b9529eb151637efb5a0`.
+- The inline compiler folds declared evidence into a coverage-scoped state and continuation packet.
+  An unsupported closeout blocks twice and, on the third unchanged attempt, can seal only
+  `CLOSED_UNSUPPORTED`. Completed-response replay remains idempotent; incomplete replay repairs the
+  interrupted attempt. This is a closeout safety/liveness rule, not a correctness or deployment claim.
+- Fresh `0.1.34` acceptance on the Windows Codex host and the portable harness each produced attempt
+  ordinals `[1,1,2,3]`: the replayed first delivery stayed ordinal 1, changed deliveries advanced to 2
+  and 3, and ordinal 3 sealed one `CLOSED_UNSUPPORTED` packet. The installed host exercised distinct
+  Stop delivery slots; same-key replay is executable-test evidence, not a live-host claim.
+- Known bounded follow-up: `lyhna-codex-adapter` issue
+  [#16](https://github.com/Lyhna-ai/lyhna-codex-adapter/issues/16) tracks recovery of a torn terminal
+  closeout under a fresh Stop identity for `0.1.35`. It is a crash-window liveness gap; it is not
+  permission to weaken the unsupported-seal invariant.
+- **Slice 2 (`0.1.35`) has not started.** Adam's current sequence is: prepare the move, move the
+  always-on work to Hetzner in a new window, pass the real-host acceptance in §7, then begin Slice 2.
+  This document update does not migrate, deploy, release, publish, or start Slice 2.
+
+**Earlier shipped history (retained for orientation):**
 
 **Shipped & merged (packaging phase complete):**
 - Backend/spine + the full claimed-vs-actual loop (proxy `#21–#25`, witness `#3–#8`) — merged earlier.
@@ -224,15 +261,15 @@ preserved at `/demo.html`.
 one run produces"), install reworked into the honest two-surface story, a connected-agents **dashboard
 preview** added, and docs aligned.
 
-**Lyhna Desktop pivot (2026-06-18, current):** buyer surfaces reframed from hosted/metered/private-beta
+**Lyhna Desktop pivot (2026-06-18, historical):** buyer surfaces reframed from hosted/metered/private-beta
 SaaS to **Lyhna Desktop** — a local, buy-once receipt layer (see §1, §5). Homepage leads with "Run your
 agents. Walk away. Come back to receipts."; pricing is buy-once ownership (no metered/free-tier);
 dashboard reframed as the local **receipt inbox** preview; install reframed around the local MCP adapter.
-`LLM-CONTEXT.md` updated in the same PR. The desktop app is a packaging direction (not a shipped
-download); the MCP adapter + witness CLI are what runs today.
+`LLM-CONTEXT.md` updated in the same PR. This paragraph records that pivot; the current Desktop
+boundary is at the top of this file and in the later packaging entry below.
 
-**Health:** witness `main` green (88 tests); proxy `master` green (512 tests). Check GitHub for open
-PRs before starting a new lane.
+**Health note:** historical test counts are snapshots, not current gates. Re-run the commands in §8
+and inspect live GitHub state before making a current claim.
 
 **Carriers vs. the witness (the export bet):** OKF and PAM are *carriers* (transport integrity — a
 bundle was not altered). Lyhna is the *witness* (origin integrity — whether the contents reflect work
@@ -242,11 +279,12 @@ into every item so a consumer inherits the honesty ceiling instead of stripping 
 consumer of Lyhna, not Lyhna. (PAM wording stays "PAM-shaped projection / `lyhna-pam/v0`" until matched
 against a formal PAM schema.)
 
-**Desktop MVP — lane 1 (2026-06-18):** first proof that the desktop **receipt inbox** can be a local file
+**Desktop MVP — lane 1 (2026-06-18, historical):** first proof that the desktop **receipt inbox** can be a local file
 index over the capsule folders the engine already produces — `src/capsule-indexer.mjs` +
 `test/desktop-inbox.test.mjs` + `DESKTOP-MVP-PLAN.md`. Read-only, zero-dep, deterministic; no GUI, no
 Tauri/Electron, no backend. The desktop app itself is still unbuilt (packaging direction). Recommended
-shell: Tauri + Vite/React in a **separate** `lyhna-desktop` repo, with `lyhna-witness` as the engine.
+shell at that point: Tauri + Vite/React in a **separate** `lyhna-desktop` repo. The later in-repo
+Electron implementation superseded that proposed shell.
 
 **Desktop MVP — lane 2 (2026-06-18):** the headless **inbox CLI** — `src/inbox-cli.mjs` (`npm run inbox`)
 + `test/inbox-cli.test.mjs`. Lists a receipt-library folder's capsules as deterministic text or `--json`
@@ -282,21 +320,65 @@ rendered a sample receipt, and opened detail. Engine `src/` untouched (determini
 prebuilt download** — code-signing/notarization (owner certs) is the remaining gap before a trusted
 installer, not engine bundling.
 
-**Deferred / next lanes (NOT V1 blockers):** the **Lyhna Desktop** app now exists in-repo and is
-feature-complete for the local loop (see the desktop note above); what remains for it is a real
-**standalone installer** (the engine must be bundled into the app — today it locates the sibling engine via
-repo layout / `LYHNA_ENGINE_*` env), live adapter start/stop+detection, a signing UI, a Settings pane, and
-extraction to a standalone `lyhna-desktop` repo. Unrelated deferrals: a real buy-once purchase path when
-numbers are approved; live Zapier/Gmail demos; concurrency-safe claim↔turn correlation (opt-in sequential
-is fine for V1).
+**Deferred / next lanes (NOT V1 blockers):** trusted code signing/notarization and a public installer;
+live adapter start/stop/detection; signing UI; Settings; on-display visual QA; and the deliberately
+deferred runtime extraction in witness issue #64. Revisit #64 when `0.1.37` merges or a second host
+adapter is actually needed, whichever comes first. Unrelated deferrals: a real buy-once purchase path
+when numbers are approved; live Zapier/Gmail demos; and concurrency-safe claim↔turn correlation.
 
 ---
 
-## 7. How to work in each repo
+## 7. Hetzner move readiness — acceptance, not migration
+
+Moving the checkout or starting the adapter does **not** prove Lyhna is witnessing. On a new host,
+`homedir()` and loader-provided plugin paths can change. If the hook and MCP server resolve different
+data roots, Lyhna can appear installed while writing or reading a different ledger. The migration gate
+therefore requires a real witnessed refusal, not only process health or unit tests.
+
+Before the move, preserve the signing key and run data intentionally. On Hetzner, configure one
+durable, access-restricted data directory and make both loader paths resolve it:
+
+- shared runtime variable: `LYHNA_CODEX_DATA`;
+- Agent Plugins loader input: `${PLUGIN_DATA}`, normalized by the package to `LYHNA_CODEX_DATA`;
+- fallback only when neither is present: `~/.lyhna/codex-adapter`.
+
+Do not copy secrets into a receipt or migration log. A key backup preserves the material needed for
+signer continuity; continuity is not proven until the imported public identity and a newly signed
+packet verify on Hetzner.
+
+**Post-migration acceptance — all conditions are required:**
+
+1. Verify the `v0.1.34` release asset against the filename, byte count, and SHA-256 recorded in §6;
+   install it; then prove the loaded OpenAI manifest, hook, MCP server, and package version resolve to
+   the recorded commit/plugin tree. Also validate the portable root
+   `plugin.json` / `mcp.json` representation against the same implementation. Do not count duplicate
+   installations or stale plugin entries as success.
+2. Prove the hook process and MCP server resolve the same explicit durable data root, and prove a
+   restart reads the same run, ledger, anchors, and signing identity. "The adapter starts" is not proof.
+3. Begin a fresh proof-mode run on Hetzner. Do not continue or mutate the preserved Windows acceptance
+   packets. Request an unsupported closeout with one stable blocker fingerprint.
+4. Require durable packet evidence that unchanged attempts 1 and 2 block and checkpoint, then attempt 3
+   seals exactly one `CLOSED_UNSUPPORTED` envelope and run seal. The expected attempt history is
+   `[1,1,2,3]` when the ordinal-1 delivery is replayed once; that replay must not append a second attempt.
+5. Cold-verify the packet after a process restart. The receipt, continuation, checkpoint/seal anchors,
+   ledger prefix, and compiled projection must agree, and verification must report the run already
+   sealed. Proof mode must not persist private prose.
+6. Treat any fail-open, successful seal without required evidence, unsupported seal before ordinal 3,
+   split data root, missing restart state, or non-idempotent completed replay as a failed migration.
+   Stop and repair the host/install boundary; do not start Slice 2 and do not weaken the invariant.
+
+Only this executable packet proves the Hetzner host is actually witnessing. Passing repository tests,
+manifest validation, installation, or process startup is necessary but insufficient. The accepted
+packet should record the exact plugin tree/hash, data-root identity (path only, no secrets), run ID,
+capsule ref, seal status, verifier result, and restart evidence so the next window can cite it.
+
+---
+
+## 8. How to work in each repo
 
 ### `lyhna-witness` (Node ≥20, zero deps)
 ```bash
-npm test                 # node --test — full suite (~70)
+npm test                 # node --test — full suite
 npm run demo             # regenerate examples/hermes-zapier
 npm run demo:live        # examples/zapier-google
 npm run demo:real        # examples/live-google
@@ -316,24 +398,43 @@ gauntlet (needs the sibling proxy).
 npm install              # first, for @types/node etc.
 npm run build            # tsc -> dist/
 npm run check            # tsc --noEmit (typecheck)
-npm test                 # vitest run — full suite (~503)
+npm test                 # vitest run — full suite
 npm run demo:live-loop   # drive the real loop -> examples/live-loop/witness-input.json
 ```
 Public CLI: `lyhna-mcp export-pack` / `export-loop-proof` (in `dist/src/bin/cli.js`).
+
+### `lyhna-codex-adapter` (Node ≥20, zero deps)
+```bash
+npm test
+npm run validate:plugin
+npm run verify:lineage -- <prior-run-dir> <current-run-dir> [...more]
+```
+The package is under `plugins/lyhna/`. Runtime state resolves through `LYHNA_CODEX_DATA`, then
+`PLUGIN_DATA`, then `~/.lyhna/codex-adapter`. Installation alone witnesses nothing: the bundled Lyhna
+skill must begin a run, supported lifecycle hooks must append evidence, and closeout must be verified
+from the packet. Keep OpenAI and portable manifests over the one shared implementation; do not fork
+runtime behavior by package format.
 
 ### Drift gates (these will fail CI if you forget to regenerate)
 - **Witness CI** regenerates all `demo*` scripts and checks `examples/` for drift. After changing the
   labeler/generator or any receipt, run the demos AND `node web/build-data.mjs`, then commit the output.
 - **Proxy CI** runs typecheck + build + test + cold-verify legs.
+- **Desktop CI** (`.github/workflows/desktop.yml`) is a separate health workflow for `desktop/`, run on
+  every push and PR: `npm ci`, typecheck (renderer + core + Electron main/preload), the vitest suite,
+  the bundled-engine smoke check (`desktop/scripts/smoke-engine.mjs`), and the Vite renderer + Electron
+  compile builds. It does not gate `src/` determinism — Witness CI does — but it is a required green
+  check before merge (§9.3). A full electron-builder dist and on-display visual QA run on the target OS,
+  not in CI.
 
 ---
 
-## 8. The PR / review workflow (how every change ships)
+## 9. The PR / review workflow (how every change ships)
 
-1. Work on a dev branch (this session used `claude/nice-bell-c866a0`; base = witness `main` / proxy `master`).
+1. Work on a fresh dev branch from the live base (`main` for witness/adapter; `master` for proxy).
 2. One logical change per PR. Open it, mark ready, comment **`@codex review`** (mark-ready alone often
    misses the trigger).
-3. **Merge gate — ALL must hold on the *current* head SHA:** every CI check `success` · `mergeable_state`
+3. **Merge gate — ALL must hold on the *current* head SHA:** every CI check `success` (**both** `ci.yml`
+   and `desktop.yml`) · `mergeable_state`
    clean · Codex bot "Didn't find any major issues" on that exact commit · **zero unresolved review
    threads**.
 4. If Codex flags P1/P2 and the fix is small + unambiguous + in-scope: fix, re-run tests, push,
@@ -341,14 +442,15 @@ Public CLI: `lyhna-mcp export-pack` / `export-loop-proof` (in `dist/src/bin/cli.
    guardrail below: stop and ask the project owner.
 5. **Squash-merge.** Then reset the dev branch to base (`git fetch origin <base>; git reset --hard
    origin/<base>; git push -f`).
-6. GitHub MCP tools only (`mcp__github__*`); no `gh` CLI in this environment.
+6. Re-sample the live PR after the last check/reviewer finishes; a successful push or queued review is
+   not a terminal result.
 
 Codex catches real, product-relevant bugs (overclaims, edge-case verdict logic). Treat it as the
 second engineer; don't merge around it.
 
 ---
 
-## 9. Guardrails — do NOT touch without explicit project-owner sign-off
+## 10. Guardrails — do NOT touch without explicit project-owner sign-off
 
 - **Proof spine (proxy):** no changes to the signed bundle / receipt shape / canonicalization. The
   `witness-input.json` is an *additive*, verified-context-only sidecar.
@@ -364,7 +466,7 @@ second engineer; don't merge around it.
 
 ---
 
-## 10. Key files map
+## 11. Key files map
 
 **lyhna-witness**
 - `THESIS.md` — the product thesis + honesty ceiling (canonical). `BUILD-PLAN.md`, `HUMAN-GUIDE.md`,
@@ -392,9 +494,19 @@ second engineer; don't merge around it.
 - `scripts/live-loop-receipt.mjs` — drives the real loop for the canonical receipt.
 - `AGENTS.md`, `RUNNING.md`, `docs/` — proxy docs.
 
+**lyhna-codex-adapter**
+- `plugins/lyhna/src/store.mjs` — append-only run state, replay recovery, checkpoint artifacts, and
+  closeout enforcement. `plugins/lyhna/src/claim-compiler.mjs` — coverage-scoped claim compilation.
+- `plugins/lyhna/src/util.mjs` — the single data-root resolver shared by both package representations.
+- `plugins/lyhna/.codex-plugin/plugin.json` + `.mcp.json` — current OpenAI loader representation.
+- `plugins/lyhna/plugin.json` + `mcp.json` — Agent Plugins v1 portable representation.
+- `plugins/lyhna/ai.lyhna.codex/hooks/` — namespaced hook implementation; the OpenAI hook entry is a
+  behavior-free bridge to it.
+- `docs/proposals/CLAIM-COMPILER-SPEC-2026-08-05.md` — ratified slice contract and version map.
+
 ---
 
-## 11. Glossary
+## 12. Glossary
 
 - **Witness / witnessed** — what the proxy actually observed crossing the tool-call boundary.
 - **Claim** — what the agent *says* it did (via `record_claim`); the agent's voice, never trusted blind.
@@ -408,3 +520,7 @@ second engineer; don't merge around it.
   (what crossed the tool boundary). Lyhna feeds the carriers; the carrier is a consumer of Lyhna.
 - **Drift gate** — CI that regenerates committed artifacts and fails if they differ (enforces determinism).
 - **The loop / live loop** — the proxy standing-service run that produces a real witnessed receipt.
+- **Inline claim compiler** — the Codex adapter fold that derives state only from the ledger prefix a
+  packet declares it covers.
+- **`CLOSED_UNSUPPORTED`** — an honest terminal closeout after three unchanged unsupported attempts;
+  it records that required evidence was still absent and cannot be read as successful work.
