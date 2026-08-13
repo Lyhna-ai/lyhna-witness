@@ -180,8 +180,10 @@ function assertEventEnvelope(event, expectedSequence) {
 }
 
 function requireReview(state, reviewRef, subject, operation) {
+  if (!Object.hasOwn(state.reviews, reviewRef)) {
+    throw new Error(`${operation}: review ${reviewRef} does not exist`);
+  }
   const review = state.reviews[reviewRef];
-  if (!review) throw new Error(`${operation}: review ${reviewRef} does not exist`);
   if (review.subject_key !== subjectKey(subject)) {
     throw new Error(`${operation}: subject does not match review ${reviewRef}`);
   }
@@ -198,7 +200,7 @@ function applyEvent(state, event) {
   const subject = normalizeSubject(event.subject);
 
   if (event.kind === "review_started") {
-    if (state.reviews[event.review_ref]) {
+    if (Object.hasOwn(state.reviews, event.review_ref)) {
       throw new Error(`review_started: review ${event.review_ref} already exists`);
     }
     state.reviews[event.review_ref] = {
@@ -212,6 +214,9 @@ function applyEvent(state, event) {
     };
   } else if (event.kind === "finding_observed") {
     const review = requireReview(state, event.review_ref, subject, "finding_observed");
+    if (review.report) {
+      throw new Error("finding_observed: review findings are frozen after report publication");
+    }
     const finding = normalizeFinding(event.payload.finding);
     const findingRef = computeFindingRef(subject, finding);
     if (event.payload.finding_ref !== findingRef) {

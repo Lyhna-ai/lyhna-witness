@@ -231,3 +231,66 @@ test("a self-consistent checkpoint cannot replace the event-prefix fold", () => 
     /checkpoint folded state does not match its event prefix/
   );
 });
+
+test("findings are frozen after immutable report publication", () => {
+  const root = freshStore();
+  seedReview(root);
+  publishReviewReport(root, {
+    event_ref: "event-publish",
+    review_ref: "review-1",
+    subject: SUBJECT,
+    report_ref: "report-1",
+    markdown: "# Review report\n"
+  });
+
+  assert.throws(
+    () =>
+      recordReviewFinding(root, {
+        event_ref: "event-finding-after-publish",
+        review_ref: "review-1",
+        subject: SUBJECT,
+        evidence_ref: "relay-receipt-2",
+        finding: {
+          reviewer_ref: "claude-review-relay",
+          severity: "P2",
+          title: "Late finding",
+          body: "This finding must not be omitted from an already immutable report.",
+          path: "src/review-continuity.mjs",
+          line: 215
+        }
+      }),
+    /findings are frozen after report publication/
+  );
+  assert.equal(
+    existsSync(join(root, "events", "000000000004-event-finding-after-publish.json")),
+    false
+  );
+  assert.equal(loadReviewState(root).reviews["review-1"].inline_findings.length, 1);
+});
+
+test("prototype-named review references are valid store keys", () => {
+  const root = freshStore();
+  startReview(root, {
+    event_ref: "event-start-constructor",
+    review_ref: "constructor",
+    subject: SUBJECT
+  });
+  recordReviewFinding(root, {
+    event_ref: "event-finding-constructor",
+    review_ref: "constructor",
+    subject: SUBJECT,
+    evidence_ref: "relay-receipt-constructor",
+    finding: {
+      reviewer_ref: "claude-review-relay",
+      severity: "P3",
+      title: "Prototype key regression",
+      body: "Every reference accepted by the grammar must be usable as a review key.",
+      path: null,
+      line: null
+    }
+  });
+
+  const review = loadReviewState(root).reviews.constructor;
+  assert.equal(review.subject.head, SUBJECT.head);
+  assert.equal(review.inline_findings.length, 1);
+});
