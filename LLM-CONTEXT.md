@@ -1,6 +1,6 @@
 # Lyhna — LLM Context Sheet
 
-> **Last updated: 2026-08-07.** Read this first at the start of any session in this project. It is the
+> **Last updated: 2026-08-13.** Read this first at the start of any session in this project. It is the
 > single source of truth for *what Lyhna is now*, how the pieces fit, what's live, and the rules for
 > changing things safely. If you change something material, update this file's date and the relevant
 > section in the same PR.
@@ -216,9 +216,15 @@ shared header/footer nav (**The capsule · Demo · Install · Receipt inbox · P
   [#16](https://github.com/Lyhna-ai/lyhna-codex-adapter/issues/16) tracks recovery of a torn terminal
   closeout under a fresh Stop identity for `0.1.35`. It is a crash-window liveness gap; it is not
   permission to weaken the unsupported-seal invariant.
-- **Slice 2 (`0.1.35`) has not started.** Adam's current sequence is: prepare the move, move the
-  always-on work to Hetzner in a new window, pass the real-host acceptance in §7, then begin Slice 2.
-  This document update does not migrate, deploy, release, publish, or start Slice 2.
+- **Witness review continuity — Slice 2 implementation:** `src/review-continuity.mjs` adds the shared,
+  deterministic exact-head review state used by future adapters: append-only event records, verified
+  checkpoints, reviewer-attributed findings, de-duplicated inline feedback, immutable report resources,
+  and acknowledgement bound to a successful verified report read. `SPEC.md`,
+  `scripts/validate-waterfall-spec.mjs`, and `test/review-continuity.test.mjs` pin the contract and its
+  failure cases. This is a local library/store, not a reviewer runner, host integration, notification,
+  merge decision, deployment, or authority surface.
+- The older PR #64 spec-only architecture proposal is superseded for implementation by this smaller
+  executable lane. Its remote close/merge disposition remains an explicit owner-facing GitHub action.
 
 **Earlier shipped history (retained for orientation):**
 
@@ -321,10 +327,11 @@ prebuilt download** — code-signing/notarization (owner certs) is the remaining
 installer, not engine bundling.
 
 **Deferred / next lanes (NOT V1 blockers):** trusted code signing/notarization and a public installer;
-live adapter start/stop/detection; signing UI; Settings; on-display visual QA; and the deliberately
-deferred runtime extraction in witness issue #64. Revisit #64 when `0.1.37` merges or a second host
-adapter is actually needed, whichever comes first. Unrelated deferrals: a real buy-once purchase path
-when numbers are approved; live Zapier/Gmail demos; and concurrency-safe claim↔turn correlation.
+live adapter start/stop/detection; signing UI; Settings; on-display visual QA; and host-adapter wiring
+for the shared review-continuity store. The broader cross-adapter runtime extraction proposed by PR #64
+remains deferred; this Slice 2 implements only the real persistence, exact-head, de-duplication, and
+verified-read flow. Unrelated deferrals: a real buy-once purchase path when numbers are approved; live
+Zapier/Gmail demos; and concurrency-safe claim↔turn correlation.
 
 ---
 
@@ -481,6 +488,9 @@ second engineer; don't merge around it.
   `src/inbox-cli.mjs` — **Lyhna Desktop inbox CLI** (`npm run inbox`): headless, deterministic, no-color
   lister over the indexer (text or `--json`; `--include-partial` / `--limit` / `--help`). See
   `DESKTOP-MVP-PLAN.md`.
+- `src/review-continuity.mjs` — **Slice 2 review state**: exact committed subject identity,
+  persistent/de-duplicated reviewer findings, verified checkpoints, report delivery/read continuity,
+  and verified-read-bound acknowledgement. `SPEC.md` is its executable contract.
 - `demo/*.mjs` — regenerate `examples/*`. `examples/live-loop/` — the canonical receipt.
   `examples/agent-team/` — the parent+subagent capsule (spine attribution incl. an unwitnessed branch;
   `npm run demo:agent-team`).
